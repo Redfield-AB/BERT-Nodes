@@ -28,23 +28,24 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
+import se.redfield.bert.core.BertTokenizer;
+
 public class BertTokenizerNodeModel extends NodeModel {
 
+	private final BertTokenizer tokenizer = new BertTokenizer();
+
 	protected BertTokenizerNodeModel() {
-		super(0, 0);
-		// TODO Auto-generated constructor stub
+		super(1, 1);
 	}
 
 	@Override
 	protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return super.execute(inData, exec);
+		return new BufferedDataTable[] { tokenizer.tokenize(inData[0], exec) };
 	}
 
 	@Override
 	protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-		// TODO Auto-generated method stub
-		return super.configure(inSpecs);
+		return new DataTableSpec[] { tokenizer.createSpec(inSpecs[0]) };
 	}
 
 	@Override
