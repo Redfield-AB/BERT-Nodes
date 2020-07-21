@@ -27,6 +27,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 import org.knime.dl.core.DLInvalidEnvironmentException;
 import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
@@ -40,15 +41,18 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernel;
 import org.knime.python2.kernel.PythonKernelOptions;
 import org.knime.python2.kernel.PythonKernelQueue;
+import org.knime.python2.kernel.PythonOutputListener;
 
 import com.google.common.base.Strings;
 
 public class BertTokenizer {
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertTokenizer.class);
 
 	private static final String SCRIPT_FILE_PATH = "py/BertTokenizer.py";
 
 	private static final String INPUT_TABLE_NAME = "input_table";
 	private static final String OUTPUT_TABLE_NAME = "output_table";
+	
 	private static final String IDS_COLUMN_NAME = "ids";
 	private static final String MASKS_COLUMN_NAME = "masks";
 	private static final String SEGMENTS_COLUMN_NAME = "segments";
@@ -56,6 +60,13 @@ public class BertTokenizer {
 	private static final String IDS_COLUMN_VAR = "IDS_COLUMN";
 	private static final String MASKS_COLUMN_VAR = "MASKS_COLUMN";
 	private static final String SEGMENTS_COLUMN_VAR = "SEGMENTS_COLUMN";
+	private static final String TARGET_COLUMN_VAR = "TARGET_COLUMN";
+	private static final String BERT_URL_VAR = "BERT_URL";
+	private static final String MAX_SEQ_LEN_VAR = "MAX_SEQ_LEN";
+	
+	private static final String TARGET_COLUMN = "review";
+	private static final String BERT_URL = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1";
+	private static final int MAX_SEQ_LEN = 128;
 
 	public DataTableSpec createSpec(DataTableSpec inTableSpec) {
 		DataColumnSpec ids = new DataColumnSpecCreator(IDS_COLUMN_NAME, ListCell.getCollectionType(IntCell.TYPE))
@@ -85,6 +96,9 @@ public class BertTokenizer {
 		b.a(IDS_COLUMN_VAR).a(" = ").as(IDS_COLUMN_NAME).n();
 		b.a(MASKS_COLUMN_VAR).a(" = ").as(MASKS_COLUMN_NAME).n();
 		b.a(SEGMENTS_COLUMN_VAR).a(" = ").as(SEGMENTS_COLUMN_NAME).n();
+		b.a(TARGET_COLUMN_VAR).a(" = ").as(TARGET_COLUMN).n();
+		b.a(BERT_URL_VAR).a(" = ").as(BERT_URL).n();
+		b.a(MAX_SEQ_LEN_VAR).a(" = ").a(MAX_SEQ_LEN).n();
 		return b.toString();
 	}
 
