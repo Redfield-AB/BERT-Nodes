@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/se.redfield.bert.feature_0.0.1.202007230017.jar" id="se.redfield.bert.feature" version="0.0.1.202007230017"/>
+   <feature url="features/se.redfield.bert.feature_0.0.1.qualifier.jar" id="se.redfield.bert.feature" version="0.0.1.qualifier"/>
 </site>
