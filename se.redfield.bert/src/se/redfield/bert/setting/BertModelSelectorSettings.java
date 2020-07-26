@@ -44,18 +44,12 @@ public class BertModelSelectorSettings {
 		localPath = new SettingsModelString(KEY_LOCAL_PATH, "");
 	}
 
-	private void updateModelsEnabled() {
-		remoteUrl.setEnabled(mode == BertModelSelectionMode.REMOTE_URL);
-		localPath.setEnabled(mode == BertModelSelectionMode.LOCAL_PATH);
-	}
-
 	public BertModelSelectionMode getMode() {
 		return mode;
 	}
 
 	public void setMode(BertModelSelectionMode mode) {
 		this.mode = mode;
-		updateModelsEnabled();
 	}
 
 	public TFHubModel getTfModel() {
@@ -108,13 +102,12 @@ public class BertModelSelectorSettings {
 		mode = BertModelSelectionMode.valueOf(settings.getString(KEY_MODE, BertModelSelectionMode.getDefault().name()));
 		remoteUrl.loadSettingsFrom(settings);
 		localPath.loadSettingsFrom(settings);
-		updateModelsEnabled();
 	}
 
 	public enum BertModelSelectionMode {
-		TF_HUB("Download from Tensorflow Hub"), //
-		REMOTE_URL("Download from URL"), //
-		LOCAL_PATH("Load from local folder");
+		TF_HUB("TensorFlow Hub"), //
+		REMOTE_URL("Remote URL"), //
+		LOCAL_PATH("Local folder");
 
 		private String title;
 

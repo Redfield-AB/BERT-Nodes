@@ -15,11 +15,14 @@
  */
 package se.redfield.bert.setting;
 
-import java.awt.FlowLayout;
+import java.awt.CardLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.EnumMap;
 import java.util.Map;
 
-import javax.swing.BoxLayout;
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -44,6 +47,8 @@ public class BertModelSelectorEditor extends JPanel {
 	private static final long serialVersionUID = 1L;
 
 	private BertModelSelectorSettings settings;
+
+	private JPanel cards;
 	private Map<BertModelSelectionMode, JRadioButton> buttons;
 	private JComboBox<TFHubModel> hubModelCombo;
 
@@ -56,27 +61,35 @@ public class BertModelSelectorEditor extends JPanel {
 	}
 
 	private void initUI() {
-		initRadioButtons();
+		GridBagConstraints c = new GridBagConstraints();
+		setLayout(new GridBagLayout());
 
-		DialogComponentString remoteUrl = new DialogComponentString(settings.getRemoteUrlModel(), "URL:", false, 50);
-		DialogComponentFileChooser localPath = new DialogComponentFileChooser(settings.getLocalPathModel(),
-				"knime.bert-model", JFileChooser.OPEN_DIALOG, true);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
 
-		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		add(buttons.get(BertModelSelectionMode.TF_HUB));
-		add(createTFHubInput());
-		add(buttons.get(BertModelSelectionMode.REMOTE_URL));
-		add(remoteUrl.getComponentPanel());
-		add(buttons.get(BertModelSelectionMode.LOCAL_PATH));
-		add(localPath.getComponentPanel());
+		add(createRadioButtonsPanel(), c);
+		c.gridy += 1;
+		add(createCardsPanel(), c);
+
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		c.gridy += 1;
+		add(Box.createVerticalGlue(), c);
 	}
 
-	private void initRadioButtons() {
+	private JComponent createRadioButtonsPanel() {
 		buttons = new EnumMap<>(BertModelSelectionMode.class);
 		ButtonGroup group = new ButtonGroup();
+		JPanel panel = new JPanel();
+
 		for (BertModelSelectionMode mode : BertModelSelectionMode.values()) {
-			createModeRb(mode, group);
+			JRadioButton rb = createModeRb(mode, group);
+			panel.add(rb);
 		}
+		return panel;
 	}
 
 	private JRadioButton createModeRb(BertModelSelectionMode mode, ButtonGroup group) {
@@ -89,21 +102,53 @@ public class BertModelSelectorEditor extends JPanel {
 		return rb;
 	}
 
+	private JComponent createCardsPanel() {
+		cards = new JPanel(new CardLayout());
+		cards.add(createTFHubInput(), BertModelSelectionMode.TF_HUB.name());
+		cards.add(createRemoteUrlInput(), BertModelSelectionMode.REMOTE_URL.name());
+		cards.add(createLocalPathInput(), BertModelSelectionMode.LOCAL_PATH.name());
+		return cards;
+	}
+
 	private JComponent createTFHubInput() {
 		hubModelCombo = new JComboBox<>(TFHubModel.values().toArray(new TFHubModel[] {}));
 		hubModelCombo.addActionListener(e -> {
 			settings.setTfModel((TFHubModel) hubModelCombo.getSelectedItem());
 		});
 
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		panel.add(new JLabel("Select model:"));
-		panel.add(hubModelCombo);
+		JPanel panel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5, 10, 5, 5);
+		panel.add(new JLabel("Select model:"), c);
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.gridx += 1;
+		c.insets = new Insets(5, 5, 5, 10);
+		panel.add(hubModelCombo, c);
 		return panel;
+	}
+
+	private JComponent createRemoteUrlInput() {
+		DialogComponentString remoteUrl = new DialogComponentString(settings.getRemoteUrlModel(), "URL:", false, 50);
+		return remoteUrl.getComponentPanel();
+	}
+
+	private JComponent createLocalPathInput() {
+		DialogComponentFileChooser localPath = new DialogComponentFileChooser(settings.getLocalPathModel(),
+				"knime.bert-model", JFileChooser.OPEN_DIALOG, true);
+		return localPath.getComponentPanel();
 	}
 
 	private void onModeChanged(BertModelSelectionMode mode) {
 		settings.setMode(mode);
-		hubModelCombo.setEnabled(mode == BertModelSelectionMode.TF_HUB);
+		((CardLayout) cards.getLayout()).show(cards, mode.name());
 	}
 
 	/**
@@ -112,8 +157,7 @@ public class BertModelSelectorEditor extends JPanel {
 	public void onSettingsLoaded() {
 		BertModelSelectionMode mode = settings.getMode();
 		buttons.get(mode).setSelected(true);
-
 		hubModelCombo.setSelectedItem(settings.getTfModel());
-		hubModelCombo.setEnabled(mode == BertModelSelectionMode.TF_HUB);
+		onModeChanged(mode);
 	}
 }
