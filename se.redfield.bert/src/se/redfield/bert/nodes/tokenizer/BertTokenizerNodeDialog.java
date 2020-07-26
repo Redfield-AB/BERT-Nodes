@@ -13,10 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package se.redfield.bert.nodes;
+package se.redfield.bert.nodes.tokenizer;
 
+import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 
+import se.redfield.bert.setting.BertTokenizerSettings;
+
+/**
+ * 
+ * Settings dialog for the {@link BertTokenizerNodeModel} node.
+ * 
+ * @author Alexander Bondaletov
+ *
+ */
 public class BertTokenizerNodeDialog extends DefaultNodeSettingsPane {
+
+	private BertTokenizerSettings settings = new BertTokenizerSettings();
+
+	/**
+	 * Creates new instance.
+	 */
+	@SuppressWarnings("unchecked")
+	public BertTokenizerNodeDialog() {
+		DialogComponentColumnNameSelection targetColumn = new DialogComponentColumnNameSelection(
+				settings.getTargetColumnModel(), "Target Column", BertTokenizerNodeModel.PORT_INPUT_TABLE,
+				StringValue.class);
+
+		addDialogComponent(targetColumn);
+	}
 
 }

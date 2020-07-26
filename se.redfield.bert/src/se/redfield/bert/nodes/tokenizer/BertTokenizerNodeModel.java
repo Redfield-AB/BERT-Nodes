@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package se.redfield.bert.nodes;
+package se.redfield.bert.nodes.tokenizer;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,62 +27,89 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 
 import se.redfield.bert.core.BertTokenizer;
+import se.redfield.bert.nodes.port.BertModelPortObject;
+import se.redfield.bert.setting.BertTokenizerSettings;
 
+/**
+ * BERT Tokenizer node. Takes an input table and performs tokenization computing
+ * ids, masks and segments columns that could be used as inputs for the BERT
+ * model.
+ * 
+ * @author Alexander Bondaletov
+ *
+ */
 public class BertTokenizerNodeModel extends NodeModel {
 
-	private final BertTokenizer tokenizer = new BertTokenizer();
+	/**
+	 * {@link BertModelPortObject} input port index.
+	 */
+	public static final int PORT_BERT_MODEL = 0;
+	/**
+	 * Data table input port index.
+	 */
+	public static final int PORT_INPUT_TABLE = 1;
+
+	private final BertTokenizerSettings settings;
+	private final BertTokenizer tokenizer;
 
 	protected BertTokenizerNodeModel() {
-		super(1, 1);
+		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
+				new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE });
+
+		settings = new BertTokenizerSettings();
+		tokenizer = new BertTokenizer(settings);
 	}
 
 	@Override
-	protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
-		return new BufferedDataTable[] { tokenizer.tokenize(inData[0], exec) };
+	protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
+		BertModelPortObject model = (BertModelPortObject) inData[PORT_BERT_MODEL];
+		return new PortObject[] { inData[PORT_BERT_MODEL],
+				tokenizer.tokenize(model.getHandle(), (BufferedDataTable) inData[PORT_INPUT_TABLE], exec) };
 	}
 
 	@Override
-	protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-		return new DataTableSpec[] { tokenizer.createSpec(inSpecs[0]) };
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		return new PortObjectSpec[] { inSpecs[PORT_BERT_MODEL],
+				tokenizer.createSpec((DataTableSpec) inSpecs[PORT_INPUT_TABLE]) };
 	}
 
 	@Override
 	protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
 			throws IOException, CanceledExecutionException {
-		// TODO Auto-generated method stub
+		// no internals
 
 	}
 
 	@Override
 	protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
 			throws IOException, CanceledExecutionException {
-		// TODO Auto-generated method stub
+		// no internals
 
 	}
 
 	@Override
 	protected void saveSettingsTo(NodeSettingsWO settings) {
-		// TODO Auto-generated method stub
-
+		this.settings.saveSettingsTo(settings);
 	}
 
 	@Override
 	protected void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
-		// TODO Auto-generated method stub
-
+		this.settings.validateSettings(settings);
 	}
 
 	@Override
 	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
-		// TODO Auto-generated method stub
-
+		this.settings.loadSettings(settings);
 	}
 
 	@Override
 	protected void reset() {
-		// TODO Auto-generated method stub
+		// nothing to reset
 
 	}
 

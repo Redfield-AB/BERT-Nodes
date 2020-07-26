@@ -13,12 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package se.redfield.bert.nodes;
+package se.redfield.bert.nodes.tokenizer;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
+/**
+ * Factory class for the {@link BertTokenizerNodeModel}.
+ * 
+ * @author Alexander Bondaletov
+ *
+ */
 public class BertTokenizerNodeFactory extends NodeFactory<BertTokenizerNodeModel> {
 
 	@Override

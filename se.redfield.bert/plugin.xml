@@ -6,8 +6,24 @@
          point="org.knime.workbench.repository.nodes">
       <node
             category-path="/"
-            factory-class="se.redfield.bert.nodes.BertTokenizerNodeFactory">
+            factory-class="se.redfield.bert.nodes.tokenizer.BertTokenizerNodeFactory">
       </node>
+      <node
+            category-path="/"
+            factory-class="se.redfield.bert.nodes.selector.BertModelSelectorNodeFactory">
+      </node>
+   </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#ff00ff"
+            hidden="false"
+            name="se.redfield.bert.nodes.port.BertModelPortObject"
+            objectClass="se.redfield.bert.nodes.port.BertModelPortObject"
+            objectSerializer="se.redfield.bert.nodes.port.BertModelPortObject$Serializer"
+            specClass="se.redfield.bert.nodes.port.BertModelPortObjectSpec"
+            specSerializer="se.redfield.bert.nodes.port.BertModelPortObjectSpec$Serializer">
+      </portType>
    </extension>
    
 </plugin>

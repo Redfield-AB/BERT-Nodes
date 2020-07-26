@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./default.png" type="Manipulator" xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>BERT Tokenizer</name>
+    
+    <shortDescription>
+        BERT Tokenizer
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	BERT Tokenizer
+        </intro>
+        
+    </fullDescription>
+    
+    <ports>
+		<inPort name="BERT Model" index="0">BERT Model</inPort>
+		<inPort name="Data Table" index="1">Data Table</inPort>
+		<outPort name="BERT Model" index="0">BERT Model</outPort>
+		<outPort name="Tokenized Table" index="1">Tokenized Table</outPort>
+    </ports>    
+</knimeNode>
