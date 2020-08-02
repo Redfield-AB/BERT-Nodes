@@ -18,45 +18,37 @@ package se.redfield.bert.setting;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 public class BertTokenizerSettings {
-	private static final String KEY_TARGET_COLUMN = "targetColumn";
-	
-	private final SettingsModelString targetColumnModel;
-	
+	private static final String KEY_INPUT_SETTINGS = "input";
+
+	private final InputSettings inputSettings;
+
 	public BertTokenizerSettings() {
-		targetColumnModel = new SettingsModelString(KEY_TARGET_COLUMN, "");
+		inputSettings = new InputSettings();
 	}
-	
-	public SettingsModelString getTargetColumnModel() {
-		return targetColumnModel;
-	}
-	
-	public String getTargetColumn() {
-		return targetColumnModel.getStringValue();
-	}
-	
+
 	public void saveSettingsTo(NodeSettingsWO settings) {
-		targetColumnModel.saveSettingsTo(settings);
+		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
 	}
-	
+
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
-		targetColumnModel.validateSettings(settings);
-		
+		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+
 		BertTokenizerSettings temp = new BertTokenizerSettings();
 		temp.loadSettings(settings);
 		temp.validate();
 	}
-	
-	public void validate() throws InvalidSettingsException{
-		if(targetColumnModel.getStringValue().isEmpty()) {
-			throw new InvalidSettingsException("Target column is not selected");
-		}
+
+	public void validate() throws InvalidSettingsException {
+		inputSettings.validate();
 	}
-	
+
 	public void loadSettings(NodeSettingsRO settings) throws InvalidSettingsException {
-		targetColumnModel.loadSettingsFrom(settings);
+		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+	}
+
+	public InputSettings getInputSettings() {
+		return inputSettings;
 	}
 }

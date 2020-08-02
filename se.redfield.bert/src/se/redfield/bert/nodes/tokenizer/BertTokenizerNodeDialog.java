@@ -15,11 +15,15 @@
  */
 package se.redfield.bert.nodes.tokenizer;
 
-import org.knime.core.data.StringValue;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertTokenizerSettings;
+import se.redfield.bert.setting.ui.InputSettingsEditor;
 
 /**
  * 
@@ -28,20 +32,35 @@ import se.redfield.bert.setting.BertTokenizerSettings;
  * @author Alexander Bondaletov
  *
  */
-public class BertTokenizerNodeDialog extends DefaultNodeSettingsPane {
+public class BertTokenizerNodeDialog extends NodeDialogPane {
 
-	private BertTokenizerSettings settings = new BertTokenizerSettings();
+	private final BertTokenizerSettings settings;
+	private final InputSettingsEditor inputSettingsEditor;
 
 	/**
 	 * Creates new instance.
 	 */
-	@SuppressWarnings("unchecked")
 	public BertTokenizerNodeDialog() {
-		DialogComponentColumnNameSelection targetColumn = new DialogComponentColumnNameSelection(
-				settings.getTargetColumnModel(), "Target Column", BertTokenizerNodeModel.PORT_INPUT_TABLE,
-				StringValue.class);
+		settings = new BertTokenizerSettings();
+		inputSettingsEditor = new InputSettingsEditor(settings.getInputSettings(),
+				BertTokenizerNodeModel.PORT_INPUT_TABLE);
 
-		addDialogComponent(targetColumn);
+		addTab("Settings", inputSettingsEditor);
+	}
+
+	@Override
+	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+		try {
+			this.settings.loadSettings(settings);
+		} catch (InvalidSettingsException e) {
+			// ignore
+		}
+		inputSettingsEditor.loadSettings(settings, specs);
+	}
+
+	@Override
+	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
+		this.settings.saveSettingsTo(settings);
 	}
 
 }

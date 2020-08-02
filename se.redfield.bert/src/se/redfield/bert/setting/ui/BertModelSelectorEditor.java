@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package se.redfield.bert.setting;
+package se.redfield.bert.setting.ui;
 
 import java.awt.CardLayout;
 import java.awt.GridBagConstraints;
@@ -34,6 +34,7 @@ import javax.swing.JRadioButton;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
+import se.redfield.bert.setting.BertModelSelectorSettings;
 import se.redfield.bert.setting.BertModelSelectorSettings.BertModelSelectionMode;
 import se.redfield.bert.setting.BertModelSelectorSettings.TFHubModel;
 

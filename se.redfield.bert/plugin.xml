@@ -25,5 +25,11 @@
             specSerializer="se.redfield.bert.nodes.port.BertModelPortObjectSpec$Serializer">
       </portType>
    </extension>
+      <extension
+         point="org.knime.python.modules">
+      <directory
+            path="py/">
+      </directory>
+   </extension>
    
 </plugin>

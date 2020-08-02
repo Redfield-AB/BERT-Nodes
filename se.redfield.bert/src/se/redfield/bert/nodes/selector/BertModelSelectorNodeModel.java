@@ -29,16 +29,11 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.dl.core.DLInvalidEnvironmentException;
-import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
-import org.knime.dl.python.util.DLPythonUtils;
-import org.knime.python2.kernel.PythonCancelable;
-import org.knime.python2.kernel.PythonExecutionMonitorCancelable;
-import org.knime.python2.kernel.PythonKernel;
 
+import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObjectSpec;
 import se.redfield.bert.setting.BertModelSelectorSettings;
-import se.redfield.bert.util.PythonUtils;
 
 public class BertModelSelectorNodeModel extends NodeModel {
 
@@ -56,19 +51,9 @@ public class BertModelSelectorNodeModel extends NodeModel {
 
 	private void downloadOrCheckModel(ExecutionContext exec)
 			throws IOException, DLInvalidEnvironmentException, CanceledExecutionException {
-		PythonCancelable cancelable = new PythonExecutionMonitorCancelable(exec);
-
-		try (PythonKernel kernel = PythonUtils.createKernel()) {
-			kernel.execute(buildScript(), cancelable);
+		try (BertCommands commands = new BertCommands()) {
+			commands.loadBertModel(settings.getHandle(), exec);
 		}
-
-	}
-
-	private String buildScript() {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a("import tensorflow_hub as hub").n();
-		b.a("bert_layer = hub.KerasLayer(").as(settings.getHandle()).a(", trainable=True)").n();
-		return b.toString();
 	}
 
 	@Override

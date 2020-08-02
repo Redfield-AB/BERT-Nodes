@@ -22,8 +22,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
-import se.redfield.bert.setting.BertModelSelectorEditor;
 import se.redfield.bert.setting.BertModelSelectorSettings;
+import se.redfield.bert.setting.ui.BertModelSelectorEditor;
 
 /**
  * Settings dialog for the {@link BertModelSelectorNodeModel} node.
