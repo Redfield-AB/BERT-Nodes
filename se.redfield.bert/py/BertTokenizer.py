@@ -17,12 +17,19 @@ class BertTokenizer:
 
         input_ids, input_masks, input_segments = [], [], []
 
+        total_count = len(table)
+        current_count = 0
+
         for row in table[selector].values:
             ids,masks,segments = self.create_single_input(row)
  
             input_ids.append(ids)
             input_masks.append(masks)
             input_segments.append(segments)
+
+            current_count += 1
+            if(current_count % 100 == 0 or current_count == total_count):
+                self.report_progress(total_count, current_count)   
 
         return input_ids, input_masks, input_segments
 
@@ -63,3 +70,6 @@ class BertTokenizer:
             if token == "[SEP]":
                 current_segment_id = 1
         return segments + [0] * (self.max_seq_length - len(tokens))
+
+    def report_progress(self, total, done):
+        print('progress:', 100 * done // total)

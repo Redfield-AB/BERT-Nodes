@@ -63,23 +63,21 @@ public class BertTokenizer {
 			throws DLInvalidEnvironmentException, PythonKernelCleanupException, PythonIOException,
 			CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
-			commands.putDataTable(inTable, exec);
-			commands.loadBertModel(bertModel, exec);
-			commands.createTokenizer(settings.getInputSettings(), exec);
-			commands.executeInKernel(getTokenizeScript(), exec);
-			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec);
+			commands.putDataTable(inTable, exec.createSubProgress(0.1));
+			commands.loadBertModel(bertModel, exec.createSubProgress(0.1));
+			commands.tokenize(settings.getInputSettings(), exec.createSubProgress(0.7));
+			commands.executeInKernel(getBuildOutTableScript(), exec.createSubProgress(0));
+			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
 		}
 	}
 
-	private static String getTokenizeScript() {
+	private static String getBuildOutTableScript() {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a("ids, masks, segments = ").a(BertCommands.VAR_TOKENIZER).a(".tokenize(").a(BertCommands.VAR_INPUT_TABLE)
-				.a(")").n();
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(BertCommands.VAR_INPUT_TABLE).a(".copy()").n();
 
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(IDS_COLUMN).a("] = ids").n();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(MASKS_COLUMN).a("] = masks").n();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(SEGMENTS_COLUMN).a("] = segments").n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(IDS_COLUMN).a("] = ").a(BertCommands.VAR_IDS).n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(MASKS_COLUMN).a("] = ").a(BertCommands.VAR_MASKS).n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(SEGMENTS_COLUMN).a("] = ").a(BertCommands.VAR_SEGMENTS).n();
 
 		return b.toString();
 	}

@@ -16,6 +16,8 @@
 package se.redfield.bert.core;
 
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -34,6 +36,7 @@ import org.knime.python2.kernel.PythonKernel;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 import org.knime.python2.kernel.PythonKernelOptions;
 import org.knime.python2.kernel.PythonKernelQueue;
+import org.knime.python2.kernel.PythonOutputListener;
 
 import com.google.common.base.Strings;
 
@@ -45,11 +48,17 @@ public class BertCommands implements AutoCloseable {
 	public static final String VAR_OUTPUT_TABLE = "output_table";
 	public static final String VAR_BERT_LAYER = "bert_layer";
 	public static final String VAR_TOKENIZER = "tokenizer";
+	public static final String VAR_IDS = "ids";
+	public static final String VAR_MASKS = "masks";
+	public static final String VAR_SEGMENTS = "segments";
 
 	private PythonKernel kernel;
+	private ProgressListener progressListener;
 
 	public BertCommands() throws DLInvalidEnvironmentException {
 		kernel = createKernel();
+		progressListener = new ProgressListener();
+		kernel.addStdoutListener(progressListener);
 	}
 
 	public static PythonKernel createKernel() throws DLInvalidEnvironmentException {
@@ -94,7 +103,10 @@ public class BertCommands implements AutoCloseable {
 
 	public void executeInKernel(String code, ExecutionMonitor exec)
 			throws PythonIOException, CanceledExecutionException {
+		progressListener.setMonitor(exec);
 		kernel.execute(code, new PythonExecutionMonitorCancelable(exec));
+		progressListener.setMonitor(null);
+		exec.setProgress(1.0);
 	}
 
 	public void loadBertModel(String modelHandle, ExecutionMonitor exec)
@@ -106,7 +118,7 @@ public class BertCommands implements AutoCloseable {
 		executeInKernel(b.toString(), exec);
 	}
 
-	public void createTokenizer(InputSettings inputSettings, ExecutionMonitor exec)
+	public void tokenize(InputSettings inputSettings, ExecutionMonitor exec)
 			throws PythonIOException, CanceledExecutionException {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertTokenizer import BertTokenizer");
 		b.a(VAR_TOKENIZER).a(" = BertTokenizer(").a(VAR_BERT_LAYER).a(", ").a(inputSettings.getMaxSeqLength()).a(", ")
@@ -117,6 +129,8 @@ public class BertCommands implements AutoCloseable {
 		}
 
 		b.a(")").n();
+		b.a(VAR_IDS).a(", ").a(VAR_MASKS).a(", ").a(VAR_SEGMENTS).a(" = ").a(VAR_TOKENIZER).a(".tokenize(")
+				.a(VAR_INPUT_TABLE).a(")").n();
 
 		executeInKernel(b.toString(), exec);
 	}
@@ -126,4 +140,35 @@ public class BertCommands implements AutoCloseable {
 		kernel.close();
 	}
 
+	private static class ProgressListener implements PythonOutputListener {
+		private static final Pattern PATTERN = Pattern.compile("^progress: (\\d+)");
+
+		private ExecutionMonitor monitor;
+		private boolean disabled = false;
+
+		public void setMonitor(ExecutionMonitor monitor) {
+			this.monitor = monitor;
+		}
+
+		@Override
+		public void setDisabled(boolean disabled) {
+			this.disabled = disabled;
+		}
+
+		@Override
+		public void messageReceived(String message, boolean isWarningMessage) {
+			if (monitor != null && !disabled) {
+				Matcher m = PATTERN.matcher(message);
+				if (m.matches()) {
+					try {
+						int progress = Integer.parseInt(m.group(1));
+						monitor.setProgress(progress / 100.0);
+					} catch (Exception e) {
+						// ignore
+					}
+				}
+			}
+		}
+
+	}
 }
