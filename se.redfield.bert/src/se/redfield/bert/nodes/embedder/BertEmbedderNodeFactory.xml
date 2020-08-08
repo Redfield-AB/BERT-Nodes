@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./default.png" type="Manipulator" xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>BERT Embedder</name>
+    
+    <shortDescription>
+        BERT Embedder
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	BERT Embedder
+        </intro>
+        
+    </fullDescription>
+    
+    <ports>
+		<inPort name="BERT Model" index="0">BERT Model</inPort>
+		<inPort name="Data Table" index="1">Data Table</inPort>
+		<outPort name="Output Table" index="0">Table with embedding computed</outPort>
+    </ports>    
+</knimeNode>

@@ -51,6 +51,8 @@ public class BertCommands implements AutoCloseable {
 	public static final String VAR_IDS = "ids";
 	public static final String VAR_MASKS = "masks";
 	public static final String VAR_SEGMENTS = "segments";
+	public static final String VAR_POOLED_EMBEDDINGS = "pooled_embeddings";
+	public static final String VAR_SEQUENCE_EMBEDDINGS = "sequence_embeddings";
 
 	private PythonKernel kernel;
 	private ProgressListener progressListener;
@@ -131,6 +133,15 @@ public class BertCommands implements AutoCloseable {
 		b.a(")").n();
 		b.a(VAR_IDS).a(", ").a(VAR_MASKS).a(", ").a(VAR_SEGMENTS).a(" = ").a(VAR_TOKENIZER).a(".tokenize(")
 				.a(VAR_INPUT_TABLE).a(")").n();
+
+		executeInKernel(b.toString(), exec);
+	}
+
+	public void computeEmbeddings(ExecutionMonitor exec) throws PythonIOException, CanceledExecutionException {
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
+		b.a("embedder = BertEmbedder(").a(VAR_BERT_LAYER).a(", ").a(VAR_TOKENIZER).a(")").n();
+		b.a(VAR_POOLED_EMBEDDINGS).a(",").a(VAR_SEQUENCE_EMBEDDINGS).a(" = embedder.compute_embeddings(").a(VAR_IDS)
+				.a(", ").a(VAR_MASKS).a(", ").a(VAR_SEGMENTS).a(")").n();
 
 		executeInKernel(b.toString(), exec);
 	}

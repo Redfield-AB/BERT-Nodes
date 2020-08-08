@@ -46,12 +46,19 @@ public class InputSettingsEditor extends JPanel {
 	private DialogComponentColumnNameSelection firstSentenceColumn;
 	private DialogComponentColumnNameSelection secondSentenceColumn;
 
+	/**
+	 * Creates new instance.
+	 * 
+	 * @param settings  The settings object.
+	 * @param specIndex Input data table spec index.
+	 */
 	public InputSettingsEditor(InputSettings settings, int specIndex) {
 		this.settings = settings;
 		this.specIndex = specIndex;
 		iniUI();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void iniUI() {
 		firstSentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(),
 				"Sentence column", specIndex, true, StringValue.class);
@@ -74,6 +81,14 @@ public class InputSettingsEditor extends JPanel {
 		add(maxSeqLenght.getComponentPanel());
 	}
 
+	/**
+	 * Initializes {@link DialogComponentColumnNameSelection} components with the
+	 * input table spec
+	 * 
+	 * @param settings The settings object.
+	 * @param specs    The input specs
+	 * @throws NotConfigurableException
+	 */
 	public void loadSettings(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
 		firstSentenceColumn.loadSettingsFrom(settings, specs);
 		secondSentenceColumn.loadSettingsFrom(settings, specs);

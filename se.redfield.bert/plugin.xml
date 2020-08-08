@@ -12,6 +12,11 @@
             category-path="/"
             factory-class="se.redfield.bert.nodes.selector.BertModelSelectorNodeFactory">
       </node>
+      <node
+            category-path="/"
+            factory-class="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory"
+            id="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.core.PortType">
