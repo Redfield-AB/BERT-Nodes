@@ -1,4 +1,6 @@
+import tensorflow_hub as hub
 from bert.tokenization import bert_tokenization
+from ProgressCallback import ProgressCallback
 
 class BertTokenizer:
     def __init__(self, bert_layer, max_seq_length, sentence_column, second_sentence_column = None):
@@ -10,14 +12,13 @@ class BertTokenizer:
         do_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
         self.tokenizer = bert_tokenization.FullTokenizer(vocab_file, do_lower_case)
 
-    def tokenize(self, table):
+    def tokenize(self, table, progress_logger):
         selector = [self.sentence_column]
         if(self.second_sentence_column):
             selector.append(self.second_sentence_column)
 
         input_ids, input_masks, input_segments = [], [], []
 
-        total_count = len(table)
         current_count = 0
 
         for row in table[selector].values:
@@ -28,8 +29,8 @@ class BertTokenizer:
             input_segments.append(segments)
 
             current_count += 1
-            if(current_count % 100 == 0 or current_count == total_count):
-                self.report_progress(total_count, current_count)   
+            if(current_count % 10 == 0): 
+                progress_logger.on_tokenize_rows_end(current_count)
 
         return input_ids, input_masks, input_segments
 
@@ -71,5 +72,25 @@ class BertTokenizer:
                 current_segment_id = 1
         return segments + [0] * (self.max_seq_length - len(tokens))
 
-    def report_progress(self, total, done):
-        print('progress:', 100 * done // total)
+    @classmethod
+    def run(cls, input_table,
+        bert_model_handle,
+        sentence_column,
+        max_seq_length = 128,
+        second_sentence_column = None,
+        ids_column = 'ids',
+        masks_column = 'masks',
+        segments_column = 'segments'
+    ):
+        bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
+        tokenizer = BertTokenizer(bert_layer, max_seq_length, sentence_column, second_sentence_column)
+
+        progress_logger = ProgressCallback(len(input_table))
+        ids, masks, segments = tokenizer.tokenize(input_table, progress_logger)
+
+        output_table = input_table.copy()
+        output_table[ids_column] = ids
+        output_table[masks_column] = masks
+        output_table[segments_column] = segments
+
+        return output_table

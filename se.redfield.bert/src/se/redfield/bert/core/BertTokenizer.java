@@ -40,8 +40,6 @@ public class BertTokenizer {
 	private static final String MASKS_COLUMN = "masks";
 	private static final String SEGMENTS_COLUMN = "segments";
 
-	private static final int MAX_SEQ_LEN = 128;
-
 	private final BertTokenizerSettings settings;
 
 	public BertTokenizer(BertTokenizerSettings settings) {
@@ -64,22 +62,24 @@ public class BertTokenizer {
 			CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.loadBertModel(bertModel, exec.createSubProgress(0.1));
-			commands.tokenize(settings.getInputSettings(), exec.createSubProgress(0.7));
-			commands.executeInKernel(getBuildOutTableScript(), exec.createSubProgress(0));
+			commands.executeInKernel(tokenizeScript(bertModel), exec.createSubProgress(0.8));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
 		}
 	}
 
-	private static String getBuildOutTableScript() {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(BertCommands.VAR_INPUT_TABLE).a(".copy()").n();
+	private String tokenizeScript(String bertModel) {
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertTokenizer import BertTokenizer");
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertTokenizer.run(").n();
 
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(IDS_COLUMN).a("] = ").a(BertCommands.VAR_IDS).n();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(MASKS_COLUMN).a("] = ").a(BertCommands.VAR_MASKS).n();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(SEGMENTS_COLUMN).a("] = ").a(BertCommands.VAR_SEGMENTS).n();
+		BertCommands.putInputTableArgs(b);
+		BertCommands.putArgs(b, bertModel);
+		BertCommands.putArgs(b, settings.getInputSettings());
+
+		b.a("ids_column = ").as(IDS_COLUMN).a(",").n();
+		b.a("masks_column = ").as(MASKS_COLUMN).a(",").n();
+		b.a("segments_column = ").as(SEGMENTS_COLUMN).a(",").n();
+		b.a(")").n();
 
 		return b.toString();
 	}
-
 }

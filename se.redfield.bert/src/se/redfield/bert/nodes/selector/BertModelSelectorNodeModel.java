@@ -29,6 +29,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.dl.core.DLInvalidEnvironmentException;
+import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
+import org.knime.dl.python.util.DLPythonUtils;
 
 import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertModelPortObject;
@@ -52,8 +54,15 @@ public class BertModelSelectorNodeModel extends NodeModel {
 	private void downloadOrCheckModel(ExecutionContext exec)
 			throws IOException, DLInvalidEnvironmentException, CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
-			commands.loadBertModel(settings.getHandle(), exec);
+			commands.executeInKernel(getLoadModelScript(), exec);
 		}
+	}
+
+	private String getLoadModelScript() {
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("import tensorflow_hub as hub");
+		b.a("bert_layer = hub.KerasLayer(").as(settings.getHandle()).a(", trainable=True)").n();
+
+		return b.toString();
 	}
 
 	@Override

@@ -26,7 +26,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.dl.core.DLInvalidEnvironmentException;
 import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
-import org.knime.dl.python.util.DLPythonUtils;
 import org.knime.python2.PythonCommand;
 import org.knime.python2.kernel.PythonCancelable;
 import org.knime.python2.kernel.PythonCanceledExecutionException;
@@ -46,13 +45,6 @@ public class BertCommands implements AutoCloseable {
 
 	public static final String VAR_INPUT_TABLE = "input_table";
 	public static final String VAR_OUTPUT_TABLE = "output_table";
-	public static final String VAR_BERT_LAYER = "bert_layer";
-	public static final String VAR_TOKENIZER = "tokenizer";
-	public static final String VAR_IDS = "ids";
-	public static final String VAR_MASKS = "masks";
-	public static final String VAR_SEGMENTS = "segments";
-	public static final String VAR_POOLED_EMBEDDINGS = "pooled_embeddings";
-	public static final String VAR_SEQUENCE_EMBEDDINGS = "sequence_embeddings";
 
 	private PythonKernel kernel;
 	private ProgressListener progressListener;
@@ -111,44 +103,26 @@ public class BertCommands implements AutoCloseable {
 		exec.setProgress(1.0);
 	}
 
-	public void loadBertModel(String modelHandle, ExecutionMonitor exec)
-			throws PythonIOException, CanceledExecutionException {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a("import tensorflow_hub as hub").n();
-		b.a(VAR_BERT_LAYER).a(" = hub.KerasLayer(").as(modelHandle).a(", trainable=True)").n();
-
-		executeInKernel(b.toString(), exec);
-	}
-
-	public void tokenize(InputSettings inputSettings, ExecutionMonitor exec)
-			throws PythonIOException, CanceledExecutionException {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertTokenizer import BertTokenizer");
-		b.a(VAR_TOKENIZER).a(" = BertTokenizer(").a(VAR_BERT_LAYER).a(", ").a(inputSettings.getMaxSeqLength()).a(", ")
-				.as(inputSettings.getSentenceColumn());
-
-		if (inputSettings.getTwoSentenceMode()) {
-			b.a(", ").as(inputSettings.getSecondSentenceColumn());
-		}
-
-		b.a(")").n();
-		b.a(VAR_IDS).a(", ").a(VAR_MASKS).a(", ").a(VAR_SEGMENTS).a(" = ").a(VAR_TOKENIZER).a(".tokenize(")
-				.a(VAR_INPUT_TABLE).a(")").n();
-
-		executeInKernel(b.toString(), exec);
-	}
-
-	public void computeEmbeddings(ExecutionMonitor exec) throws PythonIOException, CanceledExecutionException {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
-		b.a("embedder = BertEmbedder(").a(VAR_BERT_LAYER).a(", ").a(VAR_TOKENIZER).a(")").n();
-		b.a(VAR_POOLED_EMBEDDINGS).a(",").a(VAR_SEQUENCE_EMBEDDINGS).a(" = embedder.compute_embeddings(").a(VAR_IDS)
-				.a(", ").a(VAR_MASKS).a(", ").a(VAR_SEGMENTS).a(")").n();
-
-		executeInKernel(b.toString(), exec);
-	}
-
 	@Override
 	public void close() throws PythonKernelCleanupException {
 		kernel.close();
+	}
+
+	public static void putInputTableArgs(DLPythonSourceCodeBuilder b) {
+		b.a(VAR_INPUT_TABLE).a(" = ").a(VAR_INPUT_TABLE).a(",").n();
+	}
+
+	public static void putArgs(DLPythonSourceCodeBuilder b, String bertModel) {
+		b.a("bert_model_handle = ").as(bertModel).a(",").n();
+	}
+
+	public static void putArgs(DLPythonSourceCodeBuilder b, InputSettings input) {
+		b.a("sentence_column = ").as(input.getSentenceColumn()).a(",").n();
+		b.a("max_seq_length = ").a(input.getMaxSeqLength()).a(",").n();
+
+		if (input.getTwoSentenceMode()) {
+			b.a("second_sentence_column = ").as(input.getSecondSentenceColumn()).a(",").n();
+		}
 	}
 
 	private static class ProgressListener implements PythonOutputListener {

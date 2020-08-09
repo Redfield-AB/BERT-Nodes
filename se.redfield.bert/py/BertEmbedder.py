@@ -1,11 +1,15 @@
 import tensorflow as tf
+import tensorflow_hub as hub
 import numpy as np
 from tensorflow.keras.models import Model
+
 from ProgressCallback import ProgressCallback
+from BertTokenizer import BertTokenizer
 
 class BertEmbedder:
-    def __init__(self, bert_layer, tokenizer):
-        self.batch_size = 20
+    def __init__(self, bert_layer, tokenizer, batch_size):
+        self.tokenizer = tokenizer
+        self.batch_size = batch_size
 
         input_ids = tf.keras.layers.Input(shape=(tokenizer.max_seq_length,), dtype=tf.int32, name="input_ids")
         input_masks = tf.keras.layers.Input(shape=(tokenizer.max_seq_length,), dtype=tf.int32, name="input_masks")
@@ -14,13 +18,33 @@ class BertEmbedder:
         pooled_output, sequence_output = bert_layer([input_ids, input_masks, input_segments])
         self.model = Model(inputs=[input_ids, input_masks, input_segments], outputs=[pooled_output, sequence_output])
 
-    def compute_embeddings(self, ids, masks, segments):
+    def compute_embeddings(self, input_table, progress_logger):
+        ids, masks, segments = self.tokenizer.tokenize(input_table, progress_logger)
         ids = np.array(ids)
         masks = np.array(masks)
         segments = np.array(segments)
 
-        progress_callback = ProgressCallback(len(ids), self.batch_size)
-
         pooled_emb, sequence_emb = self.model.predict([ids, masks, segments],
-            batch_size=self.batch_size, callbacks=[progress_callback])
+            batch_size=self.batch_size, callbacks=[progress_logger])
         return pooled_emb, sequence_emb
+
+    @classmethod
+    def run(cls,
+        input_table,
+        bert_model_handle,
+        sentence_column,
+        max_seq_length = 128,
+        second_sentence_column = None,
+        batch_size = 20,
+        embeddings_column = 'embeddings'
+    ):
+        bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
+        tokenizer = BertTokenizer(bert_layer, max_seq_length, sentence_column, second_sentence_column)
+        embedder = BertEmbedder(bert_layer, tokenizer, batch_size)
+
+        progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
+        pooled_emb, sequence_emb = embedder.compute_embeddings(input_table, progress_logger)
+
+        output_table = input_table.copy()
+        output_table[embeddings_column] = pooled_emb.tolist()
+        return output_table

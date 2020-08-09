@@ -53,20 +53,21 @@ public class BertEmbedder {
 			DLInvalidEnvironmentException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.loadBertModel(bertModel, exec.createSubProgress(0.1));
-			commands.tokenize(settings.getInputSettings(), exec.createSubProgress(0.1));
-			commands.computeEmbeddings(exec.createSubProgress(0.6));
-			commands.executeInKernel(getBuildOutTableScript(), exec.createSubProgress(0));
+			commands.executeInKernel(computeEmbeddingsScript(bertModel), exec.createSubProgress(0.8));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
 		}
 	}
 
-	private static String getBuildOutTableScript() {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(BertCommands.VAR_INPUT_TABLE).a(".copy()").n();
+	private String computeEmbeddingsScript(String bertModel) {
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.run(").n();
 
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a("[").as(EMBEDDING_COLUMN).a("] = ").a(BertCommands.VAR_POOLED_EMBEDDINGS)
-				.a(".tolist()").n();
+		BertCommands.putInputTableArgs(b);
+		BertCommands.putArgs(b, bertModel);
+		BertCommands.putArgs(b, settings.getInputSettings());
+
+		b.a("embeddings_column = ").as(EMBEDDING_COLUMN).a(",").n();
+		b.a(")").n();
 
 		return b.toString();
 	}
