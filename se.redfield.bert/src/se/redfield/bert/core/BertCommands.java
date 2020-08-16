@@ -112,8 +112,12 @@ public class BertCommands implements AutoCloseable {
 		b.a(VAR_INPUT_TABLE).a(" = ").a(VAR_INPUT_TABLE).a(",").n();
 	}
 
-	public static void putArgs(DLPythonSourceCodeBuilder b, String bertModel) {
+	public static void putBertModelArgs(DLPythonSourceCodeBuilder b, String bertModel) {
 		b.a("bert_model_handle = ").as(bertModel).a(",").n();
+	}
+
+	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, String fileStore) {
+		b.a("file_store = ").as(fileStore).a(",").n();
 	}
 
 	public static void putArgs(DLPythonSourceCodeBuilder b, InputSettings input) {

@@ -1,2 +1,8 @@
+bert_en_cased_L-24_H-1024_A-16;https://tfhub.dev/tensorflow/bert_en_cased_L-24_H-1024_A-16/2
+bert_en_uncased_L-24_H-1024_A-16;https://tfhub.dev/tensorflow/bert_en_uncased_L-24_H-1024_A-16/2
+bert_en_wwm_cased_L-24_H-1024_A-16;https://tfhub.dev/tensorflow/bert_en_wwm_cased_L-24_H-1024_A-16/2
+bert_en_wwm_uncased_L-24_H-1024_A-16;https://tfhub.dev/tensorflow/bert_en_wwm_uncased_L-24_H-1024_A-16/2
+bert_en_cased_L-12_H-768_A-12;https://tfhub.dev/tensorflow/bert_en_cased_L-12_H-768_A-12/2
 bert_en_uncased_L-12_H-768_A-12;https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/2
 bert_multi_cased_L-12_H-768_A-12;https://tfhub.dev/tensorflow/bert_multi_cased_L-12_H-768_A-12/2
+bert_zh_L-12_H-768_A-12;https://tfhub.dev/tensorflow/bert_zh_L-12_H-768_A-12/2

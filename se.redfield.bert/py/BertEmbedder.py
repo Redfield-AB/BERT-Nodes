@@ -39,7 +39,9 @@ class BertEmbedder:
         embeddings_column = 'embeddings'
     ):
         bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
-        tokenizer = BertTokenizer(bert_layer, max_seq_length, sentence_column, second_sentence_column)
+        tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
+            bert_layer.resolved_object.do_lower_case, max_seq_length,
+            sentence_column, second_sentence_column)
         embedder = BertEmbedder(bert_layer, tokenizer, batch_size)
 
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)

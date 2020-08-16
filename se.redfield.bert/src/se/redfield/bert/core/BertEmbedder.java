@@ -63,7 +63,7 @@ public class BertEmbedder {
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.run(").n();
 
 		BertCommands.putInputTableArgs(b);
-		BertCommands.putArgs(b, bertModel);
+		BertCommands.putBertModelArgs(b, bertModel);
 		BertCommands.putArgs(b, settings.getInputSettings());
 
 		b.a("embeddings_column = ").as(EMBEDDING_COLUMN).a(",").n();

@@ -72,7 +72,7 @@ public class BertTokenizer {
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertTokenizer.run(").n();
 
 		BertCommands.putInputTableArgs(b);
-		BertCommands.putArgs(b, bertModel);
+		BertCommands.putBertModelArgs(b, bertModel);
 		BertCommands.putArgs(b, settings.getInputSettings());
 
 		b.a("ids_column = ").as(IDS_COLUMN).a(",").n();

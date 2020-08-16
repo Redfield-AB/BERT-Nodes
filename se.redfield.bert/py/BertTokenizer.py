@@ -3,13 +3,13 @@ from bert.tokenization import bert_tokenization
 from ProgressCallback import ProgressCallback
 
 class BertTokenizer:
-    def __init__(self, bert_layer, max_seq_length, sentence_column, second_sentence_column = None):
+    def __init__(self, vocab_file, do_lower_case, max_seq_length, sentence_column, second_sentence_column = None):
         self.max_seq_length = max_seq_length
         self.sentence_column = sentence_column
         self.second_sentence_column = second_sentence_column
 
-        vocab_file = bert_layer.resolved_object.vocab_file.asset_path.numpy() 
-        do_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
+        vocab_file = vocab_file.asset_path.numpy() 
+        do_lower_case = do_lower_case.numpy()
         self.tokenizer = bert_tokenization.FullTokenizer(vocab_file, do_lower_case)
 
     def tokenize(self, table, progress_logger):
@@ -83,7 +83,9 @@ class BertTokenizer:
         segments_column = 'segments'
     ):
         bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
-        tokenizer = BertTokenizer(bert_layer, max_seq_length, sentence_column, second_sentence_column)
+        tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
+            bert_layer.resolved_object.do_lower_case, max_seq_length,
+            sentence_column, second_sentence_column)
 
         progress_logger = ProgressCallback(len(input_table))
         ids, masks, segments = tokenizer.tokenize(input_table, progress_logger)

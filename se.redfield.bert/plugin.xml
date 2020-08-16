@@ -17,6 +17,14 @@
             factory-class="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory"
             id="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory">
       </node>
+      <node
+            category-path="/"
+            factory-class="se.redfield.bert.nodes.classifier.BertClassifierNodeFactory">
+      </node>
+      <node
+            category-path="/"
+            factory-class="se.redfield.bert.nodes.predictor.BertPredictorNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.core.PortType">
@@ -28,6 +36,13 @@
             objectSerializer="se.redfield.bert.nodes.port.BertModelPortObject$Serializer"
             specClass="se.redfield.bert.nodes.port.BertModelPortObjectSpec"
             specSerializer="se.redfield.bert.nodes.port.BertModelPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            name="se.redfield.bert.nodes.port.BertClassifierPortObject"
+            objectClass="se.redfield.bert.nodes.port.BertClassifierPortObject"
+            objectSerializer="se.redfield.bert.nodes.port.BertClassifierPortObject$Serializer"
+            specClass="se.redfield.bert.nodes.port.BertClassifierPortObjectSpec"
+            specSerializer="se.redfield.bert.nodes.port.BertClassifierPortObjectSpec$Serializer">
       </portType>
    </extension>
       <extension
