@@ -91,6 +91,7 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putArgs(b, settings.getInputSettings());
 		BertCommands.putFileStoreArgs(b, fileStore);
+		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
 		b.a(")").n();
 

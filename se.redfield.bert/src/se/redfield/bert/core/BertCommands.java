@@ -120,6 +120,10 @@ public class BertCommands implements AutoCloseable {
 		b.a("file_store = ").as(fileStore).a(",").n();
 	}
 
+	public static void putBatchSizeArgs(DLPythonSourceCodeBuilder b, int batchSize) {
+		b.a("batch_size = ").a(batchSize).a(",").n();
+	}
+
 	public static void putArgs(DLPythonSourceCodeBuilder b, InputSettings input) {
 		b.a("sentence_column = ").as(input.getSentenceColumn()).a(",").n();
 		b.a("max_seq_length = ").a(input.getMaxSeqLength()).a(",").n();

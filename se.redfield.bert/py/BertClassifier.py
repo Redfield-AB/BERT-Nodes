@@ -54,7 +54,7 @@ class BertClassifier:
         self.model.compile(loss='categorical_crossentropy',
                   optimizer=tf.keras.optimizers.Adam(1e-3),
                   metrics=['accuracy'])
-        self.model.fit(x=[ids, masks, segments],y=y_train,epochs=epochs, batch_size=batch_size, shuffle=False, callbacks=[progress_logger])
+        self.model.fit(x=[ids, masks, segments],y=y_train,epochs=epochs, batch_size=batch_size, shuffle=True, callbacks=[progress_logger])
     
     def save(self, path):
         self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
@@ -64,11 +64,11 @@ class BertClassifier:
 
         self.model.save(path)
     
-    def predict(self, table, progress_logger):
+    def predict(self, table, batch_size, progress_logger):
         ids, masks, segments = self.tokenize(table, progress_logger)
 
         output = self.model.predict([ids, masks, segments],
-            batch_size=32, callbacks=[progress_logger])
+            batch_size=batch_size, callbacks=[progress_logger])
         return output
 
 
@@ -124,8 +124,9 @@ class BertClassifier:
         classifier = BertClassifier(tokenizer=tokenizer, model=model)
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
 
-        output = classifier.predict(input_table, progress_logger)
+        output = classifier.predict(input_table, batch_size, progress_logger)
 
-        output_table = pd.DataFrame(output, columns=classifier.class_dict.keys(), index=input_table.index)
+        columns = [f'P ({label})' for label in classifier.class_dict.keys()]
+        output_table = pd.DataFrame(output, columns=columns, index=input_table.index)
         output_table = pd.concat([input_table, output_table], axis=1)
         return output_table

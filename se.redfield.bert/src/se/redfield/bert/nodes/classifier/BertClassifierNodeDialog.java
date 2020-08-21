@@ -17,6 +17,7 @@ package se.redfield.bert.nodes.classifier;
 
 import java.awt.FlowLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -28,6 +29,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertClassifierSettings;
@@ -56,8 +58,16 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		addTab("Settings", createSettingsPanel());
 	}
 
-	@SuppressWarnings("unchecked")
 	private JComponent createSettingsPanel() {
+		Box box = new Box(BoxLayout.Y_AXIS);
+		box.add(createInputSettingsPanel());
+		box.add(createTrainingSettingsPanel());
+		box.add(Box.createVerticalGlue());
+		return box;
+	}
+
+	@SuppressWarnings("unchecked")
+	private JComponent createInputSettingsPanel() {
 		inputSettings = new InputSettingsEditor(settings.getInputSettings(), BertClassifierNodeModel.PORT_DATA_TABLE);
 
 		classColumn = new DialogComponentColumnNameSelection(settings.getClassColumnModel(), "Class column",
@@ -67,7 +77,21 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		Box box = new Box(BoxLayout.Y_AXIS);
 		box.add(inputSettings);
 		box.add(classColumn.getComponentPanel());
-		box.add(Box.createVerticalGlue());
+		box.setBorder(BorderFactory.createTitledBorder("Input settings"));
+		return box;
+	}
+
+	private JComponent createTrainingSettingsPanel() {
+		DialogComponentNumber epochs = new DialogComponentNumber(settings.getEpochsModel(), "Numbert of epochs", 1);
+		DialogComponentNumber batchSize = new DialogComponentNumber(settings.getBatchSizeModel(), "Batch size", 1);
+
+		epochs.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		batchSize.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+
+		Box box = new Box(BoxLayout.Y_AXIS);
+		box.add(epochs.getComponentPanel());
+		box.add(batchSize.getComponentPanel());
+		box.setBorder(BorderFactory.createTitledBorder("Training settings"));
 		return box;
 	}
 

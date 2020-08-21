@@ -18,6 +18,7 @@ package se.redfield.bert.setting;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
 
@@ -29,14 +30,17 @@ import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
  */
 public class BertPredictorSettings {
 	private static final String KEY_INPUT_SETTINGS = "input";
+	private static final String KEY_BATCH_SIZE = "batchSize";
 
 	private final InputSettings inputSettings;
+	private final SettingsModelIntegerBounded batchSize;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertPredictorSettings() {
 		inputSettings = new InputSettings();
+		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 	}
 
 	/**
@@ -46,6 +50,7 @@ public class BertPredictorSettings {
 	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.saveSettingsTo(settings);
 	}
 
 	/**
@@ -56,6 +61,7 @@ public class BertPredictorSettings {
 	 */
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.validateSettings(settings);
 
 		BertPredictorSettings temp = new BertPredictorSettings();
 		temp.loadSettingsFrom(settings);
@@ -79,6 +85,7 @@ public class BertPredictorSettings {
 	 */
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -86,5 +93,19 @@ public class BertPredictorSettings {
 	 */
 	public InputSettings getInputSettings() {
 		return inputSettings;
+	}
+
+	/**
+	 * @return the batch size model
+	 */
+	public SettingsModelIntegerBounded getBatchSizeModel() {
+		return batchSize;
+	}
+
+	/**
+	 * @return the batch size
+	 */
+	public int getBatchSize() {
+		return batchSize.getIntValue();
 	}
 }

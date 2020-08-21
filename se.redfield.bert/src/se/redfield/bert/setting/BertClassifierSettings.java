@@ -18,6 +18,7 @@ package se.redfield.bert.setting;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 import se.redfield.bert.nodes.classifier.BertClassifierNodeModel;
@@ -32,9 +33,13 @@ import se.redfield.bert.nodes.classifier.BertClassifierNodeModel;
 public class BertClassifierSettings {
 	private static final String KEY_INPUT_SETTINGS = "input";
 	private static final String KEY_CLASS_COLUMN = "classColumn";
+	private static final String KEY_EPOCHS = "epochs";
+	private static final String KEY_BATCH_SIZE = "batchSize";
 
 	private final InputSettings inputSettings;
 	private final SettingsModelString classColumn;
+	private final SettingsModelIntegerBounded epochs;
+	private final SettingsModelIntegerBounded batchSize;
 
 	/**
 	 * Creates new instance
@@ -42,6 +47,8 @@ public class BertClassifierSettings {
 	public BertClassifierSettings() {
 		inputSettings = new InputSettings();
 		classColumn = new SettingsModelString(KEY_CLASS_COLUMN, "");
+		epochs = new SettingsModelIntegerBounded(KEY_EPOCHS, 1, 1, Integer.MAX_VALUE);
+		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 	}
 
 	/**
@@ -52,6 +59,8 @@ public class BertClassifierSettings {
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
 		classColumn.saveSettingsTo(settings);
+		epochs.saveSettingsTo(settings);
+		batchSize.saveSettingsTo(settings);
 	}
 
 	/**
@@ -63,6 +72,8 @@ public class BertClassifierSettings {
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 		classColumn.validateSettings(settings);
+		epochs.validateSettings(settings);
+		batchSize.validateSettings(settings);
 
 		BertClassifierSettings temp = new BertClassifierSettings();
 		temp.loadSettingsFrom(settings);
@@ -91,6 +102,8 @@ public class BertClassifierSettings {
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 		classColumn.loadSettingsFrom(settings);
+		epochs.validateSettings(settings);
+		batchSize.validateSettings(settings);
 	}
 
 	/**
@@ -112,5 +125,33 @@ public class BertClassifierSettings {
 	 */
 	public String getClassColumn() {
 		return classColumn.getStringValue();
+	}
+
+	/**
+	 * @return the epochs model
+	 */
+	public SettingsModelIntegerBounded getEpochsModel() {
+		return epochs;
+	}
+
+	/**
+	 * @return the number of training epochs
+	 */
+	public int getEpochs() {
+		return epochs.getIntValue();
+	}
+
+	/**
+	 * @return the batch size model
+	 */
+	public SettingsModelIntegerBounded getBatchSizeModel() {
+		return batchSize;
+	}
+
+	/**
+	 * @return the batch size
+	 */
+	public int getBatchSize() {
+		return batchSize.getIntValue();
 	}
 }
