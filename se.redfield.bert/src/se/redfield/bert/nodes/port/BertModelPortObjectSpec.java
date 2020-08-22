@@ -34,59 +34,44 @@ public class BertModelPortObjectSpec extends AbstractSimplePortObjectSpec {
 	public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<BertModelPortObjectSpec> {
 	}
 
-	private static final String KEY_MODE = "mode";
-	private static final String KEY_HANDLE = "handle";
-
-	private String mode;
-	private String handle;
+	private BertModelConfig model;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertModelPortObjectSpec() {
-		this("", "");
+		this(new BertModelConfig());
 	}
 
 	/**
-	 * @param mode   Selection mode
-	 * @param handle The model handle (URL or path)
+	 * @param model The {@link BertModelConfig} object.
 	 */
-	public BertModelPortObjectSpec(String mode, String handle) {
-		this.mode = mode;
-		this.handle = handle;
+	public BertModelPortObjectSpec(BertModelConfig model) {
+		this.model = model;
 	}
 
 	@Override
 	protected void save(ModelContentWO model) {
-		model.addString(KEY_MODE, mode);
-		model.addString(KEY_HANDLE, handle);
+		this.model.save(model);
 	}
 
 	@Override
 	protected void load(ModelContentRO model) throws InvalidSettingsException {
-		mode = model.getString(KEY_MODE, "");
-		handle = model.getString(KEY_HANDLE, "");
+		this.model.load(model);
 	}
 
 	/**
-	 * @return the mode
+	 * @return the {@link BertModelConfig} object.
 	 */
-	public String getMode() {
-		return mode;
-	}
-
-	/**
-	 * @return the handle
-	 */
-	public String getHandle() {
-		return handle;
+	public BertModelConfig getModel() {
+		return model;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Selection mode: ").append(mode).append("\n");
-		sb.append("Handle: ").append(handle).append("\n");
+		sb.append("Selection mode: ").append(model.getMode()).append("\n");
+		sb.append("Handle: ").append(model.getHandle()).append("\n");
 		return sb.toString();
 	}
 }

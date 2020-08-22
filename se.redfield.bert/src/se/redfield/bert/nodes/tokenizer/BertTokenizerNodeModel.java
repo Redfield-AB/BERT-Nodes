@@ -69,7 +69,7 @@ public class BertTokenizerNodeModel extends NodeModel {
 	protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
 		BertModelPortObject model = (BertModelPortObject) inData[PORT_BERT_MODEL];
 		return new PortObject[] { inData[PORT_BERT_MODEL],
-				tokenizer.tokenize(model.getHandle(), (BufferedDataTable) inData[PORT_INPUT_TABLE], exec) };
+				tokenizer.tokenize(model.getModel(), (BufferedDataTable) inData[PORT_INPUT_TABLE], exec) };
 	}
 
 	@Override

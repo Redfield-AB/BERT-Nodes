@@ -50,6 +50,7 @@ class ProgressCallback(Callback):
         progress = int(trim(progress) * 100)
         if(self.last_progress < progress):
             self.last_progress = progress
+            print('')
             print('progress:', progress)
 
 def trim(fraction):

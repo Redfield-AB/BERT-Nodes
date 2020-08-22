@@ -1,6 +1,6 @@
-import tensorflow_hub as hub
 from bert.tokenization import bert_tokenization
 from ProgressCallback import ProgressCallback
+from bert_utils import load_bert_layer
 
 class BertTokenizer:
     def __init__(self, vocab_file, do_lower_case, max_seq_length, sentence_column, second_sentence_column = None):
@@ -76,13 +76,14 @@ class BertTokenizer:
     def run(cls, input_table,
         bert_model_handle,
         sentence_column,
+        tfhub_cache_dir = None,
         max_seq_length = 128,
         second_sentence_column = None,
         ids_column = 'ids',
         masks_column = 'masks',
         segments_column = 'segments'
     ):
-        bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
+        bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
         tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
             bert_layer.resolved_object.do_lower_case, max_seq_length,
             sentence_column, second_sentence_column)

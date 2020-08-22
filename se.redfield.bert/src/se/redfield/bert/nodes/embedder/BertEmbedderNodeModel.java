@@ -70,7 +70,7 @@ public class BertEmbedderNodeModel extends NodeModel {
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 		BertModelPortObject model = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
 		return new PortObject[] {
-				embedder.computeEmbeddings(model.getHandle(), (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
+				embedder.computeEmbeddings(model.getModel(), (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
 	}
 
 	@Override

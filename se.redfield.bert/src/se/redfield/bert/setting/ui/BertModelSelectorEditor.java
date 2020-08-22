@@ -52,6 +52,7 @@ public class BertModelSelectorEditor extends JPanel {
 	private JPanel cards;
 	private Map<BertModelSelectionMode, JRadioButton> buttons;
 	private JComboBox<TFHubModel> hubModelCombo;
+	private JComponent cacheDirPanel;
 
 	/**
 	 * @param settings The settings.
@@ -74,6 +75,8 @@ public class BertModelSelectorEditor extends JPanel {
 		add(createRadioButtonsPanel(), c);
 		c.gridy += 1;
 		add(createCardsPanel(), c);
+		c.gridy += 1;
+		add(createCacheDirPanel(), c);
 
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
@@ -147,9 +150,18 @@ public class BertModelSelectorEditor extends JPanel {
 		return localPath.getComponentPanel();
 	}
 
+	private JComponent createCacheDirPanel() {
+		DialogComponentFileChooser cacheDir = new DialogComponentFileChooser(settings.getCacheDirModel(),
+				"knime.tf-cache-dir", JFileChooser.OPEN_DIALOG, true);
+		cacheDir.setBorderTitle("Cache dir");
+		cacheDirPanel = cacheDir.getComponentPanel();
+		return cacheDirPanel;
+	}
+
 	private void onModeChanged(BertModelSelectionMode mode) {
 		settings.setMode(mode);
 		((CardLayout) cards.getLayout()).show(cards, mode.name());
+		cacheDirPanel.setVisible(mode != BertModelSelectionMode.LOCAL_PATH);
 	}
 
 	/**

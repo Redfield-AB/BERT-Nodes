@@ -44,6 +44,7 @@ import org.knime.python2.kernel.PythonKernelCleanupException;
 import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
+import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.setting.BertClassifierSettings;
 
@@ -77,14 +78,14 @@ public class BertClassifierNodeModel extends NodeModel {
 		BertModelPortObject bertModel = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
 		FileStore fileStore = exec.createFileStore("model");
 
-		runTraint(bertModel.getHandle(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
+		runTraint(bertModel.getModel(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
 
 		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore) };
 	}
 
-	private void runTraint(String bertModel, FileStore fileStore, BufferedDataTable inTable, ExecutionContext exec)
-			throws PythonKernelCleanupException, DLInvalidEnvironmentException, PythonIOException,
-			CanceledExecutionException, InvalidSettingsException {
+	private void runTraint(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
+			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
+			PythonIOException, CanceledExecutionException, InvalidSettingsException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(
@@ -118,7 +119,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		return classCount;
 	}
 
-	private String getTrainScript(String bertModel, String fileStore, int classCount) {
+	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
 		b.a("BertClassifier.run_train(").n();

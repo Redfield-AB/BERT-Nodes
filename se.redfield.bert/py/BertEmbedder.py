@@ -1,10 +1,10 @@
 import tensorflow as tf
-import tensorflow_hub as hub
 import numpy as np
 from tensorflow.keras.models import Model
 
 from ProgressCallback import ProgressCallback
 from BertTokenizer import BertTokenizer
+from bert_utils import load_bert_layer
 
 class BertEmbedder:
     def __init__(self, bert_layer, tokenizer, batch_size):
@@ -33,12 +33,13 @@ class BertEmbedder:
         input_table,
         bert_model_handle,
         sentence_column,
+        tfhub_cache_dir = None,
         max_seq_length = 128,
         second_sentence_column = None,
         batch_size = 20,
         embeddings_column = 'embeddings'
     ):
-        bert_layer = hub.KerasLayer(bert_model_handle, trainable=True)
+        bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
         tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
             bert_layer.resolved_object.do_lower_case, max_seq_length,
             sentence_column, second_sentence_column)

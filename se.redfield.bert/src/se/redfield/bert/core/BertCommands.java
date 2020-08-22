@@ -39,6 +39,7 @@ import org.knime.python2.kernel.PythonOutputListener;
 
 import com.google.common.base.Strings;
 
+import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.setting.InputSettings;
 
 public class BertCommands implements AutoCloseable {
@@ -112,8 +113,13 @@ public class BertCommands implements AutoCloseable {
 		b.a(VAR_INPUT_TABLE).a(" = ").a(VAR_INPUT_TABLE).a(",").n();
 	}
 
-	public static void putBertModelArgs(DLPythonSourceCodeBuilder b, String bertModel) {
-		b.a("bert_model_handle = ").as(bertModel).a(",").n();
+	public static void putBertModelArgs(DLPythonSourceCodeBuilder b, BertModelConfig model) {
+		b.a("bert_model_handle = ").as(model.getHandle()).a(", ").n();
+
+		String cacheDir = model.getCacheDir();
+		if (cacheDir != null && !cacheDir.isEmpty()) {
+			b.a("tfhub_cache_dir = ").as(cacheDir).a(",").n();
+		}
 	}
 
 	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, String fileStore) {

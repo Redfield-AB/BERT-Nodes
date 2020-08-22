@@ -30,6 +30,7 @@ import org.knime.dl.python.util.DLPythonUtils;
 import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
+import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.setting.BertTokenizerSettings;
 
 public class BertTokenizer {
@@ -57,7 +58,7 @@ public class BertTokenizer {
 		return new DataTableSpec(inTableSpec, new DataTableSpec(ids, masks, segments));
 	}
 
-	public BufferedDataTable tokenize(String bertModel, BufferedDataTable inTable, ExecutionContext exec)
+	public BufferedDataTable tokenize(BertModelConfig bertModel, BufferedDataTable inTable, ExecutionContext exec)
 			throws DLInvalidEnvironmentException, PythonKernelCleanupException, PythonIOException,
 			CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
@@ -67,7 +68,7 @@ public class BertTokenizer {
 		}
 	}
 
-	private String tokenizeScript(String bertModel) {
+	private String tokenizeScript(BertModelConfig bertModel) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertTokenizer import BertTokenizer");
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertTokenizer.run(").n();
 

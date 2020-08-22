@@ -33,6 +33,7 @@ import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
 import org.knime.dl.python.util.DLPythonUtils;
 
 import se.redfield.bert.core.BertCommands;
+import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObjectSpec;
 import se.redfield.bert.setting.BertModelSelectorSettings;
@@ -47,20 +48,23 @@ public class BertModelSelectorNodeModel extends NodeModel {
 
 	@Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
-		downloadOrCheckModel(exec);
-		return new PortObject[] { new BertModelPortObject(createSpec()) };
+		BertModelPortObjectSpec spec = createSpec();
+		downloadOrCheckModel(spec.getModel(), exec);
+		return new PortObject[] { new BertModelPortObject(spec) };
 	}
 
-	private void downloadOrCheckModel(ExecutionContext exec)
+	private static void downloadOrCheckModel(BertModelConfig model, ExecutionContext exec)
 			throws IOException, DLInvalidEnvironmentException, CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
-			commands.executeInKernel(getLoadModelScript(), exec);
+			commands.executeInKernel(getLoadModelScript(model), exec);
 		}
 	}
 
-	private String getLoadModelScript() {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("import tensorflow_hub as hub");
-		b.a("bert_layer = hub.KerasLayer(").as(settings.getHandle()).a(", trainable=True)").n();
+	private static String getLoadModelScript(BertModelConfig model) {
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from bert_utils import load_bert_layer");
+		b.a("load_bert_layer(").n();
+		BertCommands.putBertModelArgs(b, model);
+		b.a(")").n();
 
 		return b.toString();
 	}
@@ -71,7 +75,9 @@ public class BertModelSelectorNodeModel extends NodeModel {
 	}
 
 	private BertModelPortObjectSpec createSpec() {
-		return new BertModelPortObjectSpec(settings.getMode().name(), settings.getHandle());
+		BertModelConfig model = new BertModelConfig(settings.getMode().name(), settings.getHandle(),
+				settings.getCacheDir());
+		return new BertModelPortObjectSpec(model);
 	}
 
 	@Override

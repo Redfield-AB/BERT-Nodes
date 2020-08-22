@@ -56,7 +56,7 @@ public class BertModelSelectorNodeDialog extends NodeDialogPane {
 		try {
 			this.settings.loadSettingsFrom(settings);
 		} catch (InvalidSettingsException e) {
-			throw new NotConfigurableException(e.getMessage(), e);
+			// ignore
 		}
 		editor.onSettingsLoaded();
 	}

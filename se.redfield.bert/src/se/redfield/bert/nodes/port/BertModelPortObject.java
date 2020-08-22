@@ -83,9 +83,9 @@ public class BertModelPortObject extends AbstractSimplePortObject {
 	}
 
 	/**
-	 * @return The bert model handle
+	 * @return The bert model config
 	 */
-	public String getHandle() {
-		return spec.getHandle();
+	public BertModelConfig getModel() {
+		return spec.getModel();
 	}
 }

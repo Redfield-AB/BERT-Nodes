@@ -29,6 +29,7 @@ import org.knime.dl.python.util.DLPythonUtils;
 import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
+import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.setting.BertEmbedderSettings;
 
 public class BertEmbedder {
@@ -48,8 +49,8 @@ public class BertEmbedder {
 		return new DataTableSpec(inTableSpec, new DataTableSpec(embeddings));
 	}
 
-	public BufferedDataTable computeEmbeddings(String bertModel, BufferedDataTable inTable, ExecutionContext exec)
-			throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
+	public BufferedDataTable computeEmbeddings(BertModelConfig bertModel, BufferedDataTable inTable,
+			ExecutionContext exec) throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
 			DLInvalidEnvironmentException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
@@ -58,7 +59,7 @@ public class BertEmbedder {
 		}
 	}
 
-	private String computeEmbeddingsScript(String bertModel) {
+	private String computeEmbeddingsScript(BertModelConfig bertModel) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.run(").n();
 
