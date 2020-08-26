@@ -114,16 +114,16 @@ public class BertCommands implements AutoCloseable {
 	}
 
 	public static void putBertModelArgs(DLPythonSourceCodeBuilder b, BertModelConfig model) {
-		b.a("bert_model_handle = ").as(model.getHandle()).a(", ").n();
+		b.a("bert_model_handle = ").asr(model.getHandle()).a(", ").n();
 
 		String cacheDir = model.getCacheDir();
 		if (cacheDir != null && !cacheDir.isEmpty()) {
-			b.a("tfhub_cache_dir = ").as(cacheDir).a(",").n();
+			b.a("tfhub_cache_dir = ").asr(cacheDir).a(",").n();
 		}
 	}
 
 	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, String fileStore) {
-		b.a("file_store = ").as(fileStore).a(",").n();
+		b.a("file_store = ").asr(fileStore).a(",").n();
 	}
 
 	public static void putBatchSizeArgs(DLPythonSourceCodeBuilder b, int batchSize) {
