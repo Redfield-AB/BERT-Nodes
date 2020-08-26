@@ -15,6 +15,7 @@
  */
 package se.redfield.bert.setting;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -90,6 +91,22 @@ public class BertClassifierSettings {
 
 		if (classColumn.getStringValue().isEmpty()) {
 			throw new InvalidSettingsException("Class column is not selected");
+		}
+	}
+
+	/**
+	 * Validates the settings against input table spec.
+	 * 
+	 * @param spec Input table spec.
+	 * @throws InvalidSettingsException
+	 */
+	public void validate(DataTableSpec spec) throws InvalidSettingsException {
+		validate();
+		inputSettings.validate(spec);
+
+		String cc = classColumn.getStringValue();
+		if (!spec.containsName(cc)) {
+			throw new InvalidSettingsException("Input table doesn't contain column: " + cc);
 		}
 	}
 

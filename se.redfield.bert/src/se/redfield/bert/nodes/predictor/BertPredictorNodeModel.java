@@ -18,6 +18,7 @@ package se.redfield.bert.nodes.predictor;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -100,6 +101,7 @@ public class BertPredictorNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
 		return new PortObjectSpec[] { null };
 	}
 

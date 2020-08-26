@@ -15,23 +15,46 @@
  */
 package se.redfield.bert.setting;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
+import se.redfield.bert.nodes.tokenizer.BertTokenizerNodeModel;
+
+/**
+ * Settings for the {@link BertTokenizerNodeModel} node.
+ * 
+ * @author Alexander Bondaletov
+ *
+ */
 public class BertTokenizerSettings {
 	private static final String KEY_INPUT_SETTINGS = "input";
 
 	private final InputSettings inputSettings;
 
+	/**
+	 * Creates new instance
+	 */
 	public BertTokenizerSettings() {
 		inputSettings = new InputSettings();
 	}
 
+	/**
+	 * Saves current settings into the provided {@link NodeSettingsWO}
+	 * 
+	 * @param settings
+	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
 	}
 
+	/**
+	 * Validates the settings stored in the provided {@link NodeSettingsRO}.
+	 * 
+	 * @param settings
+	 * @throws InvalidSettingsException
+	 */
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 
@@ -40,14 +63,38 @@ public class BertTokenizerSettings {
 		temp.validate();
 	}
 
+	/**
+	 * Validates internal consistency of the current settings
+	 * 
+	 * @throws InvalidSettingsException
+	 */
 	public void validate() throws InvalidSettingsException {
 		inputSettings.validate();
 	}
 
+	/**
+	 * Validates the settings against input table spec.
+	 * 
+	 * @param spec Input table spec.
+	 * @throws InvalidSettingsException
+	 */
+	public void validate(DataTableSpec spec) throws InvalidSettingsException {
+		inputSettings.validate(spec);
+	}
+
+	/**
+	 * Loads the settings from the provided {@link NodeSettingsRO}.
+	 * 
+	 * @param settings
+	 * @throws InvalidSettingsException
+	 */
 	public void loadSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 	}
 
+	/**
+	 * @return inputSettings
+	 */
 	public InputSettings getInputSettings() {
 		return inputSettings;
 	}

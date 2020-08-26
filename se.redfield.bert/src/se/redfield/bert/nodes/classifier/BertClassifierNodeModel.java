@@ -23,6 +23,7 @@ import java.util.Set;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,12 +79,12 @@ public class BertClassifierNodeModel extends NodeModel {
 		BertModelPortObject bertModel = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
 		FileStore fileStore = exec.createFileStore("model");
 
-		runTraint(bertModel.getModel(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
+		runTrain(bertModel.getModel(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
 
 		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore) };
 	}
 
-	private void runTraint(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
+	private void runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException, InvalidSettingsException {
 		try (BertCommands commands = new BertCommands()) {
@@ -140,6 +141,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
 		return new PortObjectSpec[] { createSpec() };
 	}
 

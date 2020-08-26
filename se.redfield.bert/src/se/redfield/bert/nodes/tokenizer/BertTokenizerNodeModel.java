@@ -74,6 +74,7 @@ public class BertTokenizerNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		settings.validate((DataTableSpec) inSpecs[PORT_INPUT_TABLE]);
 		return new PortObjectSpec[] { inSpecs[PORT_BERT_MODEL],
 				tokenizer.createSpec((DataTableSpec) inSpecs[PORT_INPUT_TABLE]) };
 	}

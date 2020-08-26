@@ -75,6 +75,7 @@ public class BertEmbedderNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
 		return new PortObjectSpec[] { embedder.createSpec((DataTableSpec) inSpecs[PORT_DATA_TABLE]) };
 	}
 

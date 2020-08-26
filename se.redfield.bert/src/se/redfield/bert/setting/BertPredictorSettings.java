@@ -15,6 +15,7 @@
  */
 package se.redfield.bert.setting;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -75,6 +76,16 @@ public class BertPredictorSettings {
 	 */
 	public void validate() throws InvalidSettingsException {
 		inputSettings.validate();
+	}
+
+	/**
+	 * Validates the settings against input table spec.
+	 * 
+	 * @param spec Input table spec.
+	 * @throws InvalidSettingsException
+	 */
+	public void validate(DataTableSpec spec) throws InvalidSettingsException {
+		inputSettings.validate(spec);
 	}
 
 	/**
