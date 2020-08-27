@@ -59,7 +59,7 @@ public class BertTokenizerNodeModel extends NodeModel {
 
 	protected BertTokenizerNodeModel() {
 		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
-				new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE });
+				new PortType[] { BufferedDataTable.TYPE });
 
 		settings = new BertTokenizerSettings();
 		tokenizer = new BertTokenizer(settings);
@@ -68,15 +68,14 @@ public class BertTokenizerNodeModel extends NodeModel {
 	@Override
 	protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
 		BertModelPortObject model = (BertModelPortObject) inData[PORT_BERT_MODEL];
-		return new PortObject[] { inData[PORT_BERT_MODEL],
+		return new PortObject[] {
 				tokenizer.tokenize(model.getModel(), (BufferedDataTable) inData[PORT_INPUT_TABLE], exec) };
 	}
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		settings.validate((DataTableSpec) inSpecs[PORT_INPUT_TABLE]);
-		return new PortObjectSpec[] { inSpecs[PORT_BERT_MODEL],
-				tokenizer.createSpec((DataTableSpec) inSpecs[PORT_INPUT_TABLE]) };
+		return new PortObjectSpec[] { tokenizer.createSpec((DataTableSpec) inSpecs[PORT_INPUT_TABLE]) };
 	}
 
 	@Override

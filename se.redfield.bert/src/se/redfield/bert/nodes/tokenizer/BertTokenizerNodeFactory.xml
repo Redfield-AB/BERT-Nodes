@@ -16,7 +16,6 @@
     <ports>
 		<inPort name="BERT Model" index="0">BERT Model</inPort>
 		<inPort name="Data Table" index="1">Data Table</inPort>
-		<outPort name="BERT Model" index="0">BERT Model</outPort>
-		<outPort name="Tokenized Table" index="1">Tokenized Table</outPort>
+		<outPort name="Tokenized Table" index="0">Tokenized Table</outPort>
     </ports>    
 </knimeNode>
