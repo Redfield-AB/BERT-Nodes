@@ -19,6 +19,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 import se.redfield.bert.nodes.embedder.BertEmbedderNodeModel;
 
@@ -30,14 +32,20 @@ import se.redfield.bert.nodes.embedder.BertEmbedderNodeModel;
  */
 public class BertEmbedderSettings {
 	private static final String KEY_INPUT_SETTINGS = "input";
+	private static final String KEY_BATCH_SIZE = "batchSize";
+	private static final String KEY_INCLUDE_SEQ_EMBEDDINGS = "includeSeqEmbeddings";
 
 	private final InputSettings inputSettings;
+	private final SettingsModelIntegerBounded batchSize;
+	private final SettingsModelBoolean includeSeqEmbeddings;
 
 	/**
 	 * Creates new instance
 	 */
 	public BertEmbedderSettings() {
 		inputSettings = new InputSettings();
+		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
+		includeSeqEmbeddings = new SettingsModelBoolean(KEY_INCLUDE_SEQ_EMBEDDINGS, false);
 	}
 
 	/**
@@ -47,6 +55,8 @@ public class BertEmbedderSettings {
 	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.saveSettingsTo(settings);
+		includeSeqEmbeddings.saveSettingsTo(settings);
 	}
 
 	/**
@@ -57,6 +67,8 @@ public class BertEmbedderSettings {
 	 */
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.validateSettings(settings);
+		includeSeqEmbeddings.validateSettings(settings);
 
 		BertEmbedderSettings temp = new BertEmbedderSettings();
 		temp.loadSettingsFrom(settings);
@@ -90,6 +102,8 @@ public class BertEmbedderSettings {
 	 */
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		batchSize.loadSettingsFrom(settings);
+		includeSeqEmbeddings.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -97,5 +111,33 @@ public class BertEmbedderSettings {
 	 */
 	public InputSettings getInputSettings() {
 		return inputSettings;
+	}
+
+	/**
+	 * @return the batchSize model.
+	 */
+	public SettingsModelIntegerBounded getBatchSizeModel() {
+		return batchSize;
+	}
+
+	/**
+	 * @return the batch size
+	 */
+	public int getBatchSize() {
+		return batchSize.getIntValue();
+	}
+
+	/**
+	 * @return the includeSeqEmbeddings model.
+	 */
+	public SettingsModelBoolean getIncludeSeqEmbeddingsModel() {
+		return includeSeqEmbeddings;
+	}
+
+	/**
+	 * @return the include sequence embeddings option.
+	 */
+	public boolean getIncludeSeqEmbeddings() {
+		return includeSeqEmbeddings.getBooleanValue();
 	}
 }

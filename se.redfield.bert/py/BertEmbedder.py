@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 from tensorflow.keras.models import Model
 
 from ProgressCallback import ProgressCallback
@@ -37,7 +38,9 @@ class BertEmbedder:
         max_seq_length = 128,
         second_sentence_column = None,
         batch_size = 20,
-        embeddings_column = 'embeddings'
+        embeddings_column = 'embeddings',
+        sequence_embedding_column_prefix = 'sequence_embeddings_',
+        include_sequence_embeddings = False
     ):
         bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
         tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
@@ -50,4 +53,10 @@ class BertEmbedder:
 
         output_table = input_table.copy()
         output_table[embeddings_column] = pooled_emb.tolist()
+
+        if(include_sequence_embeddings):
+            columns = [sequence_embedding_column_prefix + str(i) for i in range(len(sequence_emb[0]))]
+            se = pd.DataFrame(sequence_emb.tolist(), columns = columns, index = output_table.index)
+            output_table = pd.concat([output_table, se], axis=1)
+
         return output_table

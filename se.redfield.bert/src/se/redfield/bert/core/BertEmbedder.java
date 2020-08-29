@@ -15,6 +15,9 @@
  */
 package se.redfield.bert.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -35,6 +38,7 @@ import se.redfield.bert.setting.BertEmbedderSettings;
 public class BertEmbedder {
 
 	private static final String EMBEDDING_COLUMN = "embeddings";
+	private static final String SEQ_EMBEDDING_COLUMN_PREFIX = "sequence_embeddings_";
 
 	private BertEmbedderSettings settings;
 
@@ -43,10 +47,19 @@ public class BertEmbedder {
 	}
 
 	public DataTableSpec createSpec(DataTableSpec inTableSpec) {
-		DataColumnSpec embeddings = new DataColumnSpecCreator(EMBEDDING_COLUMN,
-				ListCell.getCollectionType(DoubleCell.TYPE)).createSpec();
+		List<DataColumnSpec> columns = new ArrayList<DataColumnSpec>();
+		columns.add(
+				new DataColumnSpecCreator(EMBEDDING_COLUMN, ListCell.getCollectionType(DoubleCell.TYPE)).createSpec());
 
-		return new DataTableSpec(inTableSpec, new DataTableSpec(embeddings));
+		if (settings.getIncludeSeqEmbeddings()) {
+			int seqLength = settings.getInputSettings().getMaxSeqLength();
+			for (int i = 0; i < seqLength; i++) {
+				columns.add(new DataColumnSpecCreator(SEQ_EMBEDDING_COLUMN_PREFIX + i,
+						ListCell.getCollectionType(DoubleCell.TYPE)).createSpec());
+			}
+		}
+
+		return new DataTableSpec(inTableSpec, new DataTableSpec(columns.toArray(new DataColumnSpec[] {})));
 	}
 
 	public BufferedDataTable computeEmbeddings(BertModelConfig bertModel, BufferedDataTable inTable,
@@ -66,8 +79,11 @@ public class BertEmbedder {
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);
 		BertCommands.putArgs(b, settings.getInputSettings());
+		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
 		b.a("embeddings_column = ").as(EMBEDDING_COLUMN).a(",").n();
+		b.a("sequence_embedding_column_prefix = ").as(SEQ_EMBEDDING_COLUMN_PREFIX).a(",").n();
+		b.a("include_sequence_embeddings = ").a(settings.getIncludeSeqEmbeddings()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();
