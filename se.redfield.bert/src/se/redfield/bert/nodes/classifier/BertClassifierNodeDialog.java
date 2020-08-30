@@ -28,12 +28,12 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertClassifierSettings;
-import se.redfield.bert.setting.ui.InputSettingsEditor;
 
 /**
  * 
@@ -46,7 +46,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 
 	private final BertClassifierSettings settings;
 
-	private InputSettingsEditor inputSettings;
+	private DialogComponentColumnNameSelection sentenceColumn;
 	private DialogComponentColumnNameSelection classColumn;
 
 	/**
@@ -55,42 +55,52 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 	public BertClassifierNodeDialog() {
 		settings = new BertClassifierSettings();
 
-		addTab("Settings", createSettingsPanel());
+		addTab("Settings", createSettingsTab());
+		addTab("Advanced", createAdvancedSettingsTab());
 	}
 
-	private JComponent createSettingsPanel() {
-		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(createInputSettingsPanel());
-		box.add(createTrainingSettingsPanel());
-		box.add(Box.createVerticalGlue());
-		return box;
+	private JComponent createSettingsTab() {
+		return createInputSettingsPanel();
 	}
 
 	@SuppressWarnings("unchecked")
 	private JComponent createInputSettingsPanel() {
-		inputSettings = new InputSettingsEditor(settings.getInputSettings(), BertClassifierNodeModel.PORT_DATA_TABLE);
-
+		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
+				BertClassifierNodeModel.PORT_DATA_TABLE, StringValue.class);
 		classColumn = new DialogComponentColumnNameSelection(settings.getClassColumnModel(), "Class column",
 				BertClassifierNodeModel.PORT_DATA_TABLE, StringValue.class);
+		DialogComponentNumber maxSeqLength = new DialogComponentNumber(settings.getMaxSeqLengthModel(),
+				"Max sequence length", 1);
+
+		sentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
 		classColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		maxSeqLength.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(inputSettings);
+		box.add(sentenceColumn.getComponentPanel());
 		box.add(classColumn.getComponentPanel());
-		box.setBorder(BorderFactory.createTitledBorder("Input settings"));
+		box.add(maxSeqLength.getComponentPanel());
 		return box;
+	}
+
+	private JComponent createAdvancedSettingsTab() {
+		return createTrainingSettingsPanel();
 	}
 
 	private JComponent createTrainingSettingsPanel() {
 		DialogComponentNumber epochs = new DialogComponentNumber(settings.getEpochsModel(), "Numbert of epochs", 1);
 		DialogComponentNumber batchSize = new DialogComponentNumber(settings.getBatchSizeModel(), "Batch size", 1);
+		DialogComponentBoolean fineTuneBert = new DialogComponentBoolean(settings.getFineTuneBertModel(),
+				"Fine tune BERT");
 
 		epochs.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
 		batchSize.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		fineTuneBert.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		Box box = new Box(BoxLayout.Y_AXIS);
 		box.add(epochs.getComponentPanel());
 		box.add(batchSize.getComponentPanel());
+		box.add(fineTuneBert.getComponentPanel());
 		box.setBorder(BorderFactory.createTitledBorder("Training settings"));
 		return box;
 	}
@@ -103,7 +113,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 			// ignore
 		}
 
-		inputSettings.loadSettings(settings, specs);
+		sentenceColumn.loadSettingsFrom(settings, specs);
 		classColumn.loadSettingsFrom(settings, specs);
 	}
 

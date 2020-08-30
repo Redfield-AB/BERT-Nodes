@@ -126,13 +126,15 @@ public class BertClassifierNodeModel extends NodeModel {
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);
-		BertCommands.putArgs(b, settings.getInputSettings());
+		BertCommands.putSentenceColumArg(b, settings.getSentenceColumn());
+		BertCommands.putMaxSeqLengthArg(b, settings.getMaxSeqLength());
 		BertCommands.putFileStoreArgs(b, fileStore);
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
 		b.a("class_column = ").as(settings.getClassColumn()).a(",").n();
 		b.a("class_count = ").a(classCount).a(",").n();
 		b.a("epochs = ").a(settings.getEpochs()).a(",").n();
+		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();

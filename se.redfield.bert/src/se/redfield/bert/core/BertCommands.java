@@ -131,12 +131,20 @@ public class BertCommands implements AutoCloseable {
 	}
 
 	public static void putArgs(DLPythonSourceCodeBuilder b, InputSettings input) {
-		b.a("sentence_column = ").as(input.getSentenceColumn()).a(",").n();
-		b.a("max_seq_length = ").a(input.getMaxSeqLength()).a(",").n();
+		putSentenceColumArg(b, input.getSentenceColumn());
+		putMaxSeqLengthArg(b, input.getMaxSeqLength());
 
 		if (input.getTwoSentenceMode()) {
 			b.a("second_sentence_column = ").as(input.getSecondSentenceColumn()).a(",").n();
 		}
+	}
+
+	public static void putSentenceColumArg(DLPythonSourceCodeBuilder b, String sentenceColumn) {
+		b.a("sentence_column = ").as(sentenceColumn).a(",").n();
+	}
+
+	public static void putMaxSeqLengthArg(DLPythonSourceCodeBuilder b, int maxSeqLength) {
+		b.a("max_seq_length = ").a(maxSeqLength).a(",").n();
 	}
 
 	private static class ProgressListener implements PythonOutputListener {

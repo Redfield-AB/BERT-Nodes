@@ -19,6 +19,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -32,24 +33,30 @@ import se.redfield.bert.nodes.classifier.BertClassifierNodeModel;
  *
  */
 public class BertClassifierSettings {
-	private static final String KEY_INPUT_SETTINGS = "input";
+	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
+	private static final String KEY_MAX_SEQ_LENGTH = "maxSeqLength";
 	private static final String KEY_CLASS_COLUMN = "classColumn";
 	private static final String KEY_EPOCHS = "epochs";
 	private static final String KEY_BATCH_SIZE = "batchSize";
+	private static final String KEY_FINE_TUNE_BERT = "fineTuneBert";
 
-	private final InputSettings inputSettings;
+	private final SettingsModelString sentenceColumn;
+	private final SettingsModelIntegerBounded maxSeqLength;
 	private final SettingsModelString classColumn;
 	private final SettingsModelIntegerBounded epochs;
 	private final SettingsModelIntegerBounded batchSize;
+	private final SettingsModelBoolean fineTuneBert;
 
 	/**
 	 * Creates new instance
 	 */
 	public BertClassifierSettings() {
-		inputSettings = new InputSettings();
+		sentenceColumn = new SettingsModelString(KEY_SENTENCE_COLUMN, "");
+		maxSeqLength = new SettingsModelIntegerBounded(KEY_MAX_SEQ_LENGTH, 128, 3, 512);
 		classColumn = new SettingsModelString(KEY_CLASS_COLUMN, "");
 		epochs = new SettingsModelIntegerBounded(KEY_EPOCHS, 1, 1, Integer.MAX_VALUE);
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
+		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
 	}
 
 	/**
@@ -58,10 +65,12 @@ public class BertClassifierSettings {
 	 * @param settings
 	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
-		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.saveSettingsTo(settings);
+		maxSeqLength.saveSettingsTo(settings);
 		classColumn.saveSettingsTo(settings);
 		epochs.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
+		fineTuneBert.saveSettingsTo(settings);
 	}
 
 	/**
@@ -71,10 +80,12 @@ public class BertClassifierSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
-		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.validateSettings(settings);
+		maxSeqLength.validateSettings(settings);
 		classColumn.validateSettings(settings);
 		epochs.validateSettings(settings);
 		batchSize.validateSettings(settings);
+		fineTuneBert.validateSettings(settings);
 
 		BertClassifierSettings temp = new BertClassifierSettings();
 		temp.loadSettingsFrom(settings);
@@ -87,7 +98,9 @@ public class BertClassifierSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void validate() throws InvalidSettingsException {
-		inputSettings.validate();
+		if (sentenceColumn.getStringValue().isEmpty()) {
+			throw new InvalidSettingsException("Sentence column is not selected");
+		}
 
 		if (classColumn.getStringValue().isEmpty()) {
 			throw new InvalidSettingsException("Class column is not selected");
@@ -102,7 +115,11 @@ public class BertClassifierSettings {
 	 */
 	public void validate(DataTableSpec spec) throws InvalidSettingsException {
 		validate();
-		inputSettings.validate(spec);
+
+		String sc = sentenceColumn.getStringValue();
+		if (!spec.containsName(sc)) {
+			throw new InvalidSettingsException("Input table doesn't contain column: " + sc);
+		}
 
 		String cc = classColumn.getStringValue();
 		if (!spec.containsName(cc)) {
@@ -117,17 +134,40 @@ public class BertClassifierSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
-		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.loadSettingsFrom(settings);
+		maxSeqLength.loadSettingsFrom(settings);
 		classColumn.loadSettingsFrom(settings);
-		epochs.validateSettings(settings);
-		batchSize.validateSettings(settings);
+		epochs.loadSettingsFrom(settings);
+		batchSize.loadSettingsFrom(settings);
+		fineTuneBert.loadSettingsFrom(settings);
 	}
 
 	/**
-	 * @return the input settings
+	 * @return the sentenceColumn model.
 	 */
-	public InputSettings getInputSettings() {
-		return inputSettings;
+	public SettingsModelString getSentenceColumnModel() {
+		return sentenceColumn;
+	}
+
+	/**
+	 * @return the sentence column
+	 */
+	public String getSentenceColumn() {
+		return sentenceColumn.getStringValue();
+	}
+
+	/**
+	 * @return the maxSeqLenght model.
+	 */
+	public SettingsModelIntegerBounded getMaxSeqLengthModel() {
+		return maxSeqLength;
+	}
+
+	/**
+	 * @return the max sequence length
+	 */
+	public int getMaxSeqLength() {
+		return maxSeqLength.getIntValue();
 	}
 
 	/**
@@ -170,5 +210,19 @@ public class BertClassifierSettings {
 	 */
 	public int getBatchSize() {
 		return batchSize.getIntValue();
+	}
+
+	/**
+	 * @return the fineTuneBert model
+	 */
+	public SettingsModelBoolean getFineTuneBertModel() {
+		return fineTuneBert;
+	}
+
+	/**
+	 * @return the fine tune BERT option
+	 */
+	public boolean getFineTuneBert() {
+		return fineTuneBert.getBooleanValue();
 	}
 }
