@@ -21,9 +21,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.MissingValue;
+import org.knime.core.data.MissingValueException;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -96,22 +97,20 @@ public class BertClassifierNodeModel extends NodeModel {
 	}
 
 	private int calcClassCout(BufferedDataTable inTable) throws InvalidSettingsException {
-		DataColumnSpec spec = inTable.getSpec().getColumnSpec(settings.getClassColumn());
-		Set<DataCell> values = spec.getDomain().getValues();
-		int classCount = 0;
+		Set<String> values = new HashSet<>();
+		int idx = inTable.getSpec().findColumnIndex(settings.getClassColumn());
 
-		if (values != null && !values.isEmpty()) {
-			classCount = values.size();
-		} else {
-			Set<String> strings = new HashSet<>();
-			int idx = inTable.getSpec().findColumnIndex(settings.getClassColumn());
+		for (DataRow row : inTable) {
+			DataCell c = row.getCell(idx);
 
-			for (DataRow row : inTable) {
-				strings.add(row.getCell(idx).toString());
+			if (c.isMissing()) {
+				throw new MissingValueException((MissingValue) c, "Class column contains missing values");
 			}
 
-			classCount = strings.size();
+			values.add(c.toString());
 		}
+
+		int classCount = values.size();
 
 		if (classCount < 2) {
 			throw new InvalidSettingsException("The class column should contain at least 2 classes");
