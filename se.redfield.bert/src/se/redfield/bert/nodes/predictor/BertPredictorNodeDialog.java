@@ -21,16 +21,17 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertPredictorSettings;
-import se.redfield.bert.setting.ui.InputSettingsEditor;
 
 /**
  * Dialog for the {@link BertPredictorNodeModel} node.
@@ -42,7 +43,7 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 
 	private final BertPredictorSettings settings;
 
-	private InputSettingsEditor inputSettings;
+	private DialogComponentColumnNameSelection sentenceColumn;
 
 	/**
 	 * Creates new instance
@@ -53,14 +54,17 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 		addTab("Settings", createSettingsPanel());
 	}
 
+	@SuppressWarnings("unchecked")
 	private JComponent createSettingsPanel() {
+		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
+				BertPredictorNodeModel.PORT_DATA_TABLE, StringValue.class);
+		sentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+
 		DialogComponentNumber batchSize = new DialogComponentNumber(settings.getBatchSizeModel(), "Batch size", 1);
 		batchSize.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
 
-		inputSettings = new InputSettingsEditor(settings.getInputSettings(), BertPredictorNodeModel.PORT_DATA_TABLE);
-
 		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(inputSettings);
+		box.add(sentenceColumn.getComponentPanel());
 		box.add(batchSize.getComponentPanel());
 		return box;
 	}
@@ -73,7 +77,7 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 			// ignore
 		}
 
-		inputSettings.loadSettings(settings, specs);
+		sentenceColumn.loadSettingsFrom(settings, specs);
 	}
 
 	@Override

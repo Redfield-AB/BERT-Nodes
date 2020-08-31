@@ -82,7 +82,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 		runTrain(bertModel.getModel(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
 
-		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore) };
+		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength()) };
 	}
 
 	private void runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,

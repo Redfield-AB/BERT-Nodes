@@ -20,6 +20,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
 
@@ -30,17 +31,17 @@ import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
  *
  */
 public class BertPredictorSettings {
-	private static final String KEY_INPUT_SETTINGS = "input";
+	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
 	private static final String KEY_BATCH_SIZE = "batchSize";
 
-	private final InputSettings inputSettings;
+	private final SettingsModelString sentenceColumn;
 	private final SettingsModelIntegerBounded batchSize;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertPredictorSettings() {
-		inputSettings = new InputSettings();
+		sentenceColumn = new SettingsModelString(KEY_SENTENCE_COLUMN, "");
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 	}
 
@@ -50,7 +51,7 @@ public class BertPredictorSettings {
 	 * @param settings
 	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
-		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
 	}
 
@@ -61,7 +62,7 @@ public class BertPredictorSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
-		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.validateSettings(settings);
 		batchSize.validateSettings(settings);
 
 		BertPredictorSettings temp = new BertPredictorSettings();
@@ -75,7 +76,9 @@ public class BertPredictorSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void validate() throws InvalidSettingsException {
-		inputSettings.validate();
+		if (sentenceColumn.getStringValue().isEmpty()) {
+			throw new InvalidSettingsException("Sentence column is not selected");
+		}
 	}
 
 	/**
@@ -85,7 +88,12 @@ public class BertPredictorSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void validate(DataTableSpec spec) throws InvalidSettingsException {
-		inputSettings.validate(spec);
+		validate();
+
+		String sc = sentenceColumn.getStringValue();
+		if (!spec.containsName(sc)) {
+			throw new InvalidSettingsException("Input table doesn't contain column: " + sc);
+		}
 	}
 
 	/**
@@ -95,15 +103,22 @@ public class BertPredictorSettings {
 	 * @throws InvalidSettingsException
 	 */
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
-		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
+		sentenceColumn.loadSettingsFrom(settings);
 		batchSize.loadSettingsFrom(settings);
 	}
 
 	/**
-	 * @return the input settings
+	 * @return the sentence column model.
 	 */
-	public InputSettings getInputSettings() {
-		return inputSettings;
+	public SettingsModelString getSentenceColumnModel() {
+		return sentenceColumn;
+	}
+
+	/**
+	 * @return the sentence column
+	 */
+	public String getSentenceColumn() {
+		return sentenceColumn.getStringValue();
 	}
 
 	/**

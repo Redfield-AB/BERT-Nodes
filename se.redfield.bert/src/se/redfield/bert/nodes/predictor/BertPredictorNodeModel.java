@@ -69,28 +69,29 @@ public class BertPredictorNodeModel extends NodeModel {
 	@Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 		BertClassifierPortObject classifier = (BertClassifierPortObject) inObjects[PORT_BERT_CLASSIFIER];
-		return new PortObject[] {
-				runPredict(classifier.getFileStore(), (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
+		return new PortObject[] { runPredict(classifier.getFileStore(), classifier.getMaxSeqLength(),
+				(BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
 	}
 
-	private BufferedDataTable runPredict(FileStore fileStore, BufferedDataTable inTable, ExecutionContext exec)
-			throws PythonKernelCleanupException, DLInvalidEnvironmentException, PythonIOException,
-			CanceledExecutionException {
+	private BufferedDataTable runPredict(FileStore fileStore, int maxSeqLength, BufferedDataTable inTable,
+			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
+			PythonIOException, CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.executeInKernel(getPredictScript(fileStore.getFile().getAbsolutePath()),
+			commands.executeInKernel(getPredictScript(fileStore.getFile().getAbsolutePath(), maxSeqLength),
 					exec.createSubProgress(0.8));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
 		}
 	}
 
-	private String getPredictScript(String fileStore) {
+	private String getPredictScript(String fileStore, int maxSeqLength) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_predict(").n();
 
 		BertCommands.putInputTableArgs(b);
-		BertCommands.putArgs(b, settings.getInputSettings());
+		BertCommands.putSentenceColumArg(b, settings.getSentenceColumn());
+		BertCommands.putMaxSeqLengthArg(b, maxSeqLength);
 		BertCommands.putFileStoreArgs(b, fileStore);
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
