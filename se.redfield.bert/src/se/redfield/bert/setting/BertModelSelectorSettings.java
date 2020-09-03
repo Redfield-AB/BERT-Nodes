@@ -39,7 +39,8 @@ public class BertModelSelectorSettings {
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelSelectorSettings.class);
 
 	private static final String KEY_MODE = "mode";
-	private static final String KEY_REMOVE_URL = "remoteUrl";
+	private static final String KEY_TFHUB_MODEL = "tfHubModel";
+	private static final String KEY_REMOTE_URL = "remoteUrl";
 	private static final String KEY_LOCAL_PATH = "localPath";
 	private static final String KEY_CACHE_DIR = "cacheDir";
 
@@ -55,7 +56,7 @@ public class BertModelSelectorSettings {
 	public BertModelSelectorSettings() {
 		mode = BertModelSelectionMode.getDefault();
 		tfModel = TFHubModel.getDefault();
-		remoteUrl = new SettingsModelString(KEY_REMOVE_URL, "");
+		remoteUrl = new SettingsModelString(KEY_REMOTE_URL, "");
 		localPath = new SettingsModelString(KEY_LOCAL_PATH, "");
 		cacheDir = new SettingsModelString(KEY_CACHE_DIR, "");
 	}
@@ -139,6 +140,7 @@ public class BertModelSelectorSettings {
 	 */
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		settings.addString(KEY_MODE, mode.name());
+		settings.addString(KEY_TFHUB_MODEL, tfModel.getName());
 		remoteUrl.saveSettingsTo(settings);
 		localPath.saveSettingsTo(settings);
 		cacheDir.saveSettingsTo(settings);
@@ -186,6 +188,7 @@ public class BertModelSelectorSettings {
 	 */
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		mode = BertModelSelectionMode.valueOf(settings.getString(KEY_MODE, BertModelSelectionMode.getDefault().name()));
+		tfModel = TFHubModel.getByName(settings.getString(KEY_TFHUB_MODEL));
 		remoteUrl.loadSettingsFrom(settings);
 		localPath.loadSettingsFrom(settings);
 		cacheDir.loadSettingsFrom(settings);
@@ -275,6 +278,20 @@ public class BertModelSelectorSettings {
 		 */
 		public static TFHubModel getDefault() {
 			return values().get(0);
+		}
+
+		/**
+		 * 
+		 * @param name Model name.
+		 * @return TFHub model.
+		 */
+		public static TFHubModel getByName(String name) {
+			for (TFHubModel m : values()) {
+				if (m.getName().equals(name)) {
+					return m;
+				}
+			}
+			return getDefault();
 		}
 
 		private TFHubModel(String name, String url) {
