@@ -19,6 +19,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -33,9 +34,19 @@ import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
 public class BertPredictorSettings {
 	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
 	private static final String KEY_BATCH_SIZE = "batchSize";
+	private static final String KEY_CHANGE_PREDICTION_COLUMN = "changePredictionColumn";
+	private static final String KEY_PREDICTION_COLUMN = "predictionColumn";
+	private static final String KEY_OUTPUT_PROBABILITIES = "outputProbabilities";
+	private static final String KEY_PROBABILITIES_COLUMN_SUFFIX = "probabilitiesColumnSuffix";
+
+	private static final String DEFAULT_PRECICTION_COLUMN = "Prediction";
 
 	private final SettingsModelString sentenceColumn;
 	private final SettingsModelIntegerBounded batchSize;
+	private final SettingsModelBoolean changePredictionColumn;
+	private final SettingsModelString predictionColumn;
+	private final SettingsModelBoolean outputProbabilities;
+	private final SettingsModelString probabilitiesColumnSuffix;
 
 	/**
 	 * Creates new instance.
@@ -43,6 +54,20 @@ public class BertPredictorSettings {
 	public BertPredictorSettings() {
 		sentenceColumn = new SettingsModelString(KEY_SENTENCE_COLUMN, "");
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
+		changePredictionColumn = new SettingsModelBoolean(KEY_CHANGE_PREDICTION_COLUMN, false);
+		predictionColumn = new SettingsModelString(KEY_PREDICTION_COLUMN, DEFAULT_PRECICTION_COLUMN);
+		outputProbabilities = new SettingsModelBoolean(KEY_OUTPUT_PROBABILITIES, true);
+		probabilitiesColumnSuffix = new SettingsModelString(KEY_PROBABILITIES_COLUMN_SUFFIX, "");
+
+		predictionColumn.setEnabled(changePredictionColumn.getBooleanValue());
+		probabilitiesColumnSuffix.setEnabled(outputProbabilities.getBooleanValue());
+
+		changePredictionColumn.addChangeListener(e -> {
+			predictionColumn.setEnabled(changePredictionColumn.getBooleanValue());
+		});
+		outputProbabilities.addChangeListener(e -> {
+			probabilitiesColumnSuffix.setEnabled(outputProbabilities.getBooleanValue());
+		});
 	}
 
 	/**
@@ -53,6 +78,10 @@ public class BertPredictorSettings {
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		sentenceColumn.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
+		changePredictionColumn.saveSettingsTo(settings);
+		predictionColumn.saveSettingsTo(settings);
+		outputProbabilities.saveSettingsTo(settings);
+		probabilitiesColumnSuffix.saveSettingsTo(settings);
 	}
 
 	/**
@@ -64,6 +93,10 @@ public class BertPredictorSettings {
 	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		sentenceColumn.validateSettings(settings);
 		batchSize.validateSettings(settings);
+		changePredictionColumn.validateSettings(settings);
+		predictionColumn.validateSettings(settings);
+		outputProbabilities.validateSettings(settings);
+		probabilitiesColumnSuffix.validateSettings(settings);
 
 		BertPredictorSettings temp = new BertPredictorSettings();
 		temp.loadSettingsFrom(settings);
@@ -78,6 +111,9 @@ public class BertPredictorSettings {
 	public void validate() throws InvalidSettingsException {
 		if (sentenceColumn.getStringValue().isEmpty()) {
 			throw new InvalidSettingsException("Sentence column is not selected");
+		}
+		if (changePredictionColumn.getBooleanValue() && predictionColumn.getStringValue().isEmpty()) {
+			throw new InvalidSettingsException("Prediction column name is empty");
 		}
 	}
 
@@ -105,6 +141,10 @@ public class BertPredictorSettings {
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
 		sentenceColumn.loadSettingsFrom(settings);
 		batchSize.loadSettingsFrom(settings);
+		predictionColumn.loadSettingsFrom(settings);
+		probabilitiesColumnSuffix.loadSettingsFrom(settings);
+		changePredictionColumn.loadSettingsFrom(settings);
+		outputProbabilities.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -133,5 +173,67 @@ public class BertPredictorSettings {
 	 */
 	public int getBatchSize() {
 		return batchSize.getIntValue();
+	}
+
+	/**
+	 * @return the changePredictionColumn model.
+	 */
+	public SettingsModelBoolean getChangePredictionColumnModel() {
+		return changePredictionColumn;
+	}
+
+	/**
+	 * @return <code>true</code> if the default prediction column name is supposed
+	 *         to be changed, <code>false</code> otherwise.
+	 */
+	public boolean getChangePredictionColumn() {
+		return changePredictionColumn.getBooleanValue();
+	}
+
+	/**
+	 * @return the predictionColumn model.
+	 */
+	public SettingsModelString getPredictionColumnModel() {
+		return predictionColumn;
+	}
+
+	/**
+	 * @return the prediction column name (either default or entered by user
+	 *         depending on the settings).
+	 */
+	public String getPredictionColumn() {
+		if (getChangePredictionColumn()) {
+			return predictionColumn.getStringValue();
+		}
+		return DEFAULT_PRECICTION_COLUMN;
+	}
+
+	/**
+	 * @return the outputProbabilities model.
+	 */
+	public SettingsModelBoolean getOutputProbabilitiesModel() {
+		return outputProbabilities;
+	}
+
+	/**
+	 * @return <code>true</code> if probabilities columns should be added to output
+	 *         table, <code>false</code> otherwise.
+	 */
+	public boolean getOutputProbabilities() {
+		return outputProbabilities.getBooleanValue();
+	}
+
+	/**
+	 * @return the probabilitiesColumnSuffix model.
+	 */
+	public SettingsModelString getProbabilitiesColumnSuffixModel() {
+		return probabilitiesColumnSuffix;
+	}
+
+	/**
+	 * @return the suffix to be added to the probabilities columns names.
+	 */
+	public String getProbabilitiesColumnSuffix() {
+		return probabilitiesColumnSuffix.getStringValue();
 	}
 }

@@ -95,6 +95,10 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertCommands.putFileStoreArgs(b, fileStore);
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
+		b.a("prediction_column_name = ").as(settings.getPredictionColumn()).a(",").n();
+		b.a("output_probabilities = ").a(settings.getOutputProbabilities()).a(",").n();
+		b.a("probabilities_column_suffix = ").as(settings.getProbabilitiesColumnSuffix()).a(",").n();
+
 		b.a(")").n();
 
 		return b.toString();

@@ -118,7 +118,10 @@ class BertClassifier:
         file_store,
         max_seq_length = 128,
         second_sentence_column = None,
-        batch_size = 20
+        batch_size = 20,
+        prediction_column_name = 'Prediction',
+        output_probabilities = True,
+        probabilities_column_suffix = ''
     ):
         model = tf.keras.models.load_model(file_store)
         tokenizer = BertTokenizer(model.vocab_file, model.do_lower_case, max_seq_length,
@@ -127,8 +130,15 @@ class BertClassifier:
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
 
         output = classifier.predict(input_table, batch_size, progress_logger)
+        output_table = input_table.copy()
 
-        columns = [f'P ({label})' for label in classifier.class_dict.keys()]
-        output_table = pd.DataFrame(output, columns=columns, index=input_table.index)
-        output_table = pd.concat([input_table, output_table], axis=1)
+        class_by_index = {value: key for (key, value) in classifier.class_dict.items()}
+        prediction = [class_by_index[idx] for idx in output.argmax(axis=1)]
+        output_table[prediction_column_name] = prediction
+
+        if(output_probabilities):
+            columns = [f'P ({label}){probabilities_column_suffix}' for label in classifier.class_dict.keys()]
+            probabilities = pd.DataFrame(output, columns=columns, index=output_table.index)
+            output_table = pd.concat([output_table, probabilities], axis=1)
+
         return output_table

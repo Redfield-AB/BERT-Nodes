@@ -17,6 +17,7 @@ package se.redfield.bert.nodes.predictor;
 
 import java.awt.FlowLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -27,8 +28,10 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertPredictorSettings;
@@ -54,8 +57,15 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 		addTab("Settings", createSettingsPanel());
 	}
 
-	@SuppressWarnings("unchecked")
 	private JComponent createSettingsPanel() {
+		Box box = new Box(BoxLayout.Y_AXIS);
+		box.add(createInputSettings());
+		box.add(createOutputSettings());
+		return box;
+	}
+
+	@SuppressWarnings("unchecked")
+	private JComponent createInputSettings() {
 		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
 				BertPredictorNodeModel.PORT_DATA_TABLE, StringValue.class);
 		sentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -66,6 +76,31 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 		Box box = new Box(BoxLayout.Y_AXIS);
 		box.add(sentenceColumn.getComponentPanel());
 		box.add(batchSize.getComponentPanel());
+		box.setBorder(BorderFactory.createTitledBorder("Input settings"));
+		return box;
+	}
+
+	private JComponent createOutputSettings() {
+		DialogComponentBoolean changePredictionColumn = new DialogComponentBoolean(
+				settings.getChangePredictionColumnModel(), "Change prediction column name");
+		DialogComponentString predictionColumn = new DialogComponentString(settings.getPredictionColumnModel(),
+				"Prediction column name");
+		DialogComponentBoolean outputProbabilities = new DialogComponentBoolean(settings.getOutputProbabilitiesModel(),
+				"Append individual class probabilities");
+		DialogComponentString probColumnsSuffix = new DialogComponentString(
+				settings.getProbabilitiesColumnSuffixModel(), "Suffix for probability columns");
+
+		changePredictionColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		predictionColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		outputProbabilities.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		probColumnsSuffix.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+
+		Box box = new Box(BoxLayout.Y_AXIS);
+		box.add(changePredictionColumn.getComponentPanel());
+		box.add(predictionColumn.getComponentPanel());
+		box.add(outputProbabilities.getComponentPanel());
+		box.add(probColumnsSuffix.getComponentPanel());
+		box.setBorder(BorderFactory.createTitledBorder("Output settings"));
 		return box;
 	}
 
