@@ -72,7 +72,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	protected BertClassifierNodeModel() {
 		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
-				new PortType[] { BertClassifierPortObject.TYPE });
+				new PortType[] { BertClassifierPortObject.TYPE, BufferedDataTable.TYPE });
 	}
 
 	@Override
@@ -80,12 +80,14 @@ public class BertClassifierNodeModel extends NodeModel {
 		BertModelPortObject bertModel = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
 		FileStore fileStore = exec.createFileStore("model");
 
-		runTrain(bertModel.getModel(), fileStore, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
+		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore,
+				(BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
 
-		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength()) };
+		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength()),
+				statsTable };
 	}
 
-	private void runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
+	private BufferedDataTable runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException, InvalidSettingsException {
 		try (BertCommands commands = new BertCommands()) {
@@ -93,6 +95,7 @@ public class BertClassifierNodeModel extends NodeModel {
 			commands.executeInKernel(
 					getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), calcClassCout(inTable)),
 					exec.createSubProgress(0.9));
+			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0));
 		}
 	}
 
@@ -122,7 +125,7 @@ public class BertClassifierNodeModel extends NodeModel {
 	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
-		b.a("BertClassifier.run_train(").n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_train(").n();
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);
@@ -136,6 +139,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		b.a("epochs = ").a(settings.getEpochs()).a(",").n();
 		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
 		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
+		b.a("validation_split = ").a(settings.getValidationSplit()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();
@@ -144,7 +148,7 @@ public class BertClassifierNodeModel extends NodeModel {
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
-		return new PortObjectSpec[] { createSpec() };
+		return new PortObjectSpec[] { createSpec(), null };
 	}
 
 	private static BertClassifierPortObjectSpec createSpec() {

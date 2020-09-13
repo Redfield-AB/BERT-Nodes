@@ -17,5 +17,6 @@
 		<inPort name="BERT Model" index="0">BERT Model</inPort>
 		<inPort name="Data Table" index="1">Data Table</inPort>
 		<outPort name="BERT Classifier" index="0">BERT Classifier model</outPort>
+		<outPort name="Stats" index="1">Stats</outPort>
     </ports>    
 </knimeNode>

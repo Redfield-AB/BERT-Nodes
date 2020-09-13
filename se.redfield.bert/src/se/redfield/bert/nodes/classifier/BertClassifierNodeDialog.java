@@ -91,6 +91,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 
 		Box box = new Box((BoxLayout.Y_AXIS));
 		box.add(createTrainingSettingsPanel());
+		box.add(createValidationSettingsPanel());
 		box.add(optimizer);
 		return box;
 	}
@@ -110,6 +111,22 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		box.add(batchSize.getComponentPanel());
 		box.add(fineTuneBert.getComponentPanel());
 		box.setBorder(BorderFactory.createTitledBorder("Training settings"));
+		return box;
+	}
+
+	private JComponent createValidationSettingsPanel() {
+		DialogComponentBoolean enableValidation = new DialogComponentBoolean(settings.getEnableValidationModel(),
+				"Use a fraction of the training data as validation");
+		DialogComponentNumber validationFraction = new DialogComponentNumber(settings.getValidationFractionModel(),
+				"Fraction[%]: ", 1);
+
+		enableValidation.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+		validationFraction.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+
+		Box box = new Box(BoxLayout.Y_AXIS);
+		box.add(enableValidation.getComponentPanel());
+		box.add(validationFraction.getComponentPanel());
+		box.setBorder(BorderFactory.createTitledBorder("Validation data set"));
 		return box;
 	}
 

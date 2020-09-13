@@ -21,6 +21,7 @@ class ProgressCallback(Callback):
         self.processed_batches = 0
         self.processed_epochs = 0
         self.last_progress = 0
+        self.logs = []
 
     def on_tokenize_rows_end(self, rows):
         self.tokenized_count = rows
@@ -34,6 +35,7 @@ class ProgressCallback(Callback):
         self.on_predict_batch_end(batch, logs=logs)
 
     def on_epoch_end(self, epoch, logs=None):
+        self.logs.append(logs.copy())
         self.processed_epochs = epoch + 1
         self.processed_batches = 0
         self.report_progress()

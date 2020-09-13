@@ -43,7 +43,7 @@ class BertClassifier:
         for index, label in enumerate(model.class_dict.numpy()):
             self.class_dict[label.decode()] = index
 
-    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False):
+    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_split = 0.0):
         ids, masks, segments = self.tokenize(table, progress_logger)
 
         self.class_dict, y_train = self.classes_to_ids(table, class_column)
@@ -54,7 +54,8 @@ class BertClassifier:
         self.model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['accuracy'])
-        self.model.fit(x=[ids, masks, segments],y=y_train,epochs=epochs, batch_size=batch_size, shuffle=True, callbacks=[progress_logger])
+        self.model.fit(x=[ids, masks, segments], y=y_train,epochs=epochs, batch_size=batch_size,
+            shuffle=True, validation_split=validation_split, callbacks=[progress_logger])
     
     def save(self, path):
         self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
@@ -101,7 +102,8 @@ class BertClassifier:
         second_sentence_column = None,
         batch_size = 20,
         epochs = 3,
-        fine_tune_bert = False
+        fine_tune_bert = False,
+        validation_split = 0.0
     ):
         bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
         tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file, bert_layer.resolved_object.do_lower_case,
@@ -109,8 +111,11 @@ class BertClassifier:
         classifier = BertClassifier(tokenizer=tokenizer, bert_layer=bert_layer, class_count=class_count)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
-        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert)
+        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_split)
         classifier.save(file_store)
+
+        output_table = pd.DataFrame(progress_logger.logs)
+        return output_table
     
     @classmethod
     def run_predict(cls,
