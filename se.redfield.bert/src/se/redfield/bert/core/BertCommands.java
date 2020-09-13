@@ -60,8 +60,10 @@ public class BertCommands implements AutoCloseable {
 		PythonKernelOptions options = getKernelOptions();
 		PythonCommand command = getCommand();
 		try {
-			return PythonKernelQueue.getNextKernel(command, Collections.emptySet(), Collections.emptySet(), options,
-					PythonCancelable.NOT_CANCELABLE);
+			PythonKernel kernel = PythonKernelQueue.getNextKernel(command, Collections.emptySet(),
+					Collections.emptySet(), options, PythonCancelable.NOT_CANCELABLE);
+			kernel.execute("import tensorflow as tf");
+			return kernel;
 		} catch (PythonIOException e) {
 			final String msg = !Strings.isNullOrEmpty(e.getMessage())
 					? "An error occurred while trying to launch Python: " + e.getMessage()

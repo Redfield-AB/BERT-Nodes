@@ -39,6 +39,7 @@ public class BertClassifierSettings {
 	private static final String KEY_EPOCHS = "epochs";
 	private static final String KEY_BATCH_SIZE = "batchSize";
 	private static final String KEY_FINE_TUNE_BERT = "fineTuneBert";
+	private static final String KEY_OPTIMIZER = "optimizer";
 
 	private final SettingsModelString sentenceColumn;
 	private final SettingsModelIntegerBounded maxSeqLength;
@@ -46,6 +47,7 @@ public class BertClassifierSettings {
 	private final SettingsModelIntegerBounded epochs;
 	private final SettingsModelIntegerBounded batchSize;
 	private final SettingsModelBoolean fineTuneBert;
+	private OptimizerSettings optimizer;
 
 	/**
 	 * Creates new instance
@@ -57,6 +59,7 @@ public class BertClassifierSettings {
 		epochs = new SettingsModelIntegerBounded(KEY_EPOCHS, 1, 1, Integer.MAX_VALUE);
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
+		optimizer = new OptimizerSettings(KEY_OPTIMIZER);
 	}
 
 	/**
@@ -71,6 +74,7 @@ public class BertClassifierSettings {
 		epochs.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
 		fineTuneBert.saveSettingsTo(settings);
+		optimizer.saveSettingsTo(settings);
 	}
 
 	/**
@@ -140,6 +144,7 @@ public class BertClassifierSettings {
 		epochs.loadSettingsFrom(settings);
 		batchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
+		optimizer.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -224,5 +229,19 @@ public class BertClassifierSettings {
 	 */
 	public boolean getFineTuneBert() {
 		return fineTuneBert.getBooleanValue();
+	}
+
+	/**
+	 * @return the optimizer settings.
+	 */
+	public OptimizerSettings getOptimizerSettings() {
+		return optimizer;
+	}
+
+	/**
+	 * @return the Python representation of the current optimizer
+	 */
+	public String getOptimizer() {
+		return optimizer.getOptimizer().getBackendRepresentation();
 	}
 }

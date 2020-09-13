@@ -34,6 +34,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertClassifierSettings;
+import se.redfield.bert.setting.ui.OptimizerSettingsEditor;
 
 /**
  * 
@@ -48,6 +49,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 
 	private DialogComponentColumnNameSelection sentenceColumn;
 	private DialogComponentColumnNameSelection classColumn;
+	private OptimizerSettingsEditor optimizer;
 
 	/**
 	 * Creates new instance
@@ -84,7 +86,13 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 	}
 
 	private JComponent createAdvancedSettingsTab() {
-		return createTrainingSettingsPanel();
+		optimizer = new OptimizerSettingsEditor(settings.getOptimizerSettings());
+		optimizer.setBorder(BorderFactory.createTitledBorder("Optimizer"));
+
+		Box box = new Box((BoxLayout.Y_AXIS));
+		box.add(createTrainingSettingsPanel());
+		box.add(optimizer);
+		return box;
 	}
 
 	private JComponent createTrainingSettingsPanel() {
@@ -115,6 +123,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 
 		sentenceColumn.loadSettingsFrom(settings, specs);
 		classColumn.loadSettingsFrom(settings, specs);
+		optimizer.settingsLoaded();
 	}
 
 	@Override

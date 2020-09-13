@@ -43,7 +43,7 @@ class BertClassifier:
         for index, label in enumerate(model.class_dict.numpy()):
             self.class_dict[label.decode()] = index
 
-    def train(self, table, class_column, batch_size, epochs, progress_logger, fine_tune_bert = False):
+    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False):
         ids, masks, segments = self.tokenize(table, progress_logger)
 
         self.class_dict, y_train = self.classes_to_ids(table, class_column)
@@ -52,7 +52,7 @@ class BertClassifier:
             self.model.layers[3].trainable = False
 
         self.model.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(1e-5),
+                  optimizer=optimizer,
                   metrics=['accuracy'])
         self.model.fit(x=[ids, masks, segments],y=y_train,epochs=epochs, batch_size=batch_size, shuffle=True, callbacks=[progress_logger])
     
@@ -95,6 +95,7 @@ class BertClassifier:
         class_column,
         class_count,
         file_store,
+        optimizer,
         tfhub_cache_dir = None,
         max_seq_length = 128,
         second_sentence_column = None,
@@ -108,7 +109,7 @@ class BertClassifier:
         classifier = BertClassifier(tokenizer=tokenizer, bert_layer=bert_layer, class_count=class_count)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
-        classifier.train(input_table, class_column, batch_size, epochs, progress_logger, fine_tune_bert)
+        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert)
         classifier.save(file_store)
     
     @classmethod

@@ -135,6 +135,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		b.a("class_count = ").a(classCount).a(",").n();
 		b.a("epochs = ").a(settings.getEpochs()).a(",").n();
 		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
+		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();
