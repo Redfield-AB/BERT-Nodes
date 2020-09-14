@@ -264,6 +264,237 @@ public class OptimizerSettings {
 		}
 	}
 
+	private static class AdadeltaOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_RHO = "rho";
+		private static final String KEY_EPSILON = "epsilon";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded rho;
+		private final SettingsModelDoubleBounded epsilon;
+
+		public AdadeltaOptimizer() {
+			super(OptimizerType.ADADELTA);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			rho = new SettingsModelDoubleBounded(KEY_RHO, 0.95, 0, Double.MAX_VALUE);
+			epsilon = new SettingsModelDoubleBounded(KEY_EPSILON, 1e-7, 0, Double.MAX_VALUE);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, rho, epsilon);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new AdadeltaDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("rho", DLPythonUtils.toPython(rho.getDoubleValue()));
+			params.put("epsilon", DLPythonUtils.toPython(epsilon.getDoubleValue()));
+		}
+
+		private class AdadeltaDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public AdadeltaDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(rho, "Decay rate");
+				addNumberEditRowComponent(epsilon, "Epsilon");
+			}
+		}
+	}
+
+	private static class AdagradOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_INITIAL_ACC = "initial_accumulator_value";
+		private static final String KEY_EPSILON = "epsilon";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded initialAcc;
+		private final SettingsModelDoubleBounded epsilon;
+
+		public AdagradOptimizer() {
+			super(OptimizerType.ADAGRAD);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			initialAcc = new SettingsModelDoubleBounded(KEY_INITIAL_ACC, 0.1, 0, Double.MAX_VALUE);
+			epsilon = new SettingsModelDoubleBounded(KEY_EPSILON, 1e-7, 0, Double.MAX_VALUE);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, initialAcc, epsilon);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new AdagradDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("initial_accumulator_value", DLPythonUtils.toPython(initialAcc.getDoubleValue()));
+			params.put("epsilon", DLPythonUtils.toPython(epsilon.getDoubleValue()));
+		}
+
+		private class AdagradDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public AdagradDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(initialAcc, "Initial accumulator value");
+				addNumberEditRowComponent(epsilon, "Epsilon");
+			}
+		}
+	}
+
+	private static class AdamaxOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_BETA_1 = "beta_1";
+		private static final String KEY_BETA_2 = "beta_2";
+		private static final String KEY_EPSILON = "epsilon";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded beta1;
+		private final SettingsModelDoubleBounded beta2;
+		private final SettingsModelDoubleBounded epsilon;
+
+		public AdamaxOptimizer() {
+			super(OptimizerType.ADAMAX);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			beta1 = new SettingsModelDoubleBounded(KEY_BETA_1, 0.9, Math.nextUp(0), Math.nextDown(1));
+			beta2 = new SettingsModelDoubleBounded(KEY_BETA_2, 0.999, Math.nextUp(0), Math.nextDown(1));
+			epsilon = new SettingsModelDoubleBounded(KEY_EPSILON, 1e-7, 0, Double.MAX_VALUE);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, beta1, beta2, epsilon);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new AdamaxDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("beta_1", DLPythonUtils.toPython(beta1.getDoubleValue()));
+			params.put("beta_2", DLPythonUtils.toPython(beta2.getDoubleValue()));
+			params.put("epsilon", DLPythonUtils.toPython(epsilon.getDoubleValue()));
+		}
+
+		private class AdamaxDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public AdamaxDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(beta1, "Beta 1");
+				addNumberEditRowComponent(beta2, "Beta 2");
+				addNumberEditRowComponent(epsilon, "Epsilon");
+			}
+		}
+	}
+
+	private static class NAdamOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_BETA_1 = "beta_1";
+		private static final String KEY_BETA_2 = "beta_2";
+		private static final String KEY_EPSILON = "epsilon";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded beta1;
+		private final SettingsModelDoubleBounded beta2;
+		private final SettingsModelDoubleBounded epsilon;
+
+		public NAdamOptimizer() {
+			super(OptimizerType.NADAM);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			beta1 = new SettingsModelDoubleBounded(KEY_BETA_1, 0.9, Math.nextUp(0), Math.nextDown(1));
+			beta2 = new SettingsModelDoubleBounded(KEY_BETA_2, 0.999, Math.nextUp(0), Math.nextDown(1));
+			epsilon = new SettingsModelDoubleBounded(KEY_EPSILON, 1e-7, 0, Double.MAX_VALUE);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, beta1, beta2, epsilon);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new NAdamDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("beta_1", DLPythonUtils.toPython(beta1.getDoubleValue()));
+			params.put("beta_2", DLPythonUtils.toPython(beta2.getDoubleValue()));
+			params.put("epsilon", DLPythonUtils.toPython(epsilon.getDoubleValue()));
+		}
+
+		private class NAdamDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public NAdamDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(beta1, "Beta 1");
+				addNumberEditRowComponent(beta2, "Beta 2");
+				addNumberEditRowComponent(epsilon, "Epsilon");
+			}
+		}
+	}
+
+	private static class RmsPropOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_RHO = "rho";
+		private static final String KEY_MOMENTUM = "momentum";
+		private static final String KEY_EPSILON = "epsilon";
+		private static final String KEY_CENTERED = "centered";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded rho;
+		private final SettingsModelDoubleBounded momentum;
+		private final SettingsModelDoubleBounded epsilon;
+		private final SettingsModelBoolean centered;
+
+		public RmsPropOptimizer() {
+			super(OptimizerType.RMSPROP);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			rho = new SettingsModelDoubleBounded(KEY_RHO, 0.9, 0, Double.MAX_VALUE);
+			momentum = new SettingsModelDoubleBounded(KEY_MOMENTUM, 0, 0, Double.MAX_VALUE);
+			epsilon = new SettingsModelDoubleBounded(KEY_EPSILON, 1e-7, 0, Double.MAX_VALUE);
+			centered = new SettingsModelBoolean(KEY_CENTERED, false);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, rho, momentum, epsilon, centered);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new RmsPropDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("rho", DLPythonUtils.toPython(rho.getDoubleValue()));
+			params.put("momentum", DLPythonUtils.toPython(momentum.getDoubleValue()));
+			params.put("epsilon", DLPythonUtils.toPython(epsilon.getDoubleValue()));
+			params.put("centered", DLPythonUtils.toPython(centered.getBooleanValue()));
+
+		}
+
+		private class RmsPropDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public RmsPropDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(rho, "Discounting factor");
+				addNumberEditRowComponent(momentum, "Momentum");
+				addNumberEditRowComponent(epsilon, "Epsilon");
+				addCheckboxRow(centered, "Centered", true);
+			}
+		}
+	}
+
 	/**
 	 * Enum representing available Keras optimizers.
 	 * 
@@ -278,7 +509,27 @@ public class OptimizerSettings {
 		/**
 		 * SGD optimizer
 		 */
-		SGD("SGD", "tf.keras.optimizers.SGD", SGDOptimizer::new);
+		SGD("SGD", "tf.keras.optimizers.SGD", SGDOptimizer::new),
+		/**
+		 * Adadelta optimizer
+		 */
+		ADADELTA("Adadelta", "tf.keras.optimizers.Adadelta", AdadeltaOptimizer::new),
+		/**
+		 * Adagrad optimizer
+		 */
+		ADAGRAD("Adagrad", "tf.keras.optimizers.Adagrad", AdagradOptimizer::new),
+		/**
+		 * Adamax optimizer
+		 */
+		ADAMAX("Adamax", "tf.keras.optimizers.Adamax", AdamaxOptimizer::new),
+		/**
+		 * NAdam optimizer
+		 */
+		NADAM("NAdam", "tf.keras.optimizers.Nadam", NAdamOptimizer::new),
+		/**
+		 * RMSprop optimizer
+		 */
+		RMSPROP("RMSprop", "tf.keras.optimizers.RMSprop", RmsPropOptimizer::new);
 
 		private String title;
 		private String identifier;
