@@ -495,6 +495,63 @@ public class OptimizerSettings {
 		}
 	}
 
+	private static class FtrlOptimizer extends Optimizer {
+		private static final String KEY_LEARNING_RATE = "learning_rate";
+		private static final String KEY_LEARNING_RATE_POWER = "learning_rate_power";
+		private static final String KEY_INITIAL_ACC = "initial_accumulator_value";
+		private static final String KEY_L1_STRENGTH = "l1_regularization_strength";
+		private static final String KEY_L2_STRENGTH = "l2_regularization_strength";
+		private static final String KEY_L2_SHRINKAGE = "l2_shrinkage_regularization_strength";
+
+		private final SettingsModelDoubleBounded learningRate;
+		private final SettingsModelDoubleBounded learningRatePower;
+		private final SettingsModelDoubleBounded initialAcc;
+		private final SettingsModelDoubleBounded l1Strength;
+		private final SettingsModelDoubleBounded l2Strength;
+		private final SettingsModelDoubleBounded l2Shrinkage;
+
+		public FtrlOptimizer() {
+			super(OptimizerType.FTRL);
+			learningRate = new SettingsModelDoubleBounded(KEY_LEARNING_RATE, 0.001, 0, Double.MAX_VALUE);
+			learningRatePower = new SettingsModelDoubleBounded(KEY_LEARNING_RATE_POWER, -0.5, -Double.MAX_VALUE, 0);
+			initialAcc = new SettingsModelDoubleBounded(KEY_INITIAL_ACC, 0.1, 0, Double.MAX_VALUE);
+			l1Strength = new SettingsModelDoubleBounded(KEY_L1_STRENGTH, 0, 0, Double.MAX_VALUE);
+			l2Strength = new SettingsModelDoubleBounded(KEY_L2_STRENGTH, 0, 0, Double.MAX_VALUE);
+			l2Shrinkage = new SettingsModelDoubleBounded(KEY_L2_SHRINKAGE, 0, 0, Double.MAX_VALUE);
+		}
+
+		@Override
+		protected Collection<SettingsModel> getSettings() {
+			return Arrays.asList(learningRate, learningRatePower, initialAcc, l1Strength, l2Strength, l2Shrinkage);
+		}
+
+		@Override
+		protected IDialogComponentGroup createEditor() {
+			return new FtrlDialogGroup();
+		}
+
+		@Override
+		protected void populateParams(Map<String, String> params) {
+			params.put("learning_rate", DLPythonUtils.toPython(learningRate.getDoubleValue()));
+			params.put("learning_rate_power", DLPythonUtils.toPython(learningRatePower.getDoubleValue()));
+			params.put("initial_accumulator_value", DLPythonUtils.toPython(initialAcc.getDoubleValue()));
+			params.put("l1_regularization_strength", DLPythonUtils.toPython(l1Strength.getDoubleValue()));
+			params.put("l2_regularization_strength", DLPythonUtils.toPython(l2Strength.getDoubleValue()));
+			params.put("l2_shrinkage_regularization_strength", DLPythonUtils.toPython(l2Shrinkage.getDoubleValue()));
+		}
+
+		private class FtrlDialogGroup extends AbstractGridBagDialogComponentGroup {
+			public FtrlDialogGroup() {
+				addNumberEditRowComponent(learningRate, "Learning rate");
+				addNumberEditRowComponent(learningRatePower, "Learning rate power");
+				addNumberEditRowComponent(initialAcc, "Initial accumulator value");
+				addNumberEditRowComponent(l1Strength, "L1 regularization strength");
+				addNumberEditRowComponent(l2Strength, "L2 regularization strength");
+				addNumberEditRowComponent(l2Shrinkage, "L2 shrinkage regularization strength");
+			}
+		}
+	}
+
 	/**
 	 * Enum representing available Keras optimizers.
 	 * 
@@ -529,7 +586,11 @@ public class OptimizerSettings {
 		/**
 		 * RMSprop optimizer
 		 */
-		RMSPROP("RMSprop", "tf.keras.optimizers.RMSprop", RmsPropOptimizer::new);
+		RMSPROP("RMSprop", "tf.keras.optimizers.RMSprop", RmsPropOptimizer::new),
+		/**
+		 * FTRL optimizer
+		 */
+		FTRL("FTRL", "tf.keras.optimizers.Ftrl", FtrlOptimizer::new);
 
 		private String title;
 		private String identifier;
