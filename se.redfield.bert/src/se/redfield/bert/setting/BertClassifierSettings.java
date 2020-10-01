@@ -40,8 +40,6 @@ public class BertClassifierSettings {
 	private static final String KEY_BATCH_SIZE = "batchSize";
 	private static final String KEY_FINE_TUNE_BERT = "fineTuneBert";
 	private static final String KEY_OPTIMIZER = "optimizer";
-	private static final String KEY_ENABLE_VALIDATION = "enableValidation";
-	private static final String KEY_VALIDATION_FRACTION = "validationFraction";
 
 	private final SettingsModelString sentenceColumn;
 	private final SettingsModelIntegerBounded maxSeqLength;
@@ -50,8 +48,6 @@ public class BertClassifierSettings {
 	private final SettingsModelIntegerBounded batchSize;
 	private final SettingsModelBoolean fineTuneBert;
 	private OptimizerSettings optimizer;
-	private final SettingsModelBoolean enableValidation;
-	private final SettingsModelIntegerBounded validationFraction;
 
 	/**
 	 * Creates new instance
@@ -64,11 +60,6 @@ public class BertClassifierSettings {
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
 		optimizer = new OptimizerSettings(KEY_OPTIMIZER);
-		enableValidation = new SettingsModelBoolean(KEY_ENABLE_VALIDATION, false);
-		validationFraction = new SettingsModelIntegerBounded(KEY_VALIDATION_FRACTION, 0, 0, 99);
-
-		validationFraction.setEnabled(false);
-		enableValidation.addChangeListener(e -> validationFraction.setEnabled(enableValidation.getBooleanValue()));
 	}
 
 	/**
@@ -84,8 +75,6 @@ public class BertClassifierSettings {
 		batchSize.saveSettingsTo(settings);
 		fineTuneBert.saveSettingsTo(settings);
 		optimizer.saveSettingsTo(settings);
-		validationFraction.saveSettingsTo(settings);
-		enableValidation.saveSettingsTo(settings);
 	}
 
 	/**
@@ -101,8 +90,6 @@ public class BertClassifierSettings {
 		epochs.validateSettings(settings);
 		batchSize.validateSettings(settings);
 		fineTuneBert.validateSettings(settings);
-		validationFraction.validateSettings(settings);
-		enableValidation.validateSettings(settings);
 
 		BertClassifierSettings temp = new BertClassifierSettings();
 		temp.loadSettingsFrom(settings);
@@ -127,20 +114,27 @@ public class BertClassifierSettings {
 	/**
 	 * Validates the settings against input table spec.
 	 * 
-	 * @param spec Input table spec.
+	 * @param spec           Input table spec.
+	 * @param validationSpec Optional validation table spec.
 	 * @throws InvalidSettingsException
 	 */
-	public void validate(DataTableSpec spec) throws InvalidSettingsException {
+	public void validate(DataTableSpec spec, DataTableSpec validationSpec) throws InvalidSettingsException {
 		validate();
 
 		String sc = sentenceColumn.getStringValue();
 		if (!spec.containsName(sc)) {
 			throw new InvalidSettingsException("Input table doesn't contain column: " + sc);
 		}
+		if (validationSpec != null && !validationSpec.containsName(sc)) {
+			throw new InvalidSettingsException("Validation table doesn't contain sentence column: " + sc);
+		}
 
 		String cc = classColumn.getStringValue();
 		if (!spec.containsName(cc)) {
 			throw new InvalidSettingsException("Input table doesn't contain column: " + cc);
+		}
+		if (validationSpec != null && !validationSpec.containsName(cc)) {
+			throw new InvalidSettingsException("Validation table doesn't contain class column: " + cc);
 		}
 	}
 
@@ -158,8 +152,6 @@ public class BertClassifierSettings {
 		batchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
 		optimizer.loadSettingsFrom(settings);
-		validationFraction.loadSettingsFrom(settings);
-		enableValidation.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -258,31 +250,5 @@ public class BertClassifierSettings {
 	 */
 	public String getOptimizer() {
 		return optimizer.getOptimizer().getBackendRepresentation();
-	}
-
-	/**
-	 * @return the enableValidation model.
-	 */
-	public SettingsModelBoolean getEnableValidationModel() {
-		return enableValidation;
-	}
-
-	/**
-	 * @return the validationFraction model.
-	 */
-	public SettingsModelIntegerBounded getValidationFractionModel() {
-		return validationFraction;
-	}
-
-	/**
-	 * Returns the fraction of the training dataset to use as validation data.
-	 * 
-	 * @return value between 0 and 1 representing validaton_split
-	 */
-	public double getValidationSplit() {
-		if (enableValidation.getBooleanValue()) {
-			return validationFraction.getIntValue() / 100.0;
-		}
-		return 0.0;
 	}
 }

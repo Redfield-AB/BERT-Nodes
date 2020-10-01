@@ -43,7 +43,7 @@ class BertClassifier:
         for index, label in enumerate(model.class_dict.numpy()):
             self.class_dict[label.decode()] = index
 
-    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_split = 0.0):
+    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_table = None):
         ids, masks, segments = self.tokenize(table, progress_logger)
 
         self.class_dict, y_train = self.classes_to_ids(table, class_column)
@@ -51,11 +51,17 @@ class BertClassifier:
         if(not fine_tune_bert):
             self.model.layers[3].trainable = False
 
+        validation_data = None
+        if(validation_table is not None):
+            ids_val, masks_val, segments_val = self.tokenize(validation_table, None)
+            y_val = to_categorical(validation_table[class_column].map(self.class_dict).values)
+            validation_data = ([ids_val, masks_val, segments_val], y_val)
+
         self.model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['accuracy'])
         self.model.fit(x=[ids, masks, segments], y=y_train,epochs=epochs, batch_size=batch_size,
-            shuffle=True, validation_split=validation_split, callbacks=[progress_logger])
+            shuffle=True, validation_data=validation_data, callbacks=[progress_logger])
     
     def save(self, path):
         self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
@@ -103,7 +109,7 @@ class BertClassifier:
         batch_size = 20,
         epochs = 3,
         fine_tune_bert = False,
-        validation_split = 0.0
+        validation_table = None
     ):
         bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
         tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file, bert_layer.resolved_object.do_lower_case,
@@ -111,7 +117,7 @@ class BertClassifier:
         classifier = BertClassifier(tokenizer=tokenizer, bert_layer=bert_layer, class_count=class_count)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
-        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_split)
+        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table)
         classifier.save(file_store)
 
         output_table = pd.DataFrame(progress_logger.logs)

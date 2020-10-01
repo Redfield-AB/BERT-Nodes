@@ -29,7 +29,7 @@ class BertTokenizer:
             input_segments.append(segments)
 
             current_count += 1
-            if(current_count % 10 == 0): 
+            if(current_count % 10 == 0 and progress_logger): 
                 progress_logger.on_tokenize_rows_end(current_count)
 
         return input_ids, input_masks, input_segments

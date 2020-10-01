@@ -16,6 +16,7 @@
     <ports>
 		<inPort name="BERT Model" index="0">BERT Model</inPort>
 		<inPort name="Data Table" index="1">Data Table</inPort>
+		<inPort name="Validation Table" index="2">Validation Table</inPort>
 		<outPort name="BERT Classifier" index="0">BERT Classifier model</outPort>
 		<outPort name="Stats" index="1">Stats</outPort>
     </ports>    

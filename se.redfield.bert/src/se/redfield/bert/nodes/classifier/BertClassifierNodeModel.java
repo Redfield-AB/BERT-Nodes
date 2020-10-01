@@ -68,10 +68,15 @@ public class BertClassifierNodeModel extends NodeModel {
 	 */
 	public static final int PORT_DATA_TABLE = 1;
 
+	/**
+	 * Validation table input port index.
+	 */
+	public static final int PORT_VALIDATION_TABLE = 2;
+
 	private final BertClassifierSettings settings = new BertClassifierSettings();
 
 	protected BertClassifierNodeModel() {
-		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
+		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE, BufferedDataTable.TYPE_OPTIONAL },
 				new PortType[] { BertClassifierPortObject.TYPE, BufferedDataTable.TYPE });
 	}
 
@@ -81,25 +86,31 @@ public class BertClassifierNodeModel extends NodeModel {
 		FileStore fileStore = exec.createFileStore("model");
 
 		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore,
-				(BufferedDataTable) inObjects[PORT_DATA_TABLE], exec);
+				(BufferedDataTable) inObjects[PORT_DATA_TABLE], (BufferedDataTable) inObjects[PORT_VALIDATION_TABLE],
+				exec);
 
 		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength()),
 				statsTable };
 	}
 
 	private BufferedDataTable runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
-			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
-			PythonIOException, CanceledExecutionException, InvalidSettingsException {
+			BufferedDataTable validationTable, ExecutionContext exec) throws PythonKernelCleanupException,
+			DLInvalidEnvironmentException, PythonIOException, CanceledExecutionException, InvalidSettingsException {
 		try (BertCommands commands = new BertCommands()) {
-			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.executeInKernel(
-					getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), calcClassCout(inTable)),
-					exec.createSubProgress(0.9));
+			commands.putDataTable(inTable, exec.createSubProgress(validationTable == null ? 0.1 : 0.05));
+			if (validationTable != null) {
+				commands.putDataTable("validation_table", validationTable, exec.createSubProgress(0.05));
+			}
+
+			int classCount = calcClassCout(inTable, validationTable);
+			commands.executeInKernel(getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), classCount,
+					validationTable != null), exec.createSubProgress(0.9));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0));
 		}
 	}
 
-	private int calcClassCout(BufferedDataTable inTable) throws InvalidSettingsException {
+	private int calcClassCout(BufferedDataTable inTable, BufferedDataTable validationTable)
+			throws InvalidSettingsException {
 		Set<String> values = new HashSet<>();
 		int idx = inTable.getSpec().findColumnIndex(settings.getClassColumn());
 
@@ -113,6 +124,23 @@ public class BertClassifierNodeModel extends NodeModel {
 			values.add(c.toString());
 		}
 
+		if (validationTable != null) {
+			for (DataRow row : validationTable) {
+				DataCell c = row.getCell(idx);
+
+				if (c.isMissing()) {
+					throw new MissingValueException((MissingValue) c,
+							"Validation table: class column contains missing values");
+				}
+
+				String val = c.toString();
+				if (!values.contains(val)) {
+					throw new InvalidSettingsException(
+							"Validation table contains class missing from the training table: " + val);
+				}
+			}
+		}
+
 		int classCount = values.size();
 
 		if (classCount < 2) {
@@ -122,7 +150,8 @@ public class BertClassifierNodeModel extends NodeModel {
 		return classCount;
 	}
 
-	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount) {
+	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount,
+			boolean hasValidationTable) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_train(").n();
@@ -139,7 +168,9 @@ public class BertClassifierNodeModel extends NodeModel {
 		b.a("epochs = ").a(settings.getEpochs()).a(",").n();
 		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
 		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
-		b.a("validation_split = ").a(settings.getValidationSplit()).a(",").n();
+		if (hasValidationTable) {
+			b.a("validation_table = validation_table,").n();
+		}
 		b.a(")").n();
 
 		return b.toString();
@@ -147,7 +178,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE], (DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
 		return new PortObjectSpec[] { createSpec(), null };
 	}
 
