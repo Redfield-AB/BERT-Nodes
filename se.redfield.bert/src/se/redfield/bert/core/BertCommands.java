@@ -15,6 +15,7 @@
  */
 package se.redfield.bert.core;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,8 +76,7 @@ public class BertCommands implements AutoCloseable {
 	}
 
 	private static PythonKernelOptions getKernelOptions() {
-		// TODO add bert as required module
-		return new PythonKernelOptions();
+		return new PythonKernelOptions().forAddedAdditionalRequiredModuleNames(Arrays.asList("bert", "tensorflow_hub"));
 	}
 
 	private static PythonCommand getCommand() {
