@@ -45,7 +45,7 @@ public class BertTokenizerNodeDialog extends NodeDialogPane {
 		inputSettingsEditor = new InputSettingsEditor(settings.getInputSettings(),
 				BertTokenizerNodeModel.PORT_INPUT_TABLE);
 
-		addTab("Settings", inputSettingsEditor);
+		addTab("Settings", inputSettingsEditor.getComponentGroupPanel());
 	}
 
 	@Override

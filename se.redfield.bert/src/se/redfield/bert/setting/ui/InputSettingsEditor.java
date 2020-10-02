@@ -15,18 +15,15 @@
  */
 package se.redfield.bert.setting.ui;
 
-import java.awt.FlowLayout;
-
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
+import javax.swing.JLabel;
 
 import org.knime.core.data.StringValue;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.InputSettings;
 
@@ -37,11 +34,7 @@ import se.redfield.bert.setting.InputSettings;
  * @author Alexander Bondaletov
  *
  */
-public class InputSettingsEditor extends JPanel {
-	private static final long serialVersionUID = 1L;
-
-	private final InputSettings settings;
-	private final int specIndex;
+public class InputSettingsEditor extends AbstractGridBagDialogComponentGroup {
 
 	private DialogComponentColumnNameSelection firstSentenceColumn;
 	private DialogComponentColumnNameSelection secondSentenceColumn;
@@ -52,33 +45,19 @@ public class InputSettingsEditor extends JPanel {
 	 * @param settings  The settings object.
 	 * @param specIndex Input data table spec index.
 	 */
-	public InputSettingsEditor(InputSettings settings, int specIndex) {
-		this.settings = settings;
-		this.specIndex = specIndex;
-		iniUI();
-	}
-
 	@SuppressWarnings("unchecked")
-	private void iniUI() {
-		firstSentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(),
-				"Sentence column", specIndex, true, StringValue.class);
-		secondSentenceColumn = new DialogComponentColumnNameSelection(settings.getSecondSentenceColumnModel(),
-				"Second sentence column", specIndex, StringValue.class);
-		DialogComponentBoolean twoSentenceMode = new DialogComponentBoolean(settings.getTwoSentenceModeModel(),
-				"Two-sentence mode");
-		DialogComponentNumber maxSeqLenght = new DialogComponentNumber(settings.getMaxSeqLengthModel(),
-				"Max sequence length", 1);
+	public InputSettingsEditor(InputSettings settings, int specIndex) {
+		firstSentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "", specIndex,
+				true, StringValue.class);
+		secondSentenceColumn = new DialogComponentColumnNameSelection(settings.getSecondSentenceColumnModel(), "",
+				specIndex, StringValue.class);
 
-		firstSentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		secondSentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		twoSentenceMode.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		maxSeqLenght.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-
-		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		add(firstSentenceColumn.getComponentPanel());
-		add(twoSentenceMode.getComponentPanel());
-		add(secondSentenceColumn.getComponentPanel());
-		add(maxSeqLenght.getComponentPanel());
+		addDoubleColumnRow(new JLabel("Sentence column"),
+				getFirstComponent(firstSentenceColumn, ColumnSelectionPanel.class));
+		addCheckboxRow(settings.getTwoSentenceModeModel(), "Two-sencence mode", true);
+		addDoubleColumnRow(new JLabel("Second sentence column"),
+				getFirstComponent(secondSentenceColumn, ColumnSelectionPanel.class));
+		addNumberSpinnerRowComponent(settings.getMaxSeqLengthModel(), "Max sequence length", 1);
 	}
 
 	/**

@@ -15,20 +15,13 @@
  */
 package se.redfield.bert.nodes.embedder;
 
-import java.awt.FlowLayout;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.BertEmbedderSettings;
 import se.redfield.bert.setting.ui.InputSettingsEditor;
@@ -49,24 +42,10 @@ public class BertEmbedderNodeDialog extends NodeDialogPane {
 	 */
 	public BertEmbedderNodeDialog() {
 		settings = new BertEmbedderSettings();
-
-		addTab("Settings", createSettingsPanel());
-	}
-
-	private JComponent createSettingsPanel() {
-		DialogComponentNumber batchSize = new DialogComponentNumber(settings.getBatchSizeModel(), "Batch size", 1);
-		batchSize.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		DialogComponentBoolean includeSeqEmbeddings = new DialogComponentBoolean(
-				settings.getIncludeSeqEmbeddingsModel(), "Include sequence embeddings");
-		includeSeqEmbeddings.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-
 		inputSettings = new InputSettingsEditor(settings.getInputSettings(), BertEmbedderNodeModel.PORT_DATA_TABLE);
 
-		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(inputSettings);
-		box.add(batchSize.getComponentPanel());
-		box.add(includeSeqEmbeddings.getComponentPanel());
-		return box;
+		addTab("Settings", inputSettings.getComponentGroupPanel());
+		addTab("Advanced", new AdvancedTabGroup().getComponentGroupPanel());
 	}
 
 	@Override
@@ -82,5 +61,12 @@ public class BertEmbedderNodeDialog extends NodeDialogPane {
 	@Override
 	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
 		this.settings.saveSettingsTo(settings);
+	}
+
+	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup {
+		public AdvancedTabGroup() {
+			addNumberSpinnerRowComponent(settings.getBatchSizeModel(), "Batch size", 1);
+			addCheckboxRow(settings.getIncludeSeqEmbeddingsModel(), "Include sequence embeddings", true);
+		}
 	}
 }

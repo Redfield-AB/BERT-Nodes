@@ -15,12 +15,11 @@
  */
 package se.redfield.bert.nodes.classifier;
 
-import java.awt.FlowLayout;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -28,10 +27,10 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.BertClassifierSettings;
 import se.redfield.bert.setting.ui.OptimizerSettingsEditor;
@@ -54,35 +53,17 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 	/**
 	 * Creates new instance
 	 */
+	@SuppressWarnings("unchecked")
 	public BertClassifierNodeDialog() {
 		settings = new BertClassifierSettings();
 
-		addTab("Settings", createSettingsTab());
-		addTab("Advanced", createAdvancedSettingsTab());
-	}
-
-	private JComponent createSettingsTab() {
-		return createInputSettingsPanel();
-	}
-
-	@SuppressWarnings("unchecked")
-	private JComponent createInputSettingsPanel() {
 		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
 				BertClassifierNodeModel.PORT_DATA_TABLE, StringValue.class);
 		classColumn = new DialogComponentColumnNameSelection(settings.getClassColumnModel(), "Class column",
 				BertClassifierNodeModel.PORT_DATA_TABLE, StringValue.class);
-		DialogComponentNumber maxSeqLength = new DialogComponentNumber(settings.getMaxSeqLengthModel(),
-				"Max sequence length", 1);
 
-		sentenceColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		classColumn.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		maxSeqLength.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-
-		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(sentenceColumn.getComponentPanel());
-		box.add(classColumn.getComponentPanel());
-		box.add(maxSeqLength.getComponentPanel());
-		return box;
+		addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
+		addTab("Advanced", createAdvancedSettingsTab());
 	}
 
 	private JComponent createAdvancedSettingsTab() {
@@ -90,26 +71,8 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		optimizer.setBorder(BorderFactory.createTitledBorder("Optimizer"));
 
 		Box box = new Box((BoxLayout.Y_AXIS));
-		box.add(createTrainingSettingsPanel());
+		box.add(new TrainingSettingsGroup().getComponentGroupPanel());
 		box.add(optimizer);
-		return box;
-	}
-
-	private JComponent createTrainingSettingsPanel() {
-		DialogComponentNumber epochs = new DialogComponentNumber(settings.getEpochsModel(), "Numbert of epochs", 1);
-		DialogComponentNumber batchSize = new DialogComponentNumber(settings.getBatchSizeModel(), "Batch size", 1);
-		DialogComponentBoolean fineTuneBert = new DialogComponentBoolean(settings.getFineTuneBertModel(),
-				"Fine tune BERT");
-
-		epochs.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		batchSize.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-		fineTuneBert.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
-
-		Box box = new Box(BoxLayout.Y_AXIS);
-		box.add(epochs.getComponentPanel());
-		box.add(batchSize.getComponentPanel());
-		box.add(fineTuneBert.getComponentPanel());
-		box.setBorder(BorderFactory.createTitledBorder("Training settings"));
 		return box;
 	}
 
@@ -131,4 +94,21 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		this.settings.saveSettingsTo(settings);
 	}
 
+	private class SettingsTabGroup extends AbstractGridBagDialogComponentGroup {
+		public SettingsTabGroup() {
+			addDoubleColumnRow(new JLabel("Sentence column"),
+					getFirstComponent(sentenceColumn, ColumnSelectionPanel.class));
+			addDoubleColumnRow(new JLabel("Class column"), getFirstComponent(classColumn, ColumnSelectionPanel.class));
+			addNumberSpinnerRowComponent(settings.getMaxSeqLengthModel(), "Max sequence length", 1);
+		}
+	}
+
+	private class TrainingSettingsGroup extends AbstractGridBagDialogComponentGroup {
+		public TrainingSettingsGroup() {
+			addNumberSpinnerRowComponent(settings.getEpochsModel(), "Number of epochs", 1);
+			addNumberSpinnerRowComponent(settings.getBatchSizeModel(), "Batch size", 1);
+			addCheckboxRow(settings.getFineTuneBertModel(), "Fine tune BERT", true);
+			getComponentGroupPanel().setBorder(BorderFactory.createTitledBorder("Training settings"));
+		}
+	}
 }
