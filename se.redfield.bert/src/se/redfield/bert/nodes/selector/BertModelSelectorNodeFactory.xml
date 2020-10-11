@@ -3,17 +3,29 @@
     <name>BERT Model Selector</name>
     
     <shortDescription>
-        BERT Model Selector
+        The node allows downloading the model available on TensorFlow Hub.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        	BERT Model Selector
+        	The node allows downloading the model available on TensorFlow Hub.
+        	Only models provided by Google are available
+        	<a href="https://github.com/tensorflow/models/tree/master/official/nlp/bert#access-to-pretrained-hub-modules"> link</a>.
+        	The model can be cached on a disk.
         </intro>
+        <tab name="Settings">
+        	<option name="Select Model">Model selection from the TensorFlow Hub list.</option>
+        	<option name="Cache directory">A path where the models will be stored for further usage.</option>
+        	<option name="URL">
+        		An arbitrary link to a model.
+        		Use with caution since there is no guarantee that the model will be compatible with the node.
+        	</option>
+        	<option name="Selected directory">A path to a cached model on a disk.</option>
+        </tab>
         
     </fullDescription>
     
     <ports>
-		<outPort name="BERT Model" index="0">BERT Model</outPort>
+		<outPort name="BERT Model" index="0">The BERT model that was downloaded or read from cache.</outPort>
     </ports>    
 </knimeNode>

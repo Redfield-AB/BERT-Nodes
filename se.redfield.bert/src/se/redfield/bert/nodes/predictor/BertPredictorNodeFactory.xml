@@ -3,13 +3,30 @@
     <name>BERT Predictor</name>
     
     <shortDescription>
-        BERT Predictor
+        The node makes predictions for the input data based on the trained BERT model by BERT Classification Learner.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        	BERT Predictor
+        	The node makes predictions for the input data based on the trained BERT model by BERT Classification Learner.
         </intro>
+        <tab name="Settings">
+        	<option name="Sentence column">
+        		A column with a plain text (String), that contains text to be classified.
+        		No special pre-processing is needed.
+        	</option>
+        	<option name="Batch size">The size of a chunk of the input data used for model update.</option>
+        	<option name="Change prediction column name">
+        		If active a column with provided name will be created in the output table.
+        		Otherwise the default name will be used for the column with predictions.
+        	</option>
+        	<option name="Append individual class probabilities">
+        		If active the columns with class probabilities will be created in the output table.
+        	</option>
+        	<option name="Suffix for probability columns">
+        		If not empty the suffix will be added to every column name for class probabilities columns.
+        	</option>
+        </tab>
         
     </fullDescription>
     

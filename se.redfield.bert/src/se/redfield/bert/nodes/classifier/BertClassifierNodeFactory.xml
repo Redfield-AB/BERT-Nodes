@@ -3,13 +3,39 @@
     <name>BERT Classification Learner</name>
     
     <shortDescription>
-        BERT Classification Learner
+        The node uses BERT model and adds a predefined neural network on top.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        	BERT Classification Learner
+        	The node uses BERT model and adds a predefined neural network on top.
+        	There are 3 layers added:
+        	<ul>
+        		<li>GlobalAveragePooling1D layer</li>
+        		<li>Dropout layer</li>
+        		<li>Dense layer</li>
+        	</ul>
+        	The trained model can be applied for multi-class classification.
         </intro>
+        <tab name="Settings">
+        	<option name="Sentence column">
+        		A column with a plain text (String), that contains text to be classified.
+        		No special pre-processing is needed.
+        	</option>
+        	<option name="Class column">A column that contains class labels.</option>
+        	<option name="Max sequence length">The maximum length of a sequence after tokenization, limit is 512.</option>
+        </tab>
+        <tab name="Advanced">
+        	<option name="Number of epochs">The number of epochs used for training the classifier.</option>
+        	<option name="Batch size">The size of a chunk of the input data used for model update.</option>
+        	<option name="Fine tune BERT">
+        		If checked than BERT model will be trained along with the additional classifier.
+        		It takes longer time to fine tune BERT, but the results are usually better.
+        	</option>
+        	<option name="Optimizer">
+        		Available <a href="https://www.tensorflow.org/api_docs/python/tf/keras/optimizers">optimizers</a> and their configuration.
+        	</option>
+        </tab>
         
     </fullDescription>
     
