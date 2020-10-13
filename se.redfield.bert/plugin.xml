@@ -4,25 +4,29 @@
    
    <extension
          point="org.knime.workbench.repository.nodes">
+<!--         
       <node
-            category-path="/"
+            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.tokenizer.BertTokenizerNodeFactory">
       </node>
+-->      
       <node
-            category-path="/"
+            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.selector.BertModelSelectorNodeFactory">
       </node>
+<!--
       <node
-            category-path="/"
+            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory"
             id="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory">
       </node>
+-->      
       <node
-            category-path="/"
+            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.classifier.BertClassifierNodeFactory">
       </node>
       <node
-            category-path="/"
+            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.predictor.BertPredictorNodeFactory">
       </node>
    </extension>
@@ -51,5 +55,14 @@
             path="py/">
       </directory>
    </extension>
+      <extension
+            point="org.knime.workbench.repository.categories">
+         <category
+               icon="icons/redfield_logo.png"
+               level-id="bert"
+               name="BERT by Redfield"
+               path="/community">
+         </category>
+      </extension>
    
 </plugin>
