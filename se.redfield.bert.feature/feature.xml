@@ -6,7 +6,21 @@
       provider-name="Redfield AB">
 
    <description>
-      Redfield BERT Nodes
+The extension provides the nodes that allow to use Google BERT Python libarary without coding.
+Curently only classification for the texts is implemented. This extension is built on top of the TensorFlow 2 Python package, so it requires to have all dependencies installed for Python Deep Learning environment, it is also possible to execute BERT on GPU (nVidia CUDA-based).
+
+The list of Python packages the extension was tested on:
+bert==2.2.0
+bert-for-tf2==0.14.4
+Keras-Preprocessing==1.1.2
+tensorboard==2.2.2
+tensorboard-plugin-wit==1.7.0
+tensorflow==2.2.0
+tensorflow-estimator==2.2.0
+tensorflow-hub==0.8.0
+tokenizers==0.7.0
+tqdm==4.48.0
+transformers==3.0.2
    </description>
 
    <copyright>
