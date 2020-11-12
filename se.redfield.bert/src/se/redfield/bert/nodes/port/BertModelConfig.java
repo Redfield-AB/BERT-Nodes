@@ -15,9 +15,15 @@
  */
 package se.redfield.bert.nodes.port;
 
+import java.net.MalformedURLException;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.FileUtil;
+
+import se.redfield.bert.setting.BertModelSelectorSettings.BertModelSelectionMode;
 
 /**
  * Data describing selected BERT model.
@@ -26,6 +32,8 @@ import org.knime.core.node.ModelContentWO;
  *
  */
 public class BertModelConfig {
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelConfig.class);
+
 	private static final String KEY_MODE = "mode";
 	private static final String KEY_HANDLE = "handle";
 	private static final String KEY_CACHE_DIR = "cacheDir";
@@ -84,16 +92,45 @@ public class BertModelConfig {
 	}
 
 	/**
-	 * @return the BERT model handle
+	 * @return the BERT model handle as it is stored in the config
 	 */
-	public String getHandle() {
+	public String getHandleRaw() {
 		return handle;
 	}
 
 	/**
+	 * Returns the model handle. Converts any <code>knime://</code> URI to local
+	 * absolute path if necessary.
+	 * 
+	 * @return The processed handle.
+	 */
+	public String getHandle() {
+		if (BertModelSelectionMode.LOCAL_PATH.name().equals(mode)) {
+			try {
+				return toAbsolutePath(handle);
+			} catch (MalformedURLException e) {
+				LOGGER.error(e.getMessage(), e);
+			}
+		}
+		return handle;
+	}
+
+	private static String toAbsolutePath(String path) throws MalformedURLException {
+		return FileUtil.getFileFromURL(FileUtil.toURL(path)).getAbsolutePath();
+	}
+
+	/**
+	 * Returns the TFHub cache directory path. Converts any <code>knime://</code>
+	 * URI to local absolute path if necessary.
+	 * 
 	 * @return the TFHub cache directory
 	 */
 	public String getCacheDir() {
-		return cacheDir;
+		try {
+			return toAbsolutePath(cacheDir);
+		} catch (MalformedURLException e) {
+			LOGGER.error(e.getMessage(), e);
+		}
+		return "";
 	}
 }

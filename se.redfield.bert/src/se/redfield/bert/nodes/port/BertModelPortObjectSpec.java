@@ -71,7 +71,7 @@ public class BertModelPortObjectSpec extends AbstractSimplePortObjectSpec {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Selection mode: ").append(model.getMode()).append("\n");
-		sb.append("Handle: ").append(model.getHandle()).append("\n");
+		sb.append("Handle: ").append(model.getHandleRaw()).append("\n");
 		return sb.toString();
 	}
 }
