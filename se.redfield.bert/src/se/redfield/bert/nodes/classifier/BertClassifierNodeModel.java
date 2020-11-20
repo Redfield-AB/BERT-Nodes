@@ -152,9 +152,9 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount,
 			boolean hasValidationTable) {
-		DLPythonSourceCodeBuilder b = DLPythonUtils
-				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_train(").n();
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
+		b.a("from BertClassifier import ").a(bertModel.getType().getClassifierClass()).n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(bertModel.getType().getClassifierClass()).a(".run_train(").n();
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);

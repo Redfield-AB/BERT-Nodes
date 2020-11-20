@@ -1,9 +1,11 @@
+import tempfile
 import tensorflow as tf
 import numpy as np
 import pandas as pd
 from tensorflow.keras.utils import to_categorical
+from transformers import TFAutoModel
 
-from BertTokenizer import BertTokenizer
+from BertTokenizer import BertTokenizer, HFTokenizerWrap
 from ProgressCallback import ProgressCallback
 from bert_utils import load_bert_layer
 
@@ -19,14 +21,22 @@ class BertClassifier:
             raise ValueError("Either bert_layer or model parameter should be specified")
 
     def create_model(self, bert_layer, class_count):
-        self.vocab_file = bert_layer.resolved_object.vocab_file
-        self.do_lower_case = bert_layer.resolved_object.do_lower_case
+        try:
+            self.vocab_file = bert_layer.resolved_object.vocab_file
+            self.do_lower_case = bert_layer.resolved_object.do_lower_case
+        except AttributeError:
+            # do nothing, HF model
+            pass
 
         input_ids = tf.keras.layers.Input(shape=(self.tokenizer.max_seq_length,), dtype=tf.int32, name="input_ids")
         input_masks = tf.keras.layers.Input(shape=(self.tokenizer.max_seq_length,), dtype=tf.int32, name="input_masks")
         input_segments = tf.keras.layers.Input(shape=(self.tokenizer.max_seq_length,), dtype=tf.int32, name="input_segments")
 
         pooled_output, sequence_output = bert_layer([input_ids, input_masks, input_segments])
+        if(pooled_output.shape.ndims == 3 and sequence_output.shape.ndims == 2):
+            # For Hugging Face models
+            pooled_output, sequence_output = sequence_output, pooled_output
+
         x = tf.keras.layers.GlobalAveragePooling1D()(sequence_output)
         x = tf.keras.layers.Dropout(0.2)(x)
         x = tf.keras.layers.Dense(128, activation='relu')(x)
@@ -111,10 +121,8 @@ class BertClassifier:
         fine_tune_bert = False,
         validation_table = None
     ):
-        bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
-        tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file, bert_layer.resolved_object.do_lower_case,
-            max_seq_length, sentence_column, second_sentence_column)
-        classifier = BertClassifier(tokenizer=tokenizer, bert_layer=bert_layer, class_count=class_count)
+        classifier = cls.create_classifier(bert_model_handle, tfhub_cache_dir, max_seq_length,
+            sentence_column, second_sentence_column, class_count)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
         classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table)
@@ -123,6 +131,15 @@ class BertClassifier:
         output_table = pd.DataFrame(progress_logger.logs)
         return output_table
     
+    @classmethod
+    def create_classifier(cls, bert_model_handle, tfhub_cache_dir, max_seq_length,
+            sentence_column, second_sentence_column, class_count):
+        bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
+        tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file, bert_layer.resolved_object.do_lower_case,
+            max_seq_length, sentence_column, second_sentence_column)
+        return BertClassifier(tokenizer=tokenizer, bert_layer=bert_layer, class_count=class_count)
+        
+
     @classmethod
     def run_predict(cls,
         input_table,
@@ -154,3 +171,25 @@ class BertClassifier:
             output_table = pd.concat([output_table, probabilities], axis=1)
 
         return output_table
+
+class HFBertClassifier(BertClassifier):
+
+    def save(self, path):
+        temp_dir = tempfile.TemporaryDirectory()
+        vocab_files = self.tokenizer.tokenizer.save_vocabulary(temp_dir.name)
+
+        self.model.vocab_file = tf.saved_model.Asset(vocab_files[0])
+        self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
+            trainable=False, name="classes_dict")
+        self.model.do_lower_case = tf.Variable(initial_value=self.tokenizer.tokenizer.do_lower_case,
+            trainable=False, name="do_lower_case")
+
+        self.model.save(path)
+
+    @classmethod
+    def create_classifier(cls, bert_model_handle, cache_dir, max_seq_length,
+            sentence_column, second_sentence_column, class_count):
+        tokenizer = HFTokenizerWrap.create_tokenizer(bert_model_handle, cache_dir,
+            sentence_column, second_sentence_column, max_seq_length)
+        auto_model = TFAutoModel.from_pretrained(bert_model_handle, cache_dir=cache_dir)
+        return HFBertClassifier(tokenizer=tokenizer, bert_layer=auto_model.layers[0], class_count=class_count)

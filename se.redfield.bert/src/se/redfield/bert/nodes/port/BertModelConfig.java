@@ -37,27 +37,31 @@ public class BertModelConfig {
 	private static final String KEY_MODE = "mode";
 	private static final String KEY_HANDLE = "handle";
 	private static final String KEY_CACHE_DIR = "cacheDir";
+	private static final String KEY_TYPE = "type";
 
 	private String mode;
 	private String handle;
 	private String cacheDir;
+	private BertModelType type;
 
 	/**
 	 * Creates new instance
 	 */
 	public BertModelConfig() {
-		this("", "", "");
+		this("", "", "", null);
 	}
 
 	/**
 	 * @param mode     Model selection mode.
 	 * @param handle   BERT model handle.
 	 * @param cacheDir TFHub cache dir.
+	 * @param type     The model type.
 	 */
-	public BertModelConfig(String mode, String handle, String cacheDir) {
+	public BertModelConfig(String mode, String handle, String cacheDir, BertModelType type) {
 		this.mode = mode;
 		this.handle = handle;
 		this.cacheDir = cacheDir;
+		this.type = type;
 	}
 
 	/**
@@ -69,6 +73,7 @@ public class BertModelConfig {
 		model.addString(KEY_MODE, mode);
 		model.addString(KEY_HANDLE, handle);
 		model.addString(KEY_CACHE_DIR, cacheDir);
+		type.save(model, KEY_TYPE);
 	}
 
 	/**
@@ -82,6 +87,7 @@ public class BertModelConfig {
 		mode = model.getString(KEY_MODE, "");
 		handle = model.getString(KEY_HANDLE, "");
 		cacheDir = model.getString(KEY_CACHE_DIR, "");
+		type = BertModelType.load(model, KEY_TYPE);
 	}
 
 	/**
@@ -132,5 +138,12 @@ public class BertModelConfig {
 			LOGGER.error(e.getMessage(), e);
 		}
 		return "";
+	}
+
+	/**
+	 * @return The bert model type.
+	 */
+	public BertModelType getType() {
+		return type;
 	}
 }

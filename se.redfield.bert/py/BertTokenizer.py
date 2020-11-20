@@ -1,16 +1,14 @@
 from bert.tokenization import bert_tokenization
+from transformers import AutoTokenizer
+
 from ProgressCallback import ProgressCallback
 from bert_utils import load_bert_layer
-
-class BertTokenizer:
-    def __init__(self, vocab_file, do_lower_case, max_seq_length, sentence_column, second_sentence_column = None):
+class TokenizerBase:
+    def __init__(self, tokenizer, max_seq_length, sentence_column, second_sentence_column=None):
+        self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
         self.sentence_column = sentence_column
         self.second_sentence_column = second_sentence_column
-
-        vocab_file = vocab_file.asset_path.numpy() 
-        do_lower_case = do_lower_case.numpy()
-        self.tokenizer = bert_tokenization.FullTokenizer(vocab_file, do_lower_case)
 
     def tokenize(self, table, progress_logger):
         selector = [self.sentence_column]
@@ -33,6 +31,46 @@ class BertTokenizer:
                 progress_logger.on_tokenize_rows_end(current_count)
 
         return input_ids, input_masks, input_segments
+
+    def create_single_input(self, row):
+        raise NotImplementedError()
+
+    @classmethod
+    def run(cls, input_table,
+        bert_model_handle,
+        sentence_column,
+        tfhub_cache_dir = None,
+        max_seq_length = 128,
+        second_sentence_column = None,
+        ids_column = 'ids',
+        masks_column = 'masks',
+        segments_column = 'segments'
+    ):
+        tokenizer = cls.create_tokenizer(bert_model_handle, tfhub_cache_dir,
+                sentence_column, second_sentence_column, max_seq_length)
+
+        progress_logger = ProgressCallback(len(input_table))
+        ids, masks, segments = tokenizer.tokenize(input_table, progress_logger)
+
+        output_table = input_table.copy()
+        output_table[ids_column] = ids
+        output_table[masks_column] = masks
+        output_table[segments_column] = segments
+
+        return output_table
+
+    @classmethod
+    def create_tokenizer(cls, bert_model_handle, tfhub_cache_dir, sentence_column, second_sentence_column, max_seq_length):
+        raise NotImplementedError()
+
+        
+class BertTokenizer(TokenizerBase):
+    def __init__(self, vocab_file, do_lower_case, max_seq_length, sentence_column, second_sentence_column = None):
+        vocab_file = vocab_file.asset_path.numpy() 
+        do_lower_case = do_lower_case.numpy()
+        tokenizer = bert_tokenization.FullTokenizer(vocab_file, do_lower_case)
+
+        super().__init__(tokenizer, max_seq_length, sentence_column, second_sentence_column)
 
     def create_single_input(self, row):
         stokens = self.tokenizer.tokenize(row[0])
@@ -73,27 +111,24 @@ class BertTokenizer:
         return segments + [0] * (self.max_seq_length - len(tokens))
 
     @classmethod
-    def run(cls, input_table,
-        bert_model_handle,
-        sentence_column,
-        tfhub_cache_dir = None,
-        max_seq_length = 128,
-        second_sentence_column = None,
-        ids_column = 'ids',
-        masks_column = 'masks',
-        segments_column = 'segments'
-    ):
+    def create_tokenizer(cls, bert_model_handle, tfhub_cache_dir, sentence_column, second_sentence_column, max_seq_length):
         bert_layer = load_bert_layer(bert_model_handle, tfhub_cache_dir)
-        tokenizer = BertTokenizer(bert_layer.resolved_object.vocab_file,
+        return BertTokenizer(bert_layer.resolved_object.vocab_file,
             bert_layer.resolved_object.do_lower_case, max_seq_length,
             sentence_column, second_sentence_column)
 
-        progress_logger = ProgressCallback(len(input_table))
-        ids, masks, segments = tokenizer.tokenize(input_table, progress_logger)
 
-        output_table = input_table.copy()
-        output_table[ids_column] = ids
-        output_table[masks_column] = masks
-        output_table[segments_column] = segments
+class HFTokenizerWrap(TokenizerBase):
+    def create_single_input(self, row):
+        text = row[0]
+        text_pair = row[1] if row.size > 1 else None
 
-        return output_table
+        res = self.tokenizer(text=text, text_pair=text_pair, padding='max_length', truncation=True,
+                max_length=self.max_seq_length, return_attention_mask=True, return_token_type_ids=True, return_length=True)
+        return res['input_ids'], res['attention_mask'], res['token_type_ids']
+
+    @classmethod
+    def create_tokenizer(cls, bert_model_handle, cache_dir, sentence_column, second_sentence_column, max_seq_length):
+        tokenizer = AutoTokenizer.from_pretrained(bert_model_handle, cache_dir=cache_dir)
+        return HFTokenizerWrap(tokenizer, max_seq_length,
+            sentence_column, second_sentence_column)

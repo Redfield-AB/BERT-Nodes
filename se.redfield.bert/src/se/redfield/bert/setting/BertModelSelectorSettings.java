@@ -27,6 +27,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.dl.util.DLUtils;
 
+import se.redfield.bert.nodes.port.BertModelType;
 import se.redfield.bert.nodes.selector.BertModelSelectorNodeModel;
 
 /**
@@ -40,12 +41,14 @@ public class BertModelSelectorSettings {
 
 	private static final String KEY_MODE = "mode";
 	private static final String KEY_TFHUB_MODEL = "tfHubModel";
+	private static final String KEY_HUGGING_FACE_MODEL = "huggingFaceModel";
 	private static final String KEY_REMOTE_URL = "remoteUrl";
 	private static final String KEY_LOCAL_PATH = "localPath";
 	private static final String KEY_CACHE_DIR = "cacheDir";
 
 	private BertModelSelectionMode mode;
 	private TFHubModel tfModel;
+	private final SettingsModelString hfModel;
 	private final SettingsModelString remoteUrl;
 	private final SettingsModelString localPath;
 	private final SettingsModelString cacheDir;
@@ -56,6 +59,7 @@ public class BertModelSelectorSettings {
 	public BertModelSelectorSettings() {
 		mode = BertModelSelectionMode.getDefault();
 		tfModel = TFHubModel.getDefault();
+		hfModel = new SettingsModelString(KEY_HUGGING_FACE_MODEL, "");
 		remoteUrl = new SettingsModelString(KEY_REMOTE_URL, "");
 		localPath = new SettingsModelString(KEY_LOCAL_PATH, "");
 		cacheDir = new SettingsModelString(KEY_CACHE_DIR, "");
@@ -90,6 +94,13 @@ public class BertModelSelectorSettings {
 	}
 
 	/**
+	 * @return the hfModel settings model.
+	 */
+	public SettingsModelString getHfModel() {
+		return hfModel;
+	}
+
+	/**
 	 * @return the removeUrl model.
 	 */
 	public SettingsModelString getRemoteUrlModel() {
@@ -111,6 +122,8 @@ public class BertModelSelectorSettings {
 		switch (mode) {
 		case TF_HUB:
 			return tfModel.getUrl();
+		case HUGGING_FACE:
+			return hfModel.getStringValue();
 		case REMOTE_URL:
 			return remoteUrl.getStringValue();
 		case LOCAL_PATH:
@@ -134,6 +147,16 @@ public class BertModelSelectorSettings {
 	}
 
 	/**
+	 * @return The model type.
+	 */
+	public BertModelType getType() {
+		if (getMode() == BertModelSelectionMode.HUGGING_FACE) {
+			return BertModelType.HUGGING_FACE;
+		}
+		return BertModelType.TFHUB;
+	}
+
+	/**
 	 * Saves the settings into the given {@link NodeSettingsWO} object.
 	 * 
 	 * @param settings
@@ -141,6 +164,7 @@ public class BertModelSelectorSettings {
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		settings.addString(KEY_MODE, mode.name());
 		settings.addString(KEY_TFHUB_MODEL, tfModel.getName());
+		hfModel.saveSettingsTo(settings);
 		remoteUrl.saveSettingsTo(settings);
 		localPath.saveSettingsTo(settings);
 		cacheDir.saveSettingsTo(settings);
@@ -157,6 +181,10 @@ public class BertModelSelectorSettings {
 		localPath.validateSettings(settings);
 		cacheDir.validateSettings(settings);
 
+		if (settings.containsKey(KEY_HUGGING_FACE_MODEL)) {
+			hfModel.validateSettings(settings);
+		}
+
 		BertModelSelectorSettings temp = new BertModelSelectorSettings();
 		temp.validate();
 	}
@@ -169,6 +197,10 @@ public class BertModelSelectorSettings {
 	public void validate() throws InvalidSettingsException {
 		if (mode == BertModelSelectionMode.TF_HUB && tfModel == null) {
 			throw new InvalidSettingsException("TensorFlow Hub model is not selected");
+		}
+
+		if (mode == BertModelSelectionMode.HUGGING_FACE && hfModel.getStringValue().isEmpty()) {
+			throw new InvalidSettingsException("Hugging Face model is not selected");
 		}
 
 		if (mode == BertModelSelectionMode.REMOTE_URL && remoteUrl.getStringValue().isEmpty()) {
@@ -192,6 +224,10 @@ public class BertModelSelectorSettings {
 		remoteUrl.loadSettingsFrom(settings);
 		localPath.loadSettingsFrom(settings);
 		cacheDir.loadSettingsFrom(settings);
+
+		if (settings.containsKey(KEY_HUGGING_FACE_MODEL)) {
+			hfModel.loadSettingsFrom(settings);
+		}
 	}
 
 	/**
@@ -206,6 +242,11 @@ public class BertModelSelectorSettings {
 		 * Select from provided TFHub models
 		 */
 		TF_HUB("TensorFlow Hub"),
+
+		/**
+		 * Select Hugging Face model
+		 */
+		HUGGING_FACE("Hugging Face"),
 
 		/**
 		 * Enter remove URL of the model

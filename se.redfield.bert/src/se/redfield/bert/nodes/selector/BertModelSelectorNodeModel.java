@@ -61,8 +61,9 @@ public class BertModelSelectorNodeModel extends NodeModel {
 	}
 
 	private static String getLoadModelScript(BertModelConfig model) {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from bert_utils import load_bert_layer");
-		b.a("load_bert_layer(").n();
+		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
+		b.a("from bert_utils import " + model.getType().getLoadMethod()).n();
+		b.a(model.getType().getLoadMethod()).a("(").n();
 		BertCommands.putBertModelArgs(b, model);
 		b.a(")").n();
 
@@ -76,7 +77,7 @@ public class BertModelSelectorNodeModel extends NodeModel {
 
 	private BertModelPortObjectSpec createSpec() {
 		BertModelConfig model = new BertModelConfig(settings.getMode().name(), settings.getHandle(),
-				settings.getCacheDir());
+				settings.getCacheDir(), settings.getType());
 		return new BertModelPortObjectSpec(model);
 	}
 
