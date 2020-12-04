@@ -19,6 +19,8 @@ import java.awt.CardLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -35,8 +37,10 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.dl.util.DLUtils;
 
 import se.redfield.bert.setting.BertModelSelectorSettings;
 import se.redfield.bert.setting.BertModelSelectorSettings.BertModelSelectionMode;
@@ -50,7 +54,8 @@ import se.redfield.bert.setting.BertModelSelectorSettings.TFHubModel;
  */
 public class BertModelSelectorEditor extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private static final String[] HUGGING_FACE_MODELS = { "bert-base-cased", "bert-base-uncased" };
+	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelSelectorEditor.class);
+	private static final String HUGGING_FACE_MODELS_FILE = "config/hf_bert_models.txt";
 
 	private BertModelSelectorSettings settings;
 
@@ -147,7 +152,7 @@ public class BertModelSelectorEditor extends JPanel {
 	}
 
 	private JComponent createHuggingFaceInput() {
-		hfModelCombo = new JComboBox<>(HUGGING_FACE_MODELS);
+		hfModelCombo = new JComboBox<>(getHuggingFaceModels());
 		hfModelCombo.addActionListener(e -> {
 			settings.getHfModel().setStringValue((String) hfModelCombo.getSelectedItem());
 		});
@@ -193,6 +198,16 @@ public class BertModelSelectorEditor extends JPanel {
 		c.insets = new Insets(5, 5, 5, 10);
 		panel.add(hfModelCombo, c);
 		return panel;
+	}
+
+	private String[] getHuggingFaceModels() {
+		try {
+			return Files.readAllLines(DLUtils.Files.getFileFromSameBundle(this, HUGGING_FACE_MODELS_FILE).toPath())
+					.toArray(new String[] {});
+		} catch (IllegalArgumentException | IOException e) {
+			LOGGER.warn("Unable to load the list of Hugging Face models", e);
+		}
+		return new String[] {};
 	}
 
 	private JComponent createRemoteUrlInput() {
