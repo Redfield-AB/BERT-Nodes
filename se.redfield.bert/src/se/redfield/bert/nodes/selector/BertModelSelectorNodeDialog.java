@@ -15,11 +15,14 @@
  */
 package se.redfield.bert.nodes.selector;
 
+import javax.swing.JComponent;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertModelSelectorSettings;
@@ -44,6 +47,13 @@ public class BertModelSelectorNodeDialog extends NodeDialogPane {
 		editor = new BertModelSelectorEditor(settings);
 
 		addTab("Settings", editor);
+		addTab("Advanced", createAdvancedTab());
+	}
+
+	private JComponent createAdvancedTab() {
+		DialogComponentBoolean advancedMode = new DialogComponentBoolean(settings.getAdvancedModeEnabledModel(),
+				"Enable Remote URL and Local path selection modes");
+		return advancedMode.getComponentPanel();
 	}
 
 	@Override

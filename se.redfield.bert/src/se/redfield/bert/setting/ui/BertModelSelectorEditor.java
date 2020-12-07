@@ -71,6 +71,8 @@ public class BertModelSelectorEditor extends JPanel {
 	public BertModelSelectorEditor(BertModelSelectorSettings settings) {
 		this.settings = settings;
 		initUI();
+
+		settings.getAdvancedModeEnabledModel().addChangeListener(e -> updateModesVisibility());
 	}
 
 	private void initUI() {
@@ -244,5 +246,17 @@ public class BertModelSelectorEditor extends JPanel {
 		hubModelCombo.setSelectedItem(settings.getTfModel());
 		hfModelCombo.setSelectedItem(settings.getHfModel().getStringValue());
 		onModeChanged(mode);
+		updateModesVisibility();
+	}
+
+	private void updateModesVisibility() {
+		boolean advanced = settings.isAdvancedModeEnabled();
+		buttons.get(BertModelSelectionMode.REMOTE_URL).setVisible(advanced);
+		buttons.get(BertModelSelectionMode.LOCAL_PATH).setVisible(advanced);
+
+		BertModelSelectionMode mode = settings.getMode();
+		if (!advanced && (mode == BertModelSelectionMode.LOCAL_PATH || mode == BertModelSelectionMode.REMOTE_URL)) {
+			buttons.get(BertModelSelectionMode.TF_HUB).doClick();
+		}
 	}
 }

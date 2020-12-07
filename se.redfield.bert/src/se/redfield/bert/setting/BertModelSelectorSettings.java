@@ -24,6 +24,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.dl.util.DLUtils;
 
@@ -45,6 +46,7 @@ public class BertModelSelectorSettings {
 	private static final String KEY_REMOTE_URL = "remoteUrl";
 	private static final String KEY_LOCAL_PATH = "localPath";
 	private static final String KEY_CACHE_DIR = "cacheDir";
+	private static final String KEY_ADVANCED_MODE_ENABLED = "advancedMode";
 
 	private BertModelSelectionMode mode;
 	private TFHubModel tfModel;
@@ -52,6 +54,7 @@ public class BertModelSelectorSettings {
 	private final SettingsModelString remoteUrl;
 	private final SettingsModelString localPath;
 	private final SettingsModelString cacheDir;
+	private final SettingsModelBoolean advancedModeEnabled;
 
 	/**
 	 * Creates new instance
@@ -63,6 +66,7 @@ public class BertModelSelectorSettings {
 		remoteUrl = new SettingsModelString(KEY_REMOTE_URL, "");
 		localPath = new SettingsModelString(KEY_LOCAL_PATH, "");
 		cacheDir = new SettingsModelString(KEY_CACHE_DIR, "");
+		advancedModeEnabled = new SettingsModelBoolean(KEY_ADVANCED_MODE_ENABLED, false);
 	}
 
 	/**
@@ -147,6 +151,20 @@ public class BertModelSelectorSettings {
 	}
 
 	/**
+	 * @return the advancedModeEnabled model.
+	 */
+	public SettingsModelBoolean getAdvancedModeEnabledModel() {
+		return advancedModeEnabled;
+	}
+
+	/**
+	 * @return Whether the advanced mode is enabled.
+	 */
+	public boolean isAdvancedModeEnabled() {
+		return advancedModeEnabled.getBooleanValue();
+	}
+
+	/**
 	 * @return The model type.
 	 */
 	public BertModelType getType() {
@@ -168,6 +186,7 @@ public class BertModelSelectorSettings {
 		remoteUrl.saveSettingsTo(settings);
 		localPath.saveSettingsTo(settings);
 		cacheDir.saveSettingsTo(settings);
+		advancedModeEnabled.saveSettingsTo(settings);
 	}
 
 	/**
@@ -183,6 +202,10 @@ public class BertModelSelectorSettings {
 
 		if (settings.containsKey(KEY_HUGGING_FACE_MODEL)) {
 			hfModel.validateSettings(settings);
+		}
+
+		if (settings.containsKey(KEY_ADVANCED_MODE_ENABLED)) {
+			advancedModeEnabled.validateSettings(settings);
 		}
 
 		BertModelSelectorSettings temp = new BertModelSelectorSettings();
@@ -227,6 +250,10 @@ public class BertModelSelectorSettings {
 
 		if (settings.containsKey(KEY_HUGGING_FACE_MODEL)) {
 			hfModel.loadSettingsFrom(settings);
+		}
+
+		if (settings.containsKey(KEY_ADVANCED_MODE_ENABLED)) {
+			advancedModeEnabled.loadSettingsFrom(settings);
 		}
 	}
 
