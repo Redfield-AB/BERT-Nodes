@@ -3,24 +3,34 @@
     <name>BERT Model Selector</name>
     
     <shortDescription>
-        The node allows downloading the model available on TensorFlow Hub.
+        The node allows downloading the model available on TensorFlow Hub and HuggingFace.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        	The node allows downloading the model available on TensorFlow Hub.
-        	Only models provided by Google are available
-        	<a href="https://github.com/tensorflow/models/tree/master/official/nlp/bert#access-to-pretrained-hub-modules"> link</a>.
+        	The node allows downloading the model available on TensorFlow Hub and HuggingFace.
+        	The trusted models are added to the lists.
+        	For HuggingFace it is possible to paste the model name into the selector.
+        	In case you would like to test other models please refer to Advanced tab.
         	The model can be cached on a disk.
         </intro>
         <tab name="Settings">
-        	<option name="Select Model">Model selection from the TensorFlow Hub list.</option>
+        	<option name="Select Model">Model selection from the TensorFlow Hub list or Huggingface list.</option>
         	<option name="Cache directory">A path where the models will be stored for further usage.</option>
-        	<option name="URL">
-        		An arbitrary link to a model.
-        		Use with caution since there is no guarantee that the model will be compatible with the node.
+        	<option name="Remote URL">
+				An arbitrary link to a model. Use with caution since there is no guarantee that the model will be compatible with the node.
+				<b>Only active when Advanced tab checkbox is active. This feature is experimental, use with discretion.</b>
+			</option>
+        	<option name="Local folder">
+        		A path to the local model that was downloaded not by this node.
+        		<b>Only active when Advanced tab checkbox is active. This feature is experimental, use with discretion.</b>
         	</option>
-        	<option name="Selected directory">A path to a cached model on a disk.</option>
+        </tab>
+        <tab name="Advanced">
+        	<option name="Enable Remote URL and Local path selection modes">
+        		Enable Remote URL and Local path selection modes - an experimental feature that makes it possible to pick any model from a remote or local source.
+        		There is no guarantee that the models will be compatible with the BERT extension.
+        	</option>
         </tab>
         
     </fullDescription>
