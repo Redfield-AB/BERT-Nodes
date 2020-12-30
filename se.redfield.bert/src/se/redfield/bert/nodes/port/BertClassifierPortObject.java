@@ -17,6 +17,7 @@ package se.redfield.bert.nodes.port;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 
@@ -52,9 +53,11 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(BertClassifierPortObject.class);
 
 	private static final String KEY_MAX_SEQ_LENGTH = "maxSeqLength";
+	private static final String KEY_CLASSES = "classes";
 
 	private BertClassifierPortObjectSpec spec;
 	private int maxSeqLength;
+	private String[] classes;
 
 	/**
 	 * Creates new instance
@@ -62,11 +65,14 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	 * @param spec         the spec
 	 * @param fileStore    the file store
 	 * @param maxSeqLength the max sequence length
+	 * @param classes      available classes
 	 */
-	public BertClassifierPortObject(BertClassifierPortObjectSpec spec, FileStore fileStore, int maxSeqLength) {
+	public BertClassifierPortObject(BertClassifierPortObjectSpec spec, FileStore fileStore, int maxSeqLength,
+			List<String> classes) {
 		super(Arrays.asList(fileStore));
 		this.spec = spec;
 		this.maxSeqLength = maxSeqLength;
+		this.classes = classes.toArray(new String[] {});
 	}
 
 	/**
@@ -90,6 +96,7 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	@Override
 	public JComponent[] getViews() {
 		final ModelContent model = new ModelContent("Model Content");
+		save(model);
 		return new JComponent[] { new ModelContentOutPortView(model) };
 	}
 
@@ -105,6 +112,13 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	 */
 	public int getMaxSeqLength() {
 		return maxSeqLength;
+	}
+
+	/**
+	 * @return the classes
+	 */
+	public String[] getClasses() {
+		return classes;
 	}
 
 	@Override
@@ -125,10 +139,12 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	protected void load(ModelContentRO model, BertClassifierPortObjectSpec spec) throws InvalidSettingsException {
 		this.spec = spec;
 		this.maxSeqLength = model.getInt(KEY_MAX_SEQ_LENGTH);
+		this.classes = model.getStringArray(KEY_CLASSES, new String[0]);
 	}
 
 	protected void save(ModelContentWO model) {
 		model.addInt(KEY_MAX_SEQ_LENGTH, maxSeqLength);
+		model.addStringArray(KEY_CLASSES, classes);
 	}
 
 	/**

@@ -70,21 +70,21 @@ public class BertPredictorNodeModel extends NodeModel {
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 		BertClassifierPortObject classifier = (BertClassifierPortObject) inObjects[PORT_BERT_CLASSIFIER];
 		return new PortObject[] { runPredict(classifier.getFileStore(), classifier.getMaxSeqLength(),
-				(BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
+				classifier.getClasses(), (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
 	}
 
-	private BufferedDataTable runPredict(FileStore fileStore, int maxSeqLength, BufferedDataTable inTable,
-			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
-			PythonIOException, CanceledExecutionException {
+	private BufferedDataTable runPredict(FileStore fileStore, int maxSeqLength, String[] classes,
+			BufferedDataTable inTable, ExecutionContext exec) throws PythonKernelCleanupException,
+			DLInvalidEnvironmentException, PythonIOException, CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.executeInKernel(getPredictScript(fileStore.getFile().getAbsolutePath(), maxSeqLength),
+			commands.executeInKernel(getPredictScript(fileStore.getFile().getAbsolutePath(), maxSeqLength, classes),
 					exec.createSubProgress(0.8));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
 		}
 	}
 
-	private String getPredictScript(String fileStore, int maxSeqLength) {
+	private String getPredictScript(String fileStore, int maxSeqLength, String[] classes) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_predict(").n();
@@ -95,6 +95,7 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertCommands.putFileStoreArgs(b, fileStore);
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
+		b.a("classes = ").as(classes).a(",").n();
 		b.a("prediction_column_name = ").as(settings.getPredictionColumn()).a(",").n();
 		b.a("output_probabilities = ").a(settings.getOutputProbabilities()).a(",").n();
 		b.a("probabilities_column_suffix = ").as(settings.getProbabilitiesColumnSuffix()).a(",").n();

@@ -17,14 +17,8 @@ package se.redfield.bert.nodes.classifier;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.MissingValue;
-import org.knime.core.data.MissingValueException;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -44,6 +38,8 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
 import se.redfield.bert.core.BertCommands;
+import se.redfield.bert.core.ClassesToFeaturesConverter;
+import se.redfield.bert.core.ClassesToFeaturesConverter.ClassifierInput;
 import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.nodes.port.BertModelConfig;
@@ -85,73 +81,35 @@ public class BertClassifierNodeModel extends NodeModel {
 		BertModelPortObject bertModel = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
 		FileStore fileStore = exec.createFileStore("model");
 
-		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore,
-				(BufferedDataTable) inObjects[PORT_DATA_TABLE], (BufferedDataTable) inObjects[PORT_VALIDATION_TABLE],
-				exec);
+		ClassesToFeaturesConverter converter = new ClassesToFeaturesConverter(settings.getSentenceColumn(),
+				settings.getClassColumn());
+		ClassifierInput input = converter.process((BufferedDataTable) inObjects[PORT_DATA_TABLE],
+				(BufferedDataTable) inObjects[PORT_VALIDATION_TABLE], exec);
 
-		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength()),
+		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore, input, exec);
+
+		return new PortObject[] {
+				new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength(), input.getClasses()),
 				statsTable };
 	}
 
-	private BufferedDataTable runTrain(BertModelConfig bertModel, FileStore fileStore, BufferedDataTable inTable,
-			BufferedDataTable validationTable, ExecutionContext exec) throws PythonKernelCleanupException,
-			DLInvalidEnvironmentException, PythonIOException, CanceledExecutionException, InvalidSettingsException {
+	private BufferedDataTable runTrain(BertModelConfig bertModel, FileStore fileStore, ClassifierInput input,
+			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
+			PythonIOException, CanceledExecutionException {
 		try (BertCommands commands = new BertCommands()) {
-			commands.putDataTable(inTable, exec.createSubProgress(validationTable == null ? 0.1 : 0.05));
-			if (validationTable != null) {
-				commands.putDataTable("validation_table", validationTable, exec.createSubProgress(0.05));
+			commands.putDataTable(input.getTrainingTable(),
+					exec.createSubProgress(input.hasValidationTable() ? 0.05 : 0.1));
+			if (input.hasValidationTable()) {
+				commands.putDataTable("validation_table", input.getValidationTable(), exec.createSubProgress(0.05));
 			}
 
-			int classCount = calcClassCout(inTable, validationTable);
-			commands.executeInKernel(getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), classCount,
-					validationTable != null), exec.createSubProgress(0.9));
+			commands.executeInKernel(getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), input),
+					exec.createSubProgress(0.9));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0));
 		}
 	}
 
-	private int calcClassCout(BufferedDataTable inTable, BufferedDataTable validationTable)
-			throws InvalidSettingsException {
-		Set<String> values = new HashSet<>();
-		int idx = inTable.getSpec().findColumnIndex(settings.getClassColumn());
-
-		for (DataRow row : inTable) {
-			DataCell c = row.getCell(idx);
-
-			if (c.isMissing()) {
-				throw new MissingValueException((MissingValue) c, "Class column contains missing values");
-			}
-
-			values.add(c.toString());
-		}
-
-		if (validationTable != null) {
-			for (DataRow row : validationTable) {
-				DataCell c = row.getCell(idx);
-
-				if (c.isMissing()) {
-					throw new MissingValueException((MissingValue) c,
-							"Validation table: class column contains missing values");
-				}
-
-				String val = c.toString();
-				if (!values.contains(val)) {
-					throw new InvalidSettingsException(
-							"Validation table contains class missing from the training table: " + val);
-				}
-			}
-		}
-
-		int classCount = values.size();
-
-		if (classCount < 2) {
-			throw new InvalidSettingsException("The class column should contain at least 2 classes");
-		}
-
-		return classCount;
-	}
-
-	private String getTrainScript(BertModelConfig bertModel, String fileStore, int classCount,
-			boolean hasValidationTable) {
+	private String getTrainScript(BertModelConfig bertModel, String fileStore, ClassifierInput input) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
 		b.a("from BertClassifier import ").a(bertModel.getType().getClassifierClass()).n();
 		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(bertModel.getType().getClassifierClass()).a(".run_train(").n();
@@ -164,11 +122,11 @@ public class BertClassifierNodeModel extends NodeModel {
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
 		b.a("class_column = ").as(settings.getClassColumn()).a(",").n();
-		b.a("class_count = ").a(classCount).a(",").n();
+		b.a("class_count = ").a(input.getClassesCount()).a(",").n();
 		b.a("epochs = ").a(settings.getEpochs()).a(",").n();
 		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
 		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
-		if (hasValidationTable) {
+		if (input.hasValidationTable()) {
 			b.a("validation_table = validation_table,").n();
 		}
 		b.a(")").n();

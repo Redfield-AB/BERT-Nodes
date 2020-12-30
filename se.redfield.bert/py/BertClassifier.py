@@ -2,7 +2,6 @@ import tempfile
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-from tensorflow.keras.utils import to_categorical
 from transformers import TFAutoModel
 
 from BertTokenizer import BertTokenizer, HFTokenizerWrap
@@ -49,14 +48,9 @@ class BertClassifier:
         self.vocab_file = model.vocab_file
         self.do_lower_case = model.do_lower_case
 
-        self.class_dict = {}
-        for index, label in enumerate(model.class_dict.numpy()):
-            self.class_dict[label.decode()] = index
-
     def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_table = None):
         ids, masks, segments = self.tokenize(table, progress_logger)
-
-        self.class_dict, y_train = self.classes_to_ids(table, class_column)
+        y_train = np.array(list(table[class_column]))
 
         if(not fine_tune_bert):
             self.model.layers[3].trainable = False
@@ -64,7 +58,7 @@ class BertClassifier:
         validation_data = None
         if(validation_table is not None):
             ids_val, masks_val, segments_val = self.tokenize(validation_table, None)
-            y_val = to_categorical(validation_table[class_column].map(self.class_dict).values)
+            y_val = np.array(list(validation_table[class_column]))
             validation_data = ([ids_val, masks_val, segments_val], y_val)
 
         self.model.compile(loss='categorical_crossentropy',
@@ -74,8 +68,6 @@ class BertClassifier:
             shuffle=True, validation_data=validation_data, callbacks=[progress_logger])
     
     def save(self, path):
-        self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
-            trainable=False, name="classes_dict")
         self.model.vocab_file = self.vocab_file
         self.model.do_lower_case = self.do_lower_case
 
@@ -95,14 +87,6 @@ class BertClassifier:
         masks = np.array(masks)
         segments = np.array(segments)
         return ids, masks, segments
-
-    def classes_to_ids(self, table, class_column):
-        class_dict = {}
-        for index, label in enumerate(table[class_column].unique()):
-            class_dict[label] = index
-
-        one_hot = to_categorical(table[class_column].map(class_dict).values)    
-        return class_dict, one_hot
     
     @classmethod
     def run_train(cls,
@@ -145,6 +129,7 @@ class BertClassifier:
         input_table,
         sentence_column,
         file_store,
+        classes = None,
         max_seq_length = 128,
         second_sentence_column = None,
         batch_size = 20,
@@ -161,12 +146,17 @@ class BertClassifier:
         output = classifier.predict(input_table, batch_size, progress_logger)
         output_table = input_table.copy()
 
-        class_by_index = {value: key for (key, value) in classifier.class_dict.items()}
-        prediction = [class_by_index[idx] for idx in output.argmax(axis=1)]
+        try:
+            # For backward compatibility with model created by older version of the node
+            classes = list(map(lambda x: x.decode(), classifier.model.class_dict.numpy()))
+        except AttributeError:
+            pass
+
+        prediction = [classes[idx] for idx in output.argmax(axis=1)]
         output_table[prediction_column_name] = prediction
 
         if(output_probabilities):
-            columns = [f'P ({label}){probabilities_column_suffix}' for label in classifier.class_dict.keys()]
+            columns = [f'P ({label}){probabilities_column_suffix}' for label in classes]
             probabilities = pd.DataFrame(output, columns=columns, index=output_table.index)
             output_table = pd.concat([output_table, probabilities], axis=1)
 
@@ -179,8 +169,6 @@ class HFBertClassifier(BertClassifier):
         vocab_files = self.tokenizer.tokenizer.save_vocabulary(temp_dir.name)
 
         self.model.vocab_file = tf.saved_model.Asset(vocab_files[0])
-        self.model.class_dict = tf.Variable(initial_value=list(self.class_dict.keys()),
-            trainable=False, name="classes_dict")
         self.model.do_lower_case = tf.Variable(initial_value=self.tokenizer.tokenizer.do_lower_case,
             trainable=False, name="do_lower_case")
 
