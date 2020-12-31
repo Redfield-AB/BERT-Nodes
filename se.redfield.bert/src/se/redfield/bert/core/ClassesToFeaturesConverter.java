@@ -53,14 +53,21 @@ public class ClassesToFeaturesConverter {
 
 	private final String sentenceColumn;
 	private final String classColumn;
+	private final boolean multiLabel;
+	private final String classSeparator;
 
 	/**
 	 * @param sentenceColumn The sentence column.
 	 * @param classColumn    The class column.
+	 * @param multiLabel     Whether multi-label classification mode is used.
+	 * @param classSeparator The class separator for multi-label mode.
 	 */
-	public ClassesToFeaturesConverter(String sentenceColumn, String classColumn) {
+	public ClassesToFeaturesConverter(String sentenceColumn, String classColumn, boolean multiLabel,
+			String classSeparator) {
 		this.sentenceColumn = sentenceColumn;
 		this.classColumn = classColumn;
+		this.multiLabel = multiLabel;
+		this.classSeparator = classSeparator;
 	}
 
 	/**
@@ -125,10 +132,7 @@ public class ClassesToFeaturesConverter {
 				throw new MissingValueException((MissingValue) c, "Class column contains missing values");
 			}
 
-			String rowClass = getClassFromCell(c);
-			if (!classes.contains(rowClass)) {
-				classes.add(rowClass);
-			}
+			classes.addAll(getClassesFromCell(c));
 		}
 
 		return classes;
@@ -150,17 +154,24 @@ public class ClassesToFeaturesConverter {
 							"Validation table: class column contains missing values");
 				}
 
-				String val = getClassFromCell(c);
-				if (!classes.contains(val)) {
-					throw new InvalidSettingsException(
-							"Validation table contains class missing from the training table: " + val);
+				Collection<String> rowClasses = getClassesFromCell(c);
+				for (String rowClass : rowClasses) {
+					if (!classes.contains(rowClass)) {
+						throw new InvalidSettingsException(
+								"Validation table contains class missing from the training table: " + rowClass);
+					}
 				}
 			}
 		}
 	}
 
-	private static String getClassFromCell(DataCell cell) {
-		return cell.toString();
+	private Collection<String> getClassesFromCell(DataCell cell) {
+		if (multiLabel) {
+			return Arrays.stream(cell.toString().split(classSeparator)).map(String::trim).filter(s -> !s.isEmpty())
+					.collect(Collectors.toList());
+		} else {
+			return Arrays.asList(cell.toString());
+		}
 	}
 
 	private class ClassConverterCellFactory extends AbstractCellFactory {
@@ -176,17 +187,20 @@ public class ClassesToFeaturesConverter {
 
 		@Override
 		public DataCell[] getCells(DataRow row) {
-			String rowClass = getClassFromCell(row.getCell(classColumnIdx));
+			Collection<String> rowClasses = getClassesFromCell(row.getCell(classColumnIdx));
 
-			DataCell cell = CollectionCellFactory.createListCell(toFeatureArray(rowClass));
+			DataCell cell = CollectionCellFactory.createListCell(toFeatureArray(rowClasses));
 
 			return new DataCell[] { cell };
 		}
 
-		private Collection<DataCell> toFeatureArray(String rowClass) {
+		private Collection<DataCell> toFeatureArray(Collection<String> rowClasses) {
 			double[] features = new double[classes.size()];
 			Arrays.fill(features, 0.0);
-			features[getIndexForClass(rowClass)] = 1.0;
+			for (String rowClass : rowClasses) {
+				features[getIndexForClass(rowClass)] = 1.0;
+			}
+
 			return Arrays.stream(features).mapToObj(DoubleCell::new).collect(Collectors.toList());
 		}
 

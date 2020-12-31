@@ -35,14 +35,39 @@ public class BertClassifierPortObjectSpec extends AbstractSimplePortObjectSpec {
 	public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<BertClassifierPortObjectSpec> {
 	}
 
+	private static final String KEY_MULTILABEL = "multiLabel";
+
+	private boolean multiLabel;
+
+	/**
+	 * Creates new instance.
+	 */
+	public BertClassifierPortObjectSpec() {
+		this(false);
+	}
+
+	/**
+	 * @param multiLabel whenever the multilabel classification mode is used.
+	 */
+	public BertClassifierPortObjectSpec(boolean multiLabel) {
+		this.multiLabel = multiLabel;
+	}
+
+	/**
+	 * @return whenever the multi-label classification mode is used.
+	 */
+	public boolean isMultiLabel() {
+		return multiLabel;
+	}
+
 	@Override
 	protected void save(ModelContentWO model) {
-		// no settings
+		model.addBoolean(KEY_MULTILABEL, multiLabel);
 	}
 
 	@Override
 	protected void load(ModelContentRO model) throws InvalidSettingsException {
-		// no settings
+		multiLabel = model.getBoolean(KEY_MULTILABEL, false);
 	}
 
 }

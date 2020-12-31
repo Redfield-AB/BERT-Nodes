@@ -82,7 +82,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		FileStore fileStore = exec.createFileStore("model");
 
 		ClassesToFeaturesConverter converter = new ClassesToFeaturesConverter(settings.getSentenceColumn(),
-				settings.getClassColumn());
+				settings.getClassColumn(), settings.isMultilabelClassification(), settings.getClassSeparator());
 		ClassifierInput input = converter.process((BufferedDataTable) inObjects[PORT_DATA_TABLE],
 				(BufferedDataTable) inObjects[PORT_VALIDATION_TABLE], exec);
 
@@ -129,6 +129,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		if (input.hasValidationTable()) {
 			b.a("validation_table = validation_table,").n();
 		}
+		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();
@@ -140,8 +141,8 @@ public class BertClassifierNodeModel extends NodeModel {
 		return new PortObjectSpec[] { createSpec(), null };
 	}
 
-	private static BertClassifierPortObjectSpec createSpec() {
-		return new BertClassifierPortObjectSpec();
+	private BertClassifierPortObjectSpec createSpec() {
+		return new BertClassifierPortObjectSpec(settings.isMultilabelClassification());
 	}
 
 	@Override

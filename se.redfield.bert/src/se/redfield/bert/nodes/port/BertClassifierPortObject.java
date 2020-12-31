@@ -121,6 +121,13 @@ public class BertClassifierPortObject extends FileStorePortObject {
 		return classes;
 	}
 
+	/**
+	 * @return whenever the multi-label classification mode is used.
+	 */
+	public boolean isMultiLabel() {
+		return spec.isMultiLabel();
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof BertClassifierPortObject)) {
