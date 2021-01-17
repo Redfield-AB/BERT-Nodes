@@ -17,6 +17,7 @@ package se.redfield.bert.nodes.predictor;
 
 import javax.swing.JLabel;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -28,6 +29,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
+import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.setting.BertPredictorSettings;
 
 /**
@@ -52,12 +54,15 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 				BertPredictorNodeModel.PORT_DATA_TABLE, StringValue.class);
 
 		addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
+		addTab("Advanced", new AdvancedTabGroup().getComponentGroupPanel());
 	}
 
 	@Override
 	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
 		try {
 			this.settings.loadSettingsFrom(settings);
+			this.settings.configure((DataTableSpec) specs[BertPredictorNodeModel.PORT_DATA_TABLE],
+					(BertClassifierPortObjectSpec) specs[BertPredictorNodeModel.PORT_BERT_CLASSIFIER]);
 		} catch (InvalidSettingsException e) {
 			// ignore
 		}
@@ -80,6 +85,20 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 			addStringEditRowComponent(settings.getPredictionColumnModel(), "Prediction column name");
 			addCheckboxRow(settings.getOutputProbabilitiesModel(), "Append individual class probabilities", true);
 			addStringEditRowComponent(settings.getProbabilitiesColumnSuffixModel(), "Suffix for probability columns");
+		}
+	}
+
+	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup {
+		public AdvancedTabGroup() {
+			addCheckboxRow(settings.getUseCustomThreshouldModel(), "Use custom threshold for determining predictions",
+					true);
+			addNumberSpinnerRowComponent(settings.getPredictionThresholdModel(), "Probability threshold", 0.01);
+			addCheckboxRow(settings.getFixNumberOfClassesModel(), "Fixed number of classes per prediction", true);
+			addNumberSpinnerRowComponent(settings.getNumberOfClassesPerPredictionModel(),
+					"Number of classes per prediction", 1);
+			addHorizontalSeparator();
+			addCheckboxRow(settings.getUseCustomClassSeparatorModel(), "Use custom class separator", true);
+			addStringEditRowComponent(settings.getClassSeparatorModel(), "Class separator");
 		}
 	}
 }

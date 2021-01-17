@@ -88,8 +88,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore, input, exec);
 
-		return new PortObject[] {
-				new BertClassifierPortObject(createSpec(), fileStore, settings.getMaxSeqLength(), input.getClasses()),
+		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, input.getClasses()),
 				statsTable };
 	}
 
@@ -142,7 +141,8 @@ public class BertClassifierNodeModel extends NodeModel {
 	}
 
 	private BertClassifierPortObjectSpec createSpec() {
-		return new BertClassifierPortObjectSpec(settings.isMultilabelClassification());
+		return new BertClassifierPortObjectSpec(settings.getMaxSeqLength(), settings.isMultilabelClassification(),
+				settings.getClassSeparator());
 	}
 
 	@Override

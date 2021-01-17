@@ -17,8 +17,15 @@ package se.redfield.bert.nodes.predictor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -37,7 +44,9 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
 import se.redfield.bert.core.BertCommands;
+import se.redfield.bert.core.ComputePredictionCellFactory;
 import se.redfield.bert.nodes.port.BertClassifierPortObject;
+import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.setting.BertPredictorSettings;
 
 /**
@@ -68,7 +77,12 @@ public class BertPredictorNodeModel extends NodeModel {
 	@Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 		BertClassifierPortObject classifier = (BertClassifierPortObject) inObjects[PORT_BERT_CLASSIFIER];
-		return new PortObject[] { runPredict(classifier, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
+		BufferedDataTable inTable = (BufferedDataTable) inObjects[PORT_DATA_TABLE];
+
+		BufferedDataTable probabilitiesTable = runPredict(classifier, inTable, exec);
+		BufferedDataTable outputTable = composeOutputTable(inTable, probabilitiesTable, classifier, exec);
+
+		return new PortObject[] { outputTable };
 	}
 
 	private BufferedDataTable runPredict(BertClassifierPortObject classifier, BufferedDataTable inTable,
@@ -92,20 +106,49 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertCommands.putFileStoreArgs(b, classifier.getFileStore().getFile().getAbsolutePath());
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
-		b.a("classes = ").as(classifier.getClasses()).a(",").n();
-		b.a("prediction_column_name = ").as(settings.getPredictionColumn()).a(",").n();
-		b.a("output_probabilities = ").a(settings.getOutputProbabilities()).a(",").n();
-		b.a("probabilities_column_suffix = ").as(settings.getProbabilitiesColumnSuffix()).a(",").n();
-		b.a("multi_label = ").a(classifier.isMultiLabel()).a(",").n();
-
 		b.a(")").n();
 
 		return b.toString();
 	}
 
+	private BufferedDataTable composeOutputTable(BufferedDataTable inTable, BufferedDataTable probabilitiesTable,
+			BertClassifierPortObject classifier, ExecutionContext exec) throws CanceledExecutionException {
+		probabilitiesTable = renameProbabilitiesColumns(probabilitiesTable, classifier, exec);
+
+		ColumnRearranger r = new ColumnRearranger(probabilitiesTable.getDataTableSpec());
+		r.insertAt(0, ComputePredictionCellFactory.create(settings, classifier));
+
+		if (!settings.getOutputProbabilities()) {
+			r.keepOnly(0);
+		}
+
+		BufferedDataTable result = exec.createColumnRearrangeTable(probabilitiesTable, r, exec);
+
+		return exec.createJoinedTable(inTable, result, exec);
+	}
+
+	private BufferedDataTable renameProbabilitiesColumns(BufferedDataTable probTable,
+			BertClassifierPortObject classifier, ExecutionContext exec) {
+		if (settings.getOutputProbabilities()) {
+			return exec.createSpecReplacerTable(probTable, createProbabilitiesSpec(classifier));
+		} else {
+			return probTable;
+		}
+	}
+
+	private DataTableSpec createProbabilitiesSpec(BertClassifierPortObject classifier) {
+		List<DataColumnSpec> cols = Arrays.stream(classifier.getClasses())
+				.map(c -> String.format("P (%s)%s", c, settings.getProbabilitiesColumnSuffix()))
+				.map(name -> new DataColumnSpecCreator(name, DoubleCell.TYPE).createSpec())
+				.collect(Collectors.toList());
+
+		return new DataTableSpec(cols.toArray(new DataColumnSpec[] {}));
+	}
+
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
+		settings.configure((DataTableSpec) inSpecs[PORT_DATA_TABLE],
+				(BertClassifierPortObjectSpec) inSpecs[PORT_BERT_CLASSIFIER]);
 		return new PortObjectSpec[] { null };
 	}
 

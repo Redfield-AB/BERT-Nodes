@@ -74,7 +74,7 @@ class BertClassifier:
 
     def get_metrics(self, multi_label):
         if(multi_label):
-            return [tf.keras.metrics.BinaryAccuracy('accuracy', dtype=tf.float32), tf.keras.metrics.AUC()]
+            return [tf.keras.metrics.BinaryAccuracy('accuracy', dtype=tf.float32), tf.keras.metrics.AUC(name='AUC')]
         else:
             return ['accuracy']
 
@@ -121,7 +121,7 @@ class BertClassifier:
             sentence_column, second_sentence_column, class_count, multi_label)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
-        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table)
+        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table, multi_label)
         classifier.save(file_store)
 
         output_table = pd.DataFrame(progress_logger.logs)
@@ -141,39 +141,17 @@ class BertClassifier:
         input_table,
         sentence_column,
         file_store,
-        classes = None,
         max_seq_length = 128,
-        second_sentence_column = None,
-        batch_size = 20,
-        prediction_column_name = 'Prediction',
-        output_probabilities = True,
-        probabilities_column_suffix = '',
-        multi_label = False
+        batch_size = 20
     ):
         model = tf.keras.models.load_model(file_store)
-        tokenizer = BertTokenizer(model.vocab_file, model.do_lower_case, max_seq_length,
-            sentence_column, second_sentence_column)
+        tokenizer = BertTokenizer(model.vocab_file, model.do_lower_case, max_seq_length, sentence_column)
         classifier = BertClassifier(tokenizer=tokenizer, model=model)
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
 
         output = classifier.predict(input_table, batch_size, progress_logger)
-        output_table = input_table.copy()
 
-        try:
-            # For backward compatibility with model created by older version of the node
-            classes = list(map(lambda x: x.decode(), classifier.model.class_dict.numpy()))
-        except AttributeError:
-            pass
-
-        prediction = compute_predictions(output, classes, multi_label)
-        output_table[prediction_column_name] = prediction
-
-        if(output_probabilities):
-            columns = [f'P ({label}){probabilities_column_suffix}' for label in classes]
-            probabilities = pd.DataFrame(output, columns=columns, index=output_table.index)
-            output_table = pd.concat([output_table, probabilities], axis=1)
-
-        return output_table
+        return pd.DataFrame(output, index=input_table.index)
 
 
 class HFBertClassifier(BertClassifier):

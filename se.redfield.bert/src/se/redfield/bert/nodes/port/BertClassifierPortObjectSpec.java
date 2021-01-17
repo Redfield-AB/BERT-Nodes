@@ -35,22 +35,37 @@ public class BertClassifierPortObjectSpec extends AbstractSimplePortObjectSpec {
 	public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<BertClassifierPortObjectSpec> {
 	}
 
+	private static final String KEY_MAX_SEQ_LENGTH = "maxSeqLength";
 	private static final String KEY_MULTILABEL = "multiLabel";
+	private static final String KEY_CLASS_SEPARATOR = "classSeparator";
 
+	private int maxSeqLength;
 	private boolean multiLabel;
+	private String classSeparator;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertClassifierPortObjectSpec() {
-		this(false);
+		this(0, false, "");
 	}
 
 	/**
-	 * @param multiLabel whenever the multilabel classification mode is used.
+	 * @param maxSeqLength   the max sequence length.
+	 * @param multiLabel     whenever the multilabel classification mode is used.
+	 * @param classSeparator class separator character.
 	 */
-	public BertClassifierPortObjectSpec(boolean multiLabel) {
+	public BertClassifierPortObjectSpec(int maxSeqLength, boolean multiLabel, String classSeparator) {
+		this.maxSeqLength = maxSeqLength;
 		this.multiLabel = multiLabel;
+		this.classSeparator = classSeparator;
+	}
+
+	/**
+	 * @return the max sequence length.
+	 */
+	public int getMaxSeqLength() {
+		return maxSeqLength;
 	}
 
 	/**
@@ -60,14 +75,26 @@ public class BertClassifierPortObjectSpec extends AbstractSimplePortObjectSpec {
 		return multiLabel;
 	}
 
+	/**
+	 * @return the class separator value used during training in case of multi-label
+	 *         classification mode.
+	 */
+	public String getClassSeparator() {
+		return classSeparator;
+	}
+
 	@Override
 	protected void save(ModelContentWO model) {
+		model.addInt(KEY_MAX_SEQ_LENGTH, maxSeqLength);
 		model.addBoolean(KEY_MULTILABEL, multiLabel);
+		model.addString(KEY_CLASS_SEPARATOR, classSeparator);
 	}
 
 	@Override
 	protected void load(ModelContentRO model) throws InvalidSettingsException {
-		multiLabel = model.getBoolean(KEY_MULTILABEL, false);
+		maxSeqLength = model.getInt(KEY_MAX_SEQ_LENGTH);
+		multiLabel = model.getBoolean(KEY_MULTILABEL);
+		classSeparator = model.getString(KEY_CLASS_SEPARATOR);
 	}
 
 }

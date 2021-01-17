@@ -33,6 +33,11 @@ import se.redfield.bert.nodes.classifier.BertClassifierNodeModel;
  *
  */
 public class BertClassifierSettings {
+	/**
+	 * Default class separator character
+	 */
+	public static final String DEFAULT_CLASS_SEPARATOR = ";";
+
 	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
 	private static final String KEY_MAX_SEQ_LENGTH = "maxSeqLength";
 	private static final String KEY_CLASS_COLUMN = "classColumn";
@@ -65,7 +70,7 @@ public class BertClassifierSettings {
 		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
 		optimizer = new OptimizerSettings(KEY_OPTIMIZER);
 		multilabelClassification = new SettingsModelBoolean(KEY_MULTILABEL_CLASSIFICATION, false);
-		classSeparator = new SettingsModelString(KEY_CLASS_SEPARATOR, ";");
+		classSeparator = new SettingsModelString(KEY_CLASS_SEPARATOR, DEFAULT_CLASS_SEPARATOR);
 
 		classSeparator.setEnabled(false);
 		multilabelClassification.addChangeListener(e -> {
@@ -103,10 +108,8 @@ public class BertClassifierSettings {
 		epochs.validateSettings(settings);
 		batchSize.validateSettings(settings);
 		fineTuneBert.validateSettings(settings);
-		if (settings.containsKey(KEY_MULTILABEL_CLASSIFICATION)) {
-			multilabelClassification.validateSettings(settings);
-			classColumn.validateSettings(settings);
-		}
+		multilabelClassification.validateSettings(settings);
+		classColumn.validateSettings(settings);
 
 		BertClassifierSettings temp = new BertClassifierSettings();
 		temp.loadSettingsFrom(settings);
@@ -173,11 +176,9 @@ public class BertClassifierSettings {
 		batchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
 		optimizer.loadSettingsFrom(settings);
+		classSeparator.loadSettingsFrom(settings);
+		multilabelClassification.loadSettingsFrom(settings);
 
-		if (settings.containsKey(KEY_MULTILABEL_CLASSIFICATION)) {
-			classSeparator.loadSettingsFrom(settings);
-			multilabelClassification.loadSettingsFrom(settings);
-		}
 	}
 
 	/**
