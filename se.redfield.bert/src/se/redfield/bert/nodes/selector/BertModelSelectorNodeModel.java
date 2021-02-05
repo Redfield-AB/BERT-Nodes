@@ -61,9 +61,9 @@ public class BertModelSelectorNodeModel extends NodeModel {
 	}
 
 	private static String getLoadModelScript(BertModelConfig model) {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a("from bert_utils import " + model.getType().getLoadMethod()).n();
-		b.a(model.getType().getLoadMethod()).a("(").n();
+		DLPythonSourceCodeBuilder b = DLPythonUtils
+				.createSourceCodeBuilder("from BertModelType import load_bert_layer");
+		b.a("load_bert_layer(").n();
 		BertCommands.putBertModelArgs(b, model);
 		b.a(")").n();
 

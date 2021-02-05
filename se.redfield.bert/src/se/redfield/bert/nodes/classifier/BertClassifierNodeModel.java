@@ -44,6 +44,7 @@ import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelPortObject;
+import se.redfield.bert.nodes.port.BertModelPortObjectSpec;
 import se.redfield.bert.setting.BertClassifierSettings;
 
 /**
@@ -88,7 +89,8 @@ public class BertClassifierNodeModel extends NodeModel {
 
 		BufferedDataTable statsTable = runTrain(bertModel.getModel(), fileStore, input, exec);
 
-		return new PortObject[] { new BertClassifierPortObject(createSpec(), fileStore, input.getClasses()),
+		return new PortObject[] {
+				new BertClassifierPortObject(createSpec(bertModel.getSpec()), fileStore, input.getClasses()),
 				statsTable };
 	}
 
@@ -102,16 +104,15 @@ public class BertClassifierNodeModel extends NodeModel {
 				commands.putDataTable("validation_table", input.getValidationTable(), exec.createSubProgress(0.05));
 			}
 
-			commands.executeInKernel(getTrainScript(bertModel, fileStore.getFile().getAbsolutePath(), input),
-					exec.createSubProgress(0.9));
+			commands.executeInKernel(getTrainScript(bertModel, fileStore, input), exec.createSubProgress(0.9));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0));
 		}
 	}
 
-	private String getTrainScript(BertModelConfig bertModel, String fileStore, ClassifierInput input) {
-		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder();
-		b.a("from BertClassifier import ").a(bertModel.getType().getClassifierClass()).n();
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ").a(bertModel.getType().getClassifierClass()).a(".run_train(").n();
+	private String getTrainScript(BertModelConfig bertModel, FileStore fileStore, ClassifierInput input) {
+		DLPythonSourceCodeBuilder b = DLPythonUtils
+				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_train(").n();
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);
@@ -137,12 +138,12 @@ public class BertClassifierNodeModel extends NodeModel {
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE], (DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
-		return new PortObjectSpec[] { createSpec(), null };
+		return new PortObjectSpec[] { createSpec((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]), null };
 	}
 
-	private BertClassifierPortObjectSpec createSpec() {
+	private BertClassifierPortObjectSpec createSpec(BertModelPortObjectSpec modelSpec) {
 		return new BertClassifierPortObjectSpec(settings.getMaxSeqLength(), settings.isMultilabelClassification(),
-				settings.getClassSeparator());
+				settings.getClassSeparator(), modelSpec.getModel().getType());
 	}
 
 	@Override

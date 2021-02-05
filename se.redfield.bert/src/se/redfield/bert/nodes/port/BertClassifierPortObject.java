@@ -44,7 +44,7 @@ import org.knime.core.node.workflow.ModelContentOutPortView;
  * @author Alexander Bondaletov
  *
  */
-public class BertClassifierPortObject extends FileStorePortObject {
+public class BertClassifierPortObject extends FileStorePortObject implements BertPortObjectBase {
 
 	/**
 	 * The type of this port.
@@ -84,7 +84,7 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	}
 
 	@Override
-	public PortObjectSpec getSpec() {
+	public BertPortObjectSpecBase getSpec() {
 		return spec;
 	}
 
@@ -121,6 +121,13 @@ public class BertClassifierPortObject extends FileStorePortObject {
 	 */
 	public boolean isMultiLabel() {
 		return spec.isMultiLabel();
+	}
+
+	/**
+	 * @return Bert model type
+	 */
+	public BertModelType getModelType() {
+		return spec.getModelType();
 	}
 
 	@Override

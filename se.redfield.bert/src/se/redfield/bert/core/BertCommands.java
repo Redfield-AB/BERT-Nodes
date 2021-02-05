@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -41,6 +42,7 @@ import org.knime.python2.kernel.PythonOutputListener;
 import com.google.common.base.Strings;
 
 import se.redfield.bert.nodes.port.BertModelConfig;
+import se.redfield.bert.nodes.port.BertModelType;
 import se.redfield.bert.setting.InputSettings;
 
 public class BertCommands implements AutoCloseable {
@@ -120,12 +122,14 @@ public class BertCommands implements AutoCloseable {
 
 		String cacheDir = model.getCacheDir();
 		if (cacheDir != null && !cacheDir.isEmpty()) {
-			b.a("tfhub_cache_dir = ").asr(cacheDir).a(",").n();
+			b.a("cache_dir = ").asr(cacheDir).a(",").n();
 		}
+
+		putModelTypeArg(b, model.getType());
 	}
 
-	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, String fileStore) {
-		b.a("file_store = ").asr(fileStore).a(",").n();
+	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, FileStore fileStore) {
+		b.a("file_store = ").asr(fileStore.getFile().getAbsolutePath()).a(",").n();
 	}
 
 	public static void putBatchSizeArgs(DLPythonSourceCodeBuilder b, int batchSize) {
@@ -147,6 +151,10 @@ public class BertCommands implements AutoCloseable {
 
 	public static void putMaxSeqLengthArg(DLPythonSourceCodeBuilder b, int maxSeqLength) {
 		b.a("max_seq_length = ").a(maxSeqLength).a(",").n();
+	}
+
+	public static void putModelTypeArg(DLPythonSourceCodeBuilder b, BertModelType type) {
+		b.a("bert_model_type_key = ").as(type.getKey()).a(",").n();
 	}
 
 	private static class ProgressListener implements PythonOutputListener {

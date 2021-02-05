@@ -32,7 +32,7 @@ import org.knime.core.node.port.PortTypeRegistry;
  * @author Alexander Bondaletov
  *
  */
-public class BertModelPortObject extends AbstractSimplePortObject {
+public class BertModelPortObject extends AbstractSimplePortObject implements BertPortObjectBase {
 
 	/**
 	 * Serializer for the {@link BertModelPortObject}.
@@ -67,7 +67,7 @@ public class BertModelPortObject extends AbstractSimplePortObject {
 	}
 
 	@Override
-	public PortObjectSpec getSpec() {
+	public BertModelPortObjectSpec getSpec() {
 		return spec;
 	}
 

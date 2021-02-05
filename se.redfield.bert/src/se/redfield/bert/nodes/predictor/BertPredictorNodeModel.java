@@ -103,7 +103,8 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putSentenceColumArg(b, settings.getSentenceColumn());
 		BertCommands.putMaxSeqLengthArg(b, classifier.getMaxSeqLength());
-		BertCommands.putFileStoreArgs(b, classifier.getFileStore().getFile().getAbsolutePath());
+		BertCommands.putFileStoreArgs(b, classifier.getFileStore());
+		BertCommands.putModelTypeArg(b, classifier.getModelType());
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
 		b.a(")").n();

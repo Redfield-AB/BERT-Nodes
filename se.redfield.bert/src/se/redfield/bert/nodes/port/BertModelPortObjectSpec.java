@@ -26,7 +26,7 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Alexander Bondaletov
  *
  */
-public class BertModelPortObjectSpec extends AbstractSimplePortObjectSpec {
+public class BertModelPortObjectSpec extends AbstractSimplePortObjectSpec implements BertPortObjectSpecBase {
 	/**
 	 * The serializer for the {@link BertModelPortObjectSpec}
 	 *
@@ -73,5 +73,10 @@ public class BertModelPortObjectSpec extends AbstractSimplePortObjectSpec {
 		sb.append("Selection mode: ").append(model.getMode()).append("\n");
 		sb.append("Handle: ").append(model.getHandleRaw()).append("\n");
 		return sb.toString();
+	}
+
+	@Override
+	public BertPortObjectType getType() {
+		return BertPortObjectType.BERT_MODEL;
 	}
 }

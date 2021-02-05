@@ -33,6 +33,7 @@ import org.knime.core.node.port.PortType;
 
 import se.redfield.bert.core.BertEmbedder;
 import se.redfield.bert.nodes.port.BertModelPortObject;
+import se.redfield.bert.nodes.port.BertPortObjectBase;
 import se.redfield.bert.setting.BertEmbedderSettings;
 
 /**
@@ -59,7 +60,7 @@ public class BertEmbedderNodeModel extends NodeModel {
 	private final BertEmbedder embedder;
 
 	protected BertEmbedderNodeModel() {
-		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
+		super(new PortType[] { BertPortObjectBase.TYPE, BufferedDataTable.TYPE },
 				new PortType[] { BufferedDataTable.TYPE });
 
 		settings = new BertEmbedderSettings();
@@ -68,9 +69,9 @@ public class BertEmbedderNodeModel extends NodeModel {
 
 	@Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
-		BertModelPortObject model = (BertModelPortObject) inObjects[PORT_BERT_MODEL];
+		BertPortObjectBase obj = (BertPortObjectBase) inObjects[PORT_BERT_MODEL];
 		return new PortObject[] {
-				embedder.computeEmbeddings(model.getModel(), (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
+				embedder.computeEmbeddings(obj, (BufferedDataTable) inObjects[PORT_DATA_TABLE], exec) };
 	}
 
 	@Override

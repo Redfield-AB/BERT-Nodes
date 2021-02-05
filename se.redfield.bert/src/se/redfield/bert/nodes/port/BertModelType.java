@@ -29,32 +29,20 @@ public enum BertModelType {
 	/**
 	 * Model from Tensorflow hub.
 	 */
-	TFHUB("load_bert_layer", "BertClassifier"),
+	TFHUB(),
 	/**
 	 * Model provided by Hugging Face.
 	 */
-	HUGGING_FACE("load_hf_bert_layer", "HFBertClassifier");
+	HUGGING_FACE();
 
-	private String loadMethod;
-	private String classifierClass;
-
-	private BertModelType(String loadMothod, String classifierClass) {
-		this.loadMethod = loadMothod;
-		this.classifierClass = classifierClass;
+	private BertModelType() {
 	}
 
 	/**
-	 * @return The python load method name.
+	 * @return The model type key.
 	 */
-	public String getLoadMethod() {
-		return loadMethod;
-	}
-
-	/**
-	 * @return The python classifier class
-	 */
-	public String getClassifierClass() {
-		return classifierClass;
+	public String getKey() {
+		return name();
 	}
 
 	/**
@@ -65,7 +53,7 @@ public enum BertModelType {
 	 * @param key    The config key.
 	 */
 	public void save(ConfigWO config, String key) {
-		config.addString(key, name());
+		config.addString(key, getKey());
 	}
 
 	/**

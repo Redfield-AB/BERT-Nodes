@@ -14,13 +14,11 @@
             category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.selector.BertModelSelectorNodeFactory">
       </node>
-<!--
       <node
             category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory"
             id="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory">
       </node>
--->      
       <node
             category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.classifier.BertClassifierNodeFactory">
@@ -47,6 +45,13 @@
             objectSerializer="se.redfield.bert.nodes.port.BertClassifierPortObject$Serializer"
             specClass="se.redfield.bert.nodes.port.BertClassifierPortObjectSpec"
             specSerializer="se.redfield.bert.nodes.port.BertClassifierPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#00ff00"
+            name="se.redfield.bert.nodes.port.BertPortObjectBase"
+            objectClass="se.redfield.bert.nodes.port.BertPortObjectBase"
+            objectSerializer="se.redfield.bert.nodes.port.BertPortObjectBase$DummySerializer"
+            specClass="se.redfield.bert.nodes.port.BertPortObjectSpecBase">
       </portType>
    </extension>
       <extension
