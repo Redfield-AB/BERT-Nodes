@@ -43,6 +43,7 @@ public class BertClassifierSettings {
 	private static final String KEY_CLASS_COLUMN = "classColumn";
 	private static final String KEY_EPOCHS = "epochs";
 	private static final String KEY_BATCH_SIZE = "batchSize";
+	private static final String KEY_VALIDATION_BATCH_SIZE = "validationBatchSize";
 	private static final String KEY_FINE_TUNE_BERT = "fineTuneBert";
 	private static final String KEY_OPTIMIZER = "optimizer";
 	private static final String KEY_MULTILABEL_CLASSIFICATION = "multilabelClassification";
@@ -53,6 +54,7 @@ public class BertClassifierSettings {
 	private final SettingsModelString classColumn;
 	private final SettingsModelIntegerBounded epochs;
 	private final SettingsModelIntegerBounded batchSize;
+	private final SettingsModelIntegerBounded validationBatchSize;
 	private final SettingsModelBoolean fineTuneBert;
 	private OptimizerSettings optimizer;
 	private final SettingsModelBoolean multilabelClassification;
@@ -67,6 +69,7 @@ public class BertClassifierSettings {
 		classColumn = new SettingsModelString(KEY_CLASS_COLUMN, "");
 		epochs = new SettingsModelIntegerBounded(KEY_EPOCHS, 1, 1, Integer.MAX_VALUE);
 		batchSize = new SettingsModelIntegerBounded(KEY_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
+		validationBatchSize = new SettingsModelIntegerBounded(KEY_VALIDATION_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
 		optimizer = new OptimizerSettings(KEY_OPTIMIZER);
 		multilabelClassification = new SettingsModelBoolean(KEY_MULTILABEL_CLASSIFICATION, false);
@@ -88,6 +91,7 @@ public class BertClassifierSettings {
 		maxSeqLength.saveSettingsTo(settings);
 		classColumn.saveSettingsTo(settings);
 		epochs.saveSettingsTo(settings);
+		validationBatchSize.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
 		fineTuneBert.saveSettingsTo(settings);
 		optimizer.saveSettingsTo(settings);
@@ -107,6 +111,7 @@ public class BertClassifierSettings {
 		classColumn.validateSettings(settings);
 		epochs.validateSettings(settings);
 		batchSize.validateSettings(settings);
+		validationBatchSize.validateSettings(settings);
 		fineTuneBert.validateSettings(settings);
 		multilabelClassification.validateSettings(settings);
 		classColumn.validateSettings(settings);
@@ -174,6 +179,7 @@ public class BertClassifierSettings {
 		classColumn.loadSettingsFrom(settings);
 		epochs.loadSettingsFrom(settings);
 		batchSize.loadSettingsFrom(settings);
+		validationBatchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
 		optimizer.loadSettingsFrom(settings);
 		classSeparator.loadSettingsFrom(settings);
@@ -249,6 +255,20 @@ public class BertClassifierSettings {
 	 */
 	public int getBatchSize() {
 		return batchSize.getIntValue();
+	}
+
+	/**
+	 * @return the validation table batch size model
+	 */
+	public SettingsModelIntegerBounded getValidationBatchSizeModel() {
+		return validationBatchSize;
+	}
+
+	/**
+	 * @return the validation table batch size
+	 */
+	public int getValidationBatchSize() {
+		return validationBatchSize.getIntValue();
 	}
 
 	/**

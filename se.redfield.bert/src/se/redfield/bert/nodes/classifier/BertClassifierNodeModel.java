@@ -128,6 +128,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
 		if (input.hasValidationTable()) {
 			b.a("validation_table = validation_table,").n();
+			b.a("validation_batch_size = ").a(settings.getValidationBatchSize()).a(",").n();
 		}
 		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
 		b.a(")").n();
@@ -137,7 +138,8 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE], (DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE],
+				(DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
 		return new PortObjectSpec[] { createSpec((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]), null };
 	}
 

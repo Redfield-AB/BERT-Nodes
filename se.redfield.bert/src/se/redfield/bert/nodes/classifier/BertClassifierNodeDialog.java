@@ -87,6 +87,9 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		sentenceColumn.loadSettingsFrom(settings, specs);
 		classColumn.loadSettingsFrom(settings, specs);
 		optimizer.settingsLoaded();
+
+		this.settings.getValidationBatchSizeModel()
+				.setEnabled(specs[BertClassifierNodeModel.PORT_VALIDATION_TABLE] != null);
 	}
 
 	@Override
@@ -109,6 +112,7 @@ public class BertClassifierNodeDialog extends NodeDialogPane {
 		public TrainingSettingsGroup() {
 			addNumberSpinnerRowComponent(settings.getEpochsModel(), "Number of epochs", 1);
 			addNumberSpinnerRowComponent(settings.getBatchSizeModel(), "Batch size", 1);
+			addNumberSpinnerRowComponent(settings.getValidationBatchSizeModel(), "Validation batch size", 1);
 			addCheckboxRow(settings.getFineTuneBertModel(), "Fine tune BERT", true);
 			getComponentGroupPanel().setBorder(BorderFactory.createTitledBorder("Training settings"));
 		}

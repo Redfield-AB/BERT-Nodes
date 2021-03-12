@@ -16,12 +16,20 @@
 package se.redfield.bert.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.container.AbstractCellFactory;
+import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -70,8 +78,45 @@ public class BertEmbedder {
 		try (BertCommands commands = new BertCommands()) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.8));
-			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
+			BufferedDataTable res = commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec,
+					exec.createSubProgress(0.05));
+			res = exec.createColumnRearrangeTable(res,
+					createColumnConverter(inTable.getDataTableSpec().getNumColumns(), res),
+					exec.createSilentSubProgress(0.05));
+			return res;
 		}
+	}
+
+	private ColumnRearranger createColumnConverter(int startIndex, BufferedDataTable table) {
+		int[] indexes = new int[table.getDataTableSpec().getNumColumns() - startIndex];
+		DataColumnSpec[] specs = new DataColumnSpec[table.getDataTableSpec().getNumColumns() - startIndex];
+
+		for (int i = 0; i < indexes.length; i++) {
+			indexes[i] = i + startIndex;
+			DataColumnSpec original = table.getDataTableSpec().getColumnSpec(i + startIndex);
+			specs[i] = new DataColumnSpecCreator(original.getName(), ListCell.getCollectionType(DoubleCell.TYPE))
+					.createSpec();
+		}
+		ColumnRearranger r = new ColumnRearranger(table.getDataTableSpec());
+		CellFactory fac = new AbstractCellFactory(specs) {
+
+			@Override
+			public DataCell[] getCells(DataRow row) {
+				DataCell[] result = new DataCell[indexes.length];
+				for (int i = 0; i < indexes.length; i++) {
+					String str = row.getCell(indexes[i]).toString();
+					List<DoubleCell> doubles = Arrays.asList(str.substring(1, str.length() - 1).split(","))//
+							.stream()//
+							.mapToDouble(Double::valueOf)//
+							.mapToObj(DoubleCell::new)//
+							.collect(Collectors.toList());
+					result[i] = CollectionCellFactory.createListCell(doubles);
+				}
+				return result;
+			}
+		};
+		r.replace(fac, indexes);
+		return r;
 	}
 
 	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {

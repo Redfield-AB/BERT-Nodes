@@ -32,7 +32,7 @@ class BertClassifier:
 
         self.model = tf.keras.models.Model(inputs=embedder.inputs, outputs=output)
 
-    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_table = None):
+    def train(self, table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert = False, validation_table = None, validation_batch_size = 20):
         ids, masks, segments = self.tokenizer.tokenize(table, progress_logger)
         y_train = np.array(list(table[class_column]))
 
@@ -51,7 +51,7 @@ class BertClassifier:
                   optimizer=optimizer,
                   metrics=self.get_metrics())
         self.model.fit(x=[ids, masks, segments], y=y_train,epochs=epochs, batch_size=batch_size,
-            shuffle=True, validation_data=validation_data, callbacks=[progress_logger])
+            shuffle=True, validation_data=validation_data, validation_batch_size=validation_batch_size, callbacks=[progress_logger])
 
     def get_metrics(self):
         if(self.multi_label):
@@ -83,6 +83,7 @@ class BertClassifier:
         cache_dir = None,
         max_seq_length = 128,
         batch_size = 20,
+        validation_batch_size = 20,
         epochs = 3,
         fine_tune_bert = False,
         validation_table = None,
@@ -93,7 +94,7 @@ class BertClassifier:
         classifier = BertClassifier(embedder=embedder, class_count=class_count, multi_label=multi_label)
         progress_logger = ProgressCallback(len(input_table), train=True, batch_size=batch_size, epochs_count=epochs)
 
-        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table)
+        classifier.train(input_table, class_column, batch_size, epochs, optimizer, progress_logger, fine_tune_bert, validation_table, validation_batch_size)
         classifier.save(file_store)
 
         output_table = pd.DataFrame(progress_logger.logs)

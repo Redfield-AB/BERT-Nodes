@@ -47,7 +47,7 @@ class BertEmbedder:
 
         if(include_sequence_embeddings):
             columns = [sequence_embedding_column_prefix + str(i) for i in range(len(sequence_emb[0]))]
-            se = pd.DataFrame(sequence_emb.tolist(), columns = columns, index = output_table.index)
+            se = pd.DataFrame(sequence_emb.tolist(), columns = columns, index = output_table.index).astype(str)
             output_table = pd.concat([output_table, se], axis=1)
 
         return output_table
