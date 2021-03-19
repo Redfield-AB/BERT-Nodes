@@ -29,6 +29,7 @@ import org.knime.dl.core.DLInvalidEnvironmentException;
 import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
 import org.knime.python2.PythonCommand;
+import org.knime.python2.extensions.serializationlibrary.SerializationOptions;
 import org.knime.python2.kernel.PythonCancelable;
 import org.knime.python2.kernel.PythonCanceledExecutionException;
 import org.knime.python2.kernel.PythonExecutionMonitorCancelable;
@@ -49,6 +50,8 @@ public class BertCommands implements AutoCloseable {
 
 	public static final String VAR_INPUT_TABLE = "input_table";
 	public static final String VAR_OUTPUT_TABLE = "output_table";
+
+	private static final int DEFAULT_TABLE_CHUNK_SIZE = 10000;
 
 	private PythonKernel kernel;
 	private ProgressListener progressListener;
@@ -78,7 +81,10 @@ public class BertCommands implements AutoCloseable {
 	}
 
 	private static PythonKernelOptions getKernelOptions() {
-		return new PythonKernelOptions().forAddedAdditionalRequiredModuleNames(Arrays.asList("bert", "tensorflow_hub"));
+		SerializationOptions serializationOpts = new SerializationOptions().forChunkSize(DEFAULT_TABLE_CHUNK_SIZE);
+
+		return new PythonKernelOptions().forAddedAdditionalRequiredModuleNames(Arrays.asList("bert", "tensorflow_hub"))
+				.forSerializationOptions(serializationOpts);
 	}
 
 	private static PythonCommand getCommand() {
