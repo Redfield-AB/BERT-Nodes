@@ -46,8 +46,6 @@ public class BertClassifierSettings {
 	private static final String KEY_VALIDATION_BATCH_SIZE = "validationBatchSize";
 	private static final String KEY_FINE_TUNE_BERT = "fineTuneBert";
 	private static final String KEY_OPTIMIZER = "optimizer";
-	private static final String KEY_MULTILABEL_CLASSIFICATION = "multilabelClassification";
-	private static final String KEY_CLASS_SEPARATOR = "classSeparator";
 
 	private final SettingsModelString sentenceColumn;
 	private final SettingsModelIntegerBounded maxSeqLength;
@@ -57,8 +55,6 @@ public class BertClassifierSettings {
 	private final SettingsModelIntegerBounded validationBatchSize;
 	private final SettingsModelBoolean fineTuneBert;
 	private OptimizerSettings optimizer;
-	private final SettingsModelBoolean multilabelClassification;
-	private final SettingsModelString classSeparator;
 
 	/**
 	 * Creates new instance
@@ -72,13 +68,6 @@ public class BertClassifierSettings {
 		validationBatchSize = new SettingsModelIntegerBounded(KEY_VALIDATION_BATCH_SIZE, 20, 1, Integer.MAX_VALUE);
 		fineTuneBert = new SettingsModelBoolean(KEY_FINE_TUNE_BERT, false);
 		optimizer = new OptimizerSettings(KEY_OPTIMIZER);
-		multilabelClassification = new SettingsModelBoolean(KEY_MULTILABEL_CLASSIFICATION, false);
-		classSeparator = new SettingsModelString(KEY_CLASS_SEPARATOR, DEFAULT_CLASS_SEPARATOR);
-
-		classSeparator.setEnabled(false);
-		multilabelClassification.addChangeListener(e -> {
-			classSeparator.setEnabled(multilabelClassification.getBooleanValue());
-		});
 	}
 
 	/**
@@ -95,8 +84,6 @@ public class BertClassifierSettings {
 		batchSize.saveSettingsTo(settings);
 		fineTuneBert.saveSettingsTo(settings);
 		optimizer.saveSettingsTo(settings);
-		multilabelClassification.saveSettingsTo(settings);
-		classSeparator.saveSettingsTo(settings);
 	}
 
 	/**
@@ -113,7 +100,6 @@ public class BertClassifierSettings {
 		batchSize.validateSettings(settings);
 		validationBatchSize.validateSettings(settings);
 		fineTuneBert.validateSettings(settings);
-		multilabelClassification.validateSettings(settings);
 		classColumn.validateSettings(settings);
 
 		BertClassifierSettings temp = new BertClassifierSettings();
@@ -135,9 +121,6 @@ public class BertClassifierSettings {
 			throw new InvalidSettingsException("Class column is not selected");
 		}
 
-		if (multilabelClassification.getBooleanValue() && classSeparator.getStringValue().isEmpty()) {
-			throw new InvalidSettingsException("Class separator is required");
-		}
 	}
 
 	/**
@@ -182,8 +165,6 @@ public class BertClassifierSettings {
 		validationBatchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
 		optimizer.loadSettingsFrom(settings);
-		classSeparator.loadSettingsFrom(settings);
-		multilabelClassification.loadSettingsFrom(settings);
 
 	}
 
@@ -299,32 +280,4 @@ public class BertClassifierSettings {
 		return optimizer.getOptimizer().getBackendRepresentation();
 	}
 
-	/**
-	 * @return the multilabelClassification model.
-	 */
-	public SettingsModelBoolean getMultilabelClassificationModel() {
-		return multilabelClassification;
-	}
-
-	/**
-	 * @return whenever the multi-label classification mode is selected
-	 */
-	public boolean isMultilabelClassification() {
-		return multilabelClassification.getBooleanValue();
-	}
-
-	/**
-	 * @return the classSeparator model.
-	 */
-	public SettingsModelString getClassSeparatorModel() {
-		return classSeparator;
-	}
-
-	/**
-	 * @return the class separator character to be used for multi-label
-	 *         classification
-	 */
-	public String getClassSeparator() {
-		return classSeparator.getStringValue();
-	}
 }

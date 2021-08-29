@@ -40,9 +40,7 @@ import org.knime.dl.python.util.DLPythonUtils;
 import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
-import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObject;
-import se.redfield.bert.nodes.port.BertPortObjectBase;
 import se.redfield.bert.setting.BertEmbedderSettings;
 
 public class BertEmbedder {
@@ -72,7 +70,7 @@ public class BertEmbedder {
 		return new DataTableSpec(inTableSpec, new DataTableSpec(columns.toArray(new DataColumnSpec[] {})));
 	}
 
-	public BufferedDataTable computeEmbeddings(BertPortObjectBase bertObject, BufferedDataTable inTable,
+	public BufferedDataTable computeEmbeddings(BertModelPortObject bertObject, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
 			DLInvalidEnvironmentException {
 		try (BertCommands commands = new BertCommands()) {
@@ -87,7 +85,7 @@ public class BertEmbedder {
 		}
 	}
 
-	private ColumnRearranger createColumnConverter(int startIndex, BufferedDataTable table) {
+	private static ColumnRearranger createColumnConverter(int startIndex, BufferedDataTable table) {
 		int[] indexes = new int[table.getDataTableSpec().getNumColumns() - startIndex];
 		DataColumnSpec[] specs = new DataColumnSpec[table.getDataTableSpec().getNumColumns() - startIndex];
 
@@ -119,12 +117,12 @@ public class BertEmbedder {
 		return r;
 	}
 
-	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {
+	private String computeEmbeddingsScript(BertModelPortObject bertObject) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.").a(getRunMethodName(bertObject)).a("(").n();
+		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.run_from_pretrained(").n();
 
 		BertCommands.putInputTableArgs(b);
-		putBertObjectArgs(bertObject, b);
+		BertCommands.putBertModelArgs(b, bertObject.getModel());
 		BertCommands.putArgs(b, settings.getInputSettings());
 		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 
@@ -136,36 +134,4 @@ public class BertEmbedder {
 		return b.toString();
 	}
 
-	private static String getRunMethodName(BertPortObjectBase bertObject) {
-		switch (bertObject.getType()) {
-		case BERT_MODEL:
-			return "run_from_pretrained";
-		case CLASSIFIER:
-			return "run_from_classifier";
-		default:
-			throw new IllegalArgumentException("Unsupported port object type:" + bertObject.getType());
-		}
-	}
-
-	private static void putBertObjectArgs(BertPortObjectBase bertObject, DLPythonSourceCodeBuilder builder) {
-		switch (bertObject.getType()) {
-		case BERT_MODEL:
-			putBertModelArgs((BertModelPortObject) bertObject, builder);
-			break;
-		case CLASSIFIER:
-			putClassifierArgs((BertClassifierPortObject) bertObject, builder);
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported port object type:" + bertObject.getType());
-		}
-	}
-
-	private static void putBertModelArgs(BertModelPortObject bertModel, DLPythonSourceCodeBuilder builder) {
-		BertCommands.putBertModelArgs(builder, bertModel.getModel());
-	}
-
-	private static void putClassifierArgs(BertClassifierPortObject classifier, DLPythonSourceCodeBuilder builder) {
-		BertCommands.putFileStoreArgs(builder, classifier.getFileStore());
-		BertCommands.putModelTypeArg(builder, classifier.getModelType());
-	}
 }
