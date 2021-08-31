@@ -130,7 +130,6 @@ public class BertClassifierNodeModel extends NodeModel {
 			b.a("validation_table = validation_table,").n();
 			b.a("validation_batch_size = ").a(settings.getValidationBatchSize()).a(",").n();
 		}
-		b.a("multi_label = false,").n();
 		b.a(")").n();
 
 		return b.toString();
