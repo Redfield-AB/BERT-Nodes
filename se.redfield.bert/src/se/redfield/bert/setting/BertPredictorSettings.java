@@ -192,7 +192,12 @@ public class BertPredictorSettings {
 
 		if (!classifier.isMultiLabel()) {
 			fixNumberOfClasses.setBooleanValue(false);
+			useCustomThreshould.setBooleanValue(false);
+			useCustomClassSeparator.setBooleanValue(false);
+
 			fixNumberOfClasses.setEnabled(false);
+			useCustomThreshould.setEnabled(false);
+			useCustomClassSeparator.setEnabled(false);
 		}
 	}
 

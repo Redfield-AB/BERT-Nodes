@@ -54,7 +54,7 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 				BertPredictorNodeModel.PORT_DATA_TABLE, StringValue.class);
 
 		addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
-		addTab("Advanced", new AdvancedTabGroup().getComponentGroupPanel());
+		addTab("Multi-label", new AdvancedTabGroup().getComponentGroupPanel());
 	}
 
 	@Override
