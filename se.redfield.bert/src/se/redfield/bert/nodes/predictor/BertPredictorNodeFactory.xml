@@ -27,6 +27,26 @@
         		If not empty the suffix will be added to every column name for class probabilities columns.
         	</option>
         </tab>
+        <tab name="Multi-label">
+        	<option name="Use custom threshold for assigning the classes">
+        		If active it is possible to change the probability threshold for assigning the class. By default class is assigned by the biggest probability value.
+        	</option>
+        	<option name="Probability threshold">
+        		The class is assigned if the class probability is equal or higher then the value. Several classes might be assigned.
+        	</option>
+        	<option name="Fixed number of classes per prediction">
+        		If active it is possible to set up the desired number of classes for a prediction.
+        	</option>
+        	<option name="Number of classes per prediction">
+        		The fixed number of classes that will be assigned to the prediction.
+        	</option>
+        	<option name="Use custom class separator">
+        		If active it is possible to enter the separation character for the prediction. Prediction is represented as a string with separated values.
+        	</option>
+        	<option name="Class separator">
+        		A character that separates multiple labels for prediction.
+        	</option>
+        </tab>
         
     </fullDescription>
     
