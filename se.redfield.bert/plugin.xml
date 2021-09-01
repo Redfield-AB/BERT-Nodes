@@ -16,11 +16,6 @@
       </node>
       <node
             category-path="/community/bert"
-            factory-class="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory"
-            id="se.redfield.bert.nodes.embedder.BertEmbedderNodeFactory">
-      </node>
-      <node
-            category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.classifier.BertClassifierNodeFactory">
       </node>
       <node
