@@ -2,7 +2,7 @@
 <feature
       id="se.redfield.bert.update"
       label="Update"
-      version="0.0.1.qualifier"
+      version="0.1.0.qualifier"
       provider-name="Redfield AB">
 
    <description>
