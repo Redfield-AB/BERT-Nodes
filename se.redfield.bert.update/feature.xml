@@ -691,6 +691,6 @@ Public License instead of this License.  But first, please read
 
    <includes
          id="se.redfield.bert.feature"
-         version="0.0.1.qualifier"/>
+         version="0.1.0.qualifier"/>
 
 </feature>

@@ -707,6 +707,6 @@ Public License instead of this License.  But first, please read
          id="se.redfield.bert"
          download-size="0"
          install-size="0"
-         version="0.0.1.qualifier"/>
+         version="0.1.0.qualifier"/>
 
 </feature>
