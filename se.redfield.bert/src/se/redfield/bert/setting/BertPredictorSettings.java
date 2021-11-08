@@ -34,7 +34,7 @@ import se.redfield.bert.nodes.predictor.BertPredictorNodeModel;
  * @author Alexander Bondaletov
  *
  */
-public class BertPredictorSettings {
+public class BertPredictorSettings extends PythonNodeSettings {
 	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
 	private static final String KEY_BATCH_SIZE = "batchSize";
 	private static final String KEY_CHANGE_PREDICTION_COLUMN = "changePredictionColumn";
@@ -121,7 +121,9 @@ public class BertPredictorSettings {
 	 * 
 	 * @param settings
 	 */
+	@Override
 	public void saveSettingsTo(NodeSettingsWO settings) {
+		super.saveSettingsTo(settings);
 		sentenceColumn.saveSettingsTo(settings);
 		batchSize.saveSettingsTo(settings);
 		changePredictionColumn.saveSettingsTo(settings);
@@ -216,7 +218,9 @@ public class BertPredictorSettings {
 	 * @param settings
 	 * @throws InvalidSettingsException
 	 */
+	@Override
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		super.loadSettingsFrom(settings);
 		sentenceColumn.loadSettingsFrom(settings);
 		batchSize.loadSettingsFrom(settings);
 		predictionColumn.loadSettingsFrom(settings);

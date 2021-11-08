@@ -28,7 +28,7 @@ import se.redfield.bert.nodes.tokenizer.BertTokenizerNodeModel;
  * @author Alexander Bondaletov
  *
  */
-public class BertTokenizerSettings {
+public class BertTokenizerSettings extends PythonNodeSettings {
 	private static final String KEY_INPUT_SETTINGS = "input";
 
 	private final InputSettings inputSettings;
@@ -45,7 +45,9 @@ public class BertTokenizerSettings {
 	 * 
 	 * @param settings
 	 */
+	@Override
 	public void saveSettingsTo(NodeSettingsWO settings) {
+		super.saveSettingsTo(settings);
 		inputSettings.saveSettingsTo(settings.addNodeSettings(KEY_INPUT_SETTINGS));
 	}
 
@@ -59,7 +61,7 @@ public class BertTokenizerSettings {
 		inputSettings.validateSettings(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 
 		BertTokenizerSettings temp = new BertTokenizerSettings();
-		temp.loadSettings(settings);
+		temp.loadSettingsFrom(settings);
 		temp.validate();
 	}
 
@@ -88,7 +90,9 @@ public class BertTokenizerSettings {
 	 * @param settings
 	 * @throws InvalidSettingsException
 	 */
-	public void loadSettings(NodeSettingsRO settings) throws InvalidSettingsException {
+	@Override
+	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		super.loadSettingsFrom(settings);
 		inputSettings.loadSettingsFrom(settings.getNodeSettings(KEY_INPUT_SETTINGS));
 	}
 

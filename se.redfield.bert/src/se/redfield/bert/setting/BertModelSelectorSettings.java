@@ -37,7 +37,7 @@ import se.redfield.bert.nodes.selector.BertModelSelectorNodeModel;
  * @author Alexander Bondaletov
  *
  */
-public class BertModelSelectorSettings {
+public class BertModelSelectorSettings extends PythonNodeSettings {
 	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelSelectorSettings.class);
 
 	private static final String KEY_MODE = "mode";
@@ -179,7 +179,9 @@ public class BertModelSelectorSettings {
 	 * 
 	 * @param settings
 	 */
+	@Override
 	public void saveSettingsTo(NodeSettingsWO settings) {
+		super.saveSettingsTo(settings);
 		settings.addString(KEY_MODE, mode.name());
 		settings.addString(KEY_TFHUB_MODEL, tfModel.getName());
 		hfModel.saveSettingsTo(settings);
@@ -241,7 +243,9 @@ public class BertModelSelectorSettings {
 	 * @param settings
 	 * @throws InvalidSettingsException
 	 */
+	@Override
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		super.loadSettingsFrom(settings);
 		mode = BertModelSelectionMode.valueOf(settings.getString(KEY_MODE, BertModelSelectionMode.getDefault().name()));
 		tfModel = TFHubModel.getByName(settings.getString(KEY_TFHUB_MODEL));
 		remoteUrl.loadSettingsFrom(settings);

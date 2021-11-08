@@ -104,7 +104,7 @@ public class BertTokenizerNodeModel extends NodeModel {
 
 	@Override
 	protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
-		this.settings.loadSettings(settings);
+		this.settings.loadSettingsFrom(settings);
 	}
 
 	@Override

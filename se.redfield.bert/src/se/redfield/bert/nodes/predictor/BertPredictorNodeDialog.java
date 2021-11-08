@@ -20,9 +20,7 @@ import javax.swing.JLabel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.port.PortObjectSpec;
@@ -31,6 +29,7 @@ import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.setting.BertPredictorSettings;
+import se.redfield.bert.setting.ui.PythonNodeDialog;
 
 /**
  * Dialog for the {@link BertPredictorNodeModel} node.
@@ -38,9 +37,7 @@ import se.redfield.bert.setting.BertPredictorSettings;
  * @author Alexander Bondaletov
  *
  */
-public class BertPredictorNodeDialog extends NodeDialogPane {
-
-	private final BertPredictorSettings settings;
+public class BertPredictorNodeDialog extends PythonNodeDialog<BertPredictorSettings> {
 
 	private DialogComponentColumnNameSelection sentenceColumn;
 
@@ -49,18 +46,20 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 	 */
 	@SuppressWarnings("unchecked")
 	public BertPredictorNodeDialog() {
-		settings = new BertPredictorSettings();
+		super(new BertPredictorSettings());
+
 		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
 				BertPredictorNodeModel.PORT_DATA_TABLE, StringValue.class);
 
 		addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
 		addTab("Multi-label", new AdvancedTabGroup().getComponentGroupPanel());
+		addPythonTab();
 	}
 
 	@Override
 	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+		super.loadSettingsFrom(settings, specs);
 		try {
-			this.settings.loadSettingsFrom(settings);
 			this.settings.configure((DataTableSpec) specs[BertPredictorNodeModel.PORT_DATA_TABLE],
 					(BertClassifierPortObjectSpec) specs[BertPredictorNodeModel.PORT_BERT_CLASSIFIER]);
 		} catch (InvalidSettingsException e) {
@@ -68,11 +67,6 @@ public class BertPredictorNodeDialog extends NodeDialogPane {
 		}
 
 		sentenceColumn.loadSettingsFrom(settings, specs);
-	}
-
-	@Override
-	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
-		this.settings.saveSettingsTo(settings);
 	}
 
 	private class SettingsTabGroup extends AbstractGridBagDialogComponentGroup {
