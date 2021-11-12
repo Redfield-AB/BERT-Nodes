@@ -15,15 +15,13 @@
  */
 package se.redfield.bert.nodes.tokenizer;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertTokenizerSettings;
 import se.redfield.bert.setting.ui.InputSettingsEditor;
+import se.redfield.bert.setting.ui.PythonNodeDialog;
 
 /**
  * 
@@ -32,35 +30,26 @@ import se.redfield.bert.setting.ui.InputSettingsEditor;
  * @author Alexander Bondaletov
  *
  */
-public class BertTokenizerNodeDialog extends NodeDialogPane {
+public class BertTokenizerNodeDialog extends PythonNodeDialog<BertTokenizerSettings> {
 
-	private final BertTokenizerSettings settings;
 	private final InputSettingsEditor inputSettingsEditor;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertTokenizerNodeDialog() {
-		settings = new BertTokenizerSettings();
+		super(new BertTokenizerSettings());
 		inputSettingsEditor = new InputSettingsEditor(settings.getInputSettings(),
 				BertTokenizerNodeModel.PORT_INPUT_TABLE);
 
 		addTab("Settings", inputSettingsEditor.getComponentGroupPanel());
+		addPythonTab();
 	}
 
 	@Override
 	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
-		try {
-			this.settings.loadSettings(settings);
-		} catch (InvalidSettingsException e) {
-			// ignore
-		}
+		super.loadSettingsFrom(settings, specs);
 		inputSettingsEditor.loadSettings(settings, specs);
-	}
-
-	@Override
-	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
-		this.settings.saveSettingsTo(settings);
 	}
 
 }

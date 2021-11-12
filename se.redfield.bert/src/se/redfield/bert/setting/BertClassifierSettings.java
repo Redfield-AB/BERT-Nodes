@@ -32,7 +32,7 @@ import se.redfield.bert.nodes.classifier.BertClassifierNodeModel;
  * @author Alexander Bondaletov
  *
  */
-public class BertClassifierSettings {
+public class BertClassifierSettings extends PythonNodeSettings {
 	/**
 	 * Default class separator character
 	 */
@@ -75,7 +75,9 @@ public class BertClassifierSettings {
 	 * 
 	 * @param settings
 	 */
+	@Override
 	public void saveSettingsTo(NodeSettingsWO settings) {
+		super.saveSettingsTo(settings);
 		sentenceColumn.saveSettingsTo(settings);
 		maxSeqLength.saveSettingsTo(settings);
 		classColumn.saveSettingsTo(settings);
@@ -156,7 +158,9 @@ public class BertClassifierSettings {
 	 * @param settings
 	 * @throws InvalidSettingsException
 	 */
+	@Override
 	public void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+		super.loadSettingsFrom(settings);
 		sentenceColumn.loadSettingsFrom(settings);
 		maxSeqLength.loadSettingsFrom(settings);
 		classColumn.loadSettingsFrom(settings);

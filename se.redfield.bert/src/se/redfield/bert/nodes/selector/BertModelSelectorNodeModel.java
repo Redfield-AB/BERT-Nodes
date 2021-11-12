@@ -53,9 +53,9 @@ public class BertModelSelectorNodeModel extends NodeModel {
 		return new PortObject[] { new BertModelPortObject(spec) };
 	}
 
-	private static void downloadOrCheckModel(BertModelConfig model, ExecutionContext exec)
+	private void downloadOrCheckModel(BertModelConfig model, ExecutionContext exec)
 			throws IOException, DLInvalidEnvironmentException, CanceledExecutionException {
-		try (BertCommands commands = new BertCommands()) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
 			commands.executeInKernel(getLoadModelScript(model), exec);
 		}
 	}

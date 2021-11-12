@@ -26,9 +26,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.dl.core.DLInvalidEnvironmentException;
-import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.dl.python.util.DLPythonSourceCodeBuilder;
 import org.knime.python2.PythonCommand;
+import org.knime.python2.config.PythonCommandConfig;
 import org.knime.python2.extensions.serializationlibrary.SerializationOptions;
 import org.knime.python2.kernel.PythonCancelable;
 import org.knime.python2.kernel.PythonCanceledExecutionException;
@@ -56,15 +56,14 @@ public class BertCommands implements AutoCloseable {
 	private PythonKernel kernel;
 	private ProgressListener progressListener;
 
-	public BertCommands() throws DLInvalidEnvironmentException {
-		kernel = createKernel();
+	public BertCommands(PythonCommandConfig config) throws DLInvalidEnvironmentException {
+		kernel = createKernel(config.getCommand());
 		progressListener = new ProgressListener();
 		kernel.addStdoutListener(progressListener);
 	}
 
-	public static PythonKernel createKernel() throws DLInvalidEnvironmentException {
+	public static PythonKernel createKernel(PythonCommand command) throws DLInvalidEnvironmentException {
 		PythonKernelOptions options = getKernelOptions();
-		PythonCommand command = getCommand();
 		try {
 			PythonKernel kernel = PythonKernelQueue.getNextKernel(command, Collections.emptySet(),
 					Collections.emptySet(), options, PythonCancelable.NOT_CANCELABLE);
@@ -85,10 +84,6 @@ public class BertCommands implements AutoCloseable {
 
 		return new PythonKernelOptions().forAddedAdditionalRequiredModuleNames(Arrays.asList("bert", "tensorflow_hub"))
 				.forSerializationOptions(serializationOpts);
-	}
-
-	private static PythonCommand getCommand() {
-		return DLPythonPreferences.getPythonTF2CommandPreference();
 	}
 
 	public void putDataTable(String name, BufferedDataTable table, ExecutionMonitor exec)

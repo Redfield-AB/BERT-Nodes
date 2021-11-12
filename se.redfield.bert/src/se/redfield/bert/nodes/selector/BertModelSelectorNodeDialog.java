@@ -17,16 +17,14 @@ package se.redfield.bert.nodes.selector;
 
 import javax.swing.JComponent;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.port.PortObjectSpec;
 
 import se.redfield.bert.setting.BertModelSelectorSettings;
 import se.redfield.bert.setting.ui.BertModelSelectorEditor;
+import se.redfield.bert.setting.ui.PythonNodeDialog;
 
 /**
  * Settings dialog for the {@link BertModelSelectorNodeModel} node.
@@ -34,20 +32,20 @@ import se.redfield.bert.setting.ui.BertModelSelectorEditor;
  * @author Alexander Bondaletov
  *
  */
-public class BertModelSelectorNodeDialog extends NodeDialogPane {
+public class BertModelSelectorNodeDialog extends PythonNodeDialog<BertModelSelectorSettings> {
 
-	private final BertModelSelectorSettings settings;
 	private final BertModelSelectorEditor editor;
 
 	/**
 	 * Creates new instance
 	 */
 	public BertModelSelectorNodeDialog() {
-		settings = new BertModelSelectorSettings();
+		super(new BertModelSelectorSettings());
 		editor = new BertModelSelectorEditor(settings);
 
 		addTab("Settings", editor);
 		addTab("Advanced", createAdvancedTab());
+		addPythonTab();
 	}
 
 	private JComponent createAdvancedTab() {
@@ -57,17 +55,8 @@ public class BertModelSelectorNodeDialog extends NodeDialogPane {
 	}
 
 	@Override
-	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
-		this.settings.saveSettingsTo(settings);
-	}
-
-	@Override
 	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
-		try {
-			this.settings.loadSettingsFrom(settings);
-		} catch (InvalidSettingsException e) {
-			// ignore
-		}
+		super.loadSettingsFrom(settings, specs);
 		editor.onSettingsLoaded();
 	}
 }

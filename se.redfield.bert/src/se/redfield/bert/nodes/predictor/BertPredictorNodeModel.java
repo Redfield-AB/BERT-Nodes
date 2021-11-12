@@ -88,7 +88,7 @@ public class BertPredictorNodeModel extends NodeModel {
 	private BufferedDataTable runPredict(BertClassifierPortObject classifier, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException {
-		try (BertCommands commands = new BertCommands()) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(getPredictScript(classifier), exec.createSubProgress(0.8));
 			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
