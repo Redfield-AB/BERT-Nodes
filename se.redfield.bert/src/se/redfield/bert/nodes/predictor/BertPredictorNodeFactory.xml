@@ -47,7 +47,15 @@
         		A character that separates multiple labels for prediction.
         	</option>
         </tab>
-        
+        <tab name="Python">
+    		<option name="Python">
+    			Select one of Python execution environment options:
+    			<ul>
+        			<li>use default Python environment for Deep Learning</li>
+        			<li>use Conda environment</li>
+        		</ul>
+    		</option>
+        </tab>        
     </fullDescription>
     
     <ports>
