@@ -91,6 +91,8 @@ public class BertClassifierNodeDialog extends PythonNodeDialog<BertClassifierSet
 					getFirstComponent(sentenceColumn, ColumnSelectionPanel.class));
 			addDoubleColumnRow(new JLabel("Class column"), getFirstComponent(classColumn, ColumnSelectionPanel.class));
 			addNumberSpinnerRowComponent(settings.getMaxSeqLengthModel(), "Max sequence length", 1);
+			addCheckboxRow(settings.getMultilabelClassificationModel(), "Multi-label classification", true);
+			addStringEditRowComponent(settings.getClassSeparatorModel(), "Class separator");
 		}
 	}
 
