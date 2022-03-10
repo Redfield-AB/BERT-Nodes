@@ -16,9 +16,5 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)",
  org.knime.dl;bundle-version="[4.4.1,5.0.0)",
  com.google.guava;bundle-version="[19.0.0,20.0.0)"
 Bundle-ActivationPolicy: lazy
-Export-Package: se.redfield.bert,
- se.redfield.bert.core,
- se.redfield.bert.nodes.port,
- se.redfield.bert.setting,
- se.redfield.bert.setting.ui
+Export-Package: se.redfield.bert
 

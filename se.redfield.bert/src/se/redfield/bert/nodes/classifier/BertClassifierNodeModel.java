@@ -83,7 +83,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		FileStore fileStore = exec.createFileStore("model");
 
 		ClassesToFeaturesConverter converter = new ClassesToFeaturesConverter(settings.getSentenceColumn(),
-				settings.getClassColumn(), false, BertClassifierSettings.DEFAULT_CLASS_SEPARATOR);
+				settings.getClassColumn(), settings.isMultilabelClassification(), settings.getClassSeparator());
 		ClassifierInput input = converter.process((BufferedDataTable) inObjects[PORT_DATA_TABLE],
 				(BufferedDataTable) inObjects[PORT_VALIDATION_TABLE], exec);
 
@@ -130,6 +130,7 @@ public class BertClassifierNodeModel extends NodeModel {
 			b.a("validation_table = validation_table,").n();
 			b.a("validation_batch_size = ").a(settings.getValidationBatchSize()).a(",").n();
 		}
+		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
 		b.a(")").n();
 
 		return b.toString();
@@ -137,13 +138,14 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE], (DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE],
+				(DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
 		return new PortObjectSpec[] { createSpec((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]), null };
 	}
 
 	private BertClassifierPortObjectSpec createSpec(BertModelPortObjectSpec modelSpec) {
-		return new BertClassifierPortObjectSpec(settings.getMaxSeqLength(), false,
-				BertClassifierSettings.DEFAULT_CLASS_SEPARATOR, modelSpec.getModel().getType());
+		return new BertClassifierPortObjectSpec(settings.getMaxSeqLength(), settings.isMultilabelClassification(),
+				settings.getClassSeparator(), modelSpec.getModel().getType());
 	}
 
 	@Override
