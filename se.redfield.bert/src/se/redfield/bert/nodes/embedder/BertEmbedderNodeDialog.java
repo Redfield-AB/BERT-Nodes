@@ -15,16 +15,11 @@
  */
 package se.redfield.bert.nodes.embedder;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.BertEmbedderSettings;
 import se.redfield.bert.setting.ui.InputSettingsEditor;
+import se.redfield.bert.setting.ui.PythonNodeDialog;
 
 /**
  * 
@@ -33,34 +28,19 @@ import se.redfield.bert.setting.ui.InputSettingsEditor;
  * @author Alexander Bondaletov
  *
  */
-public class BertEmbedderNodeDialog extends NodeDialogPane {
-	private final BertEmbedderSettings settings;
+public class BertEmbedderNodeDialog extends PythonNodeDialog<BertEmbedderSettings> {
 	private InputSettingsEditor inputSettings;
 
 	/**
 	 * Creates new instance.
 	 */
 	public BertEmbedderNodeDialog() {
-		settings = new BertEmbedderSettings();
+		super(new BertEmbedderSettings());
 		inputSettings = new InputSettingsEditor(settings.getInputSettings(), BertEmbedderNodeModel.PORT_DATA_TABLE);
 
 		addTab("Settings", inputSettings.getComponentGroupPanel());
 		addTab("Advanced", new AdvancedTabGroup().getComponentGroupPanel());
-	}
-
-	@Override
-	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
-		try {
-			this.settings.loadSettingsFrom(settings);
-		} catch (InvalidSettingsException e) {
-			// ignore
-		}
-		inputSettings.loadSettings(settings, specs);
-	}
-
-	@Override
-	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
-		this.settings.saveSettingsTo(settings);
+		addPythonTab();
 	}
 
 	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup {
