@@ -61,16 +61,16 @@ public class BertTokenizer {
 	public BufferedDataTable tokenize(BertModelConfig bertModel, BufferedDataTable inTable, ExecutionContext exec)
 			throws DLInvalidEnvironmentException, PythonKernelCleanupException, PythonIOException,
 			CanceledExecutionException {
-		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(tokenizeScript(bertModel), exec.createSubProgress(0.8));
-			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0.1));
+			return commands.getDataTable(exec, exec.createSubProgress(0.1));
 		}
 	}
 
 	private String tokenizeScript(BertModelConfig bertModel) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertTokenizer import BertTokenizer");
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertTokenizer.run(").n();
+		b.a("BertTokenizer.run(").n();
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);

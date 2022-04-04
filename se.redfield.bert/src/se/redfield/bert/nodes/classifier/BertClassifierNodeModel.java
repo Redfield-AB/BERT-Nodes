@@ -70,6 +70,8 @@ public class BertClassifierNodeModel extends NodeModel {
 	 */
 	public static final int PORT_VALIDATION_TABLE = 2;
 
+	private static final int KNIO_VALIDATION_TABLE_IDX = 1;
+
 	private final BertClassifierSettings settings = new BertClassifierSettings();
 
 	protected BertClassifierNodeModel() {
@@ -97,22 +99,23 @@ public class BertClassifierNodeModel extends NodeModel {
 	private BufferedDataTable runTrain(BertModelConfig bertModel, FileStore fileStore, ClassifierInput input,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException {
-		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(input.getTrainingTable(),
 					exec.createSubProgress(input.hasValidationTable() ? 0.05 : 0.1));
 			if (input.hasValidationTable()) {
-				commands.putDataTable("validation_table", input.getValidationTable(), exec.createSubProgress(0.05));
+				commands.putDataTable(KNIO_VALIDATION_TABLE_IDX, input.getValidationTable(),
+						exec.createSubProgress(0.05));
 			}
 
 			commands.executeInKernel(getTrainScript(bertModel, fileStore, input), exec.createSubProgress(0.9));
-			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSubProgress(0));
+			return commands.getDataTable(exec, exec.createSubProgress(0));
 		}
 	}
 
 	private String getTrainScript(BertModelConfig bertModel, FileStore fileStore, ClassifierInput input) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from BertClassifier import BertClassifier");
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertClassifier.run_train(").n();
+		b.a("BertClassifier.run_train(").n();
 
 		BertCommands.putInputTableArgs(b);
 		BertCommands.putBertModelArgs(b, bertModel);
@@ -127,7 +130,7 @@ public class BertClassifierNodeModel extends NodeModel {
 		b.a("fine_tune_bert = ").a(settings.getFineTuneBert()).a(",").n();
 		b.a("optimizer = " + settings.getOptimizer()).a(",").n();
 		if (input.hasValidationTable()) {
-			b.a("validation_table = validation_table,").n();
+			BertCommands.putInputTableArgs(b, "validation_table", KNIO_VALIDATION_TABLE_IDX);
 			b.a("validation_batch_size = ").a(settings.getValidationBatchSize()).a(",").n();
 		}
 		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
@@ -138,8 +141,7 @@ public class BertClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE],
-				(DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
+		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE], (DataTableSpec) inSpecs[PORT_VALIDATION_TABLE]);
 		return new PortObjectSpec[] { createSpec((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]), null };
 	}
 

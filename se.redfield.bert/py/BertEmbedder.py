@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import knime_io as knio
 from tensorflow.keras.models import Model
 
 from ProgressCallback import ProgressCallback
@@ -68,7 +69,8 @@ class BertEmbedder:
     ):
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_pretrained(model_type, bert_model_handle, sentence_column, second_sentence_column, max_seq_length, cache_dir)
-        return embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+        output_table = embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+        knio.output_tables[0] = knio.write_table(output_table)
     
     @classmethod
     def run_from_classifier(cls,
@@ -86,7 +88,8 @@ class BertEmbedder:
         saved_model = tf.keras.models.load_model(file_store)
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_saved_model(model_type, saved_model, sentence_column, second_sentence_column, max_seq_length)
-        return embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+        output_table = embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+        knio.output_tables[0] = knio.write_table(output_table)
 
     @classmethod
     def from_pretrained(cls, model_type:BertModelType, bert_model_handle, sentence_column, second_sentence_column=None, max_seq_length=128, cache_dir=None):

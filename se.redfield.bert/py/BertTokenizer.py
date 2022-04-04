@@ -4,10 +4,15 @@ import tensorflow as tf
 import numpy as np
 
 from zipfile import ZipFile
-from bert.tokenization import bert_tokenization
+from bert.tokenization import FullTokenizer
 from transformers import AutoTokenizer, AutoConfig
 from ProgressCallback import ProgressCallback
 from bert_utils import load_bert_layer
+
+#temporary fix for the UnparsedFlagAccessError
+from absl import flags
+flags.FLAGS([''])
+
 class TokenizerBase:
     def __init__(self, tokenizer, max_seq_length, sentence_column, second_sentence_column=None):
         self.tokenizer = tokenizer
@@ -82,7 +87,7 @@ class BertTokenizer(TokenizerBase):
     def __init__(self, vocab_file, do_lower_case, max_seq_length, sentence_column, second_sentence_column = None):
         self.vocab_file = vocab_file
         self.do_lower_case = do_lower_case
-        tokenizer = bert_tokenization.FullTokenizer(vocab_file.asset_path.numpy(), do_lower_case.numpy())
+        tokenizer = FullTokenizer(vocab_file.asset_path.numpy(), do_lower_case.numpy())
 
         super().__init__(tokenizer, max_seq_length, sentence_column, second_sentence_column)
 
