@@ -75,11 +75,10 @@ public class BertEmbedder {
 	public BufferedDataTable computeEmbeddings(BertPortObjectBase bertObject, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
 			DLInvalidEnvironmentException {
-		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.8));
-			BufferedDataTable res = commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec,
-					exec.createSubProgress(0.05));
+			BufferedDataTable res = commands.getDataTable(exec, exec.createSubProgress(0.05));
 			res = exec.createColumnRearrangeTable(res,
 					createColumnConverter(inTable.getDataTableSpec().getNumColumns(), res),
 					exec.createSilentSubProgress(0.05));
@@ -121,7 +120,7 @@ public class BertEmbedder {
 
 	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {
 		DLPythonSourceCodeBuilder b = DLPythonUtils.createSourceCodeBuilder("from BertEmbedder import BertEmbedder");
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = BertEmbedder.").a(getRunMethodName(bertObject)).a("(").n();
+		b.a("BertEmbedder.").a(getRunMethodName(bertObject)).a("(").n();
 
 		BertCommands.putInputTableArgs(b);
 		putBertObjectArgs(bertObject, b);

@@ -15,6 +15,9 @@
  */
 package se.redfield.bert.nodes.embedder;
 
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.BertEmbedderSettings;
@@ -41,6 +44,12 @@ public class BertEmbedderNodeDialog extends PythonNodeDialog<BertEmbedderSetting
 		addTab("Settings", inputSettings.getComponentGroupPanel());
 		addTab("Advanced", new AdvancedTabGroup().getComponentGroupPanel());
 		addPythonTab();
+	}
+
+	@Override
+	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+		super.loadSettingsFrom(settings, specs);
+		inputSettings.loadSettings(settings, specs);
 	}
 
 	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup {

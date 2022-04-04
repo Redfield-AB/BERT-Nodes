@@ -55,7 +55,7 @@ public class BertModelSelectorNodeModel extends NodeModel {
 
 	private void downloadOrCheckModel(BertModelConfig model, ExecutionContext exec)
 			throws IOException, DLInvalidEnvironmentException, CanceledExecutionException {
-		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 0)) {
 			commands.executeInKernel(getLoadModelScript(model), exec);
 		}
 	}

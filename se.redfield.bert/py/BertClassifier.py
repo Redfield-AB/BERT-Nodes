@@ -2,6 +2,7 @@ import tempfile
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import knime_io as knio
 from transformers import TFAutoModel
 
 from BertEmbedder import BertEmbedder
@@ -98,7 +99,7 @@ class BertClassifier:
         classifier.save(file_store)
 
         output_table = pd.DataFrame(progress_logger.logs)
-        return output_table
+        knio.output_tables[0] = knio.write_table(output_table)
 
     @classmethod
     def run_predict(cls,
@@ -117,4 +118,5 @@ class BertClassifier:
 
         output = classifier.predict(input_table, batch_size, progress_logger)
 
-        return pd.DataFrame(output, index=input_table.index)
+        output_table = pd.DataFrame(output, index=input_table.index).astype('float64')
+        knio.output_tables[0] = knio.write_table(output_table)
