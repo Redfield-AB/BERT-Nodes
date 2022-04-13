@@ -25,4 +25,11 @@
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>src/se/redfield/bert/nodes/zstc/ZSTC logo.png</name>
+			<type>1</type>
+			<location>/Users/abderrahimal/Documents/zero shot classification node/ZSTC logo.png</location>
+		</link>
+	</linkedResources>
 </projectDescription>
