@@ -90,7 +90,7 @@ public class ZeroShotTextClassifierNodeDialog extends PythonNodeDialog<ZeroShotT
 
 		public AdvancedTabGroup() {
 			addCheckboxRow(settings.getMultilabelClassification(), "Multi-label classification", false);
-			addCheckboxRow(settings.getUseCustomThreshouldModel(), "Use custom threshold for determining predictions",
+			addCheckboxRow(settings.getUseCustomThresholdModel(), "Use custom threshold for determining predictions",
 					false);
 			addNumberSpinnerRowComponent(settings.getPredictionThresholdModel(), "Probability threshold", 0.01);
 		}

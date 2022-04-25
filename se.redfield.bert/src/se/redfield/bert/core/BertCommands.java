@@ -155,11 +155,6 @@ public class BertCommands implements AutoCloseable {
 		putModelTypeArg(b, model.getType());
 	}
 
-	// CandidateLabels
-	public static void putCandidateLabelsArg(DLPythonSourceCodeBuilder b, String candidateLabels) {
-		b.a("candidate_labels = ").as(candidateLabels).a(",").n();
-	}
-
 	public static void putFileStoreArgs(DLPythonSourceCodeBuilder b, FileStore fileStore) {
 		b.a("file_store = ").asr(fileStore.getFile().getAbsolutePath()).a(",").n();
 	}
