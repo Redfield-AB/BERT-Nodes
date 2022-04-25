@@ -29,33 +29,30 @@ import org.knime.core.node.NodeView;
 
 public class ZeroShotTextClassifierNodeFactory extends NodeFactory<ZeroShotTextClassifierNodeModel> {
 
+	@Override
+	public ZeroShotTextClassifierNodeModel createNodeModel() {
+		return new ZeroShotTextClassifierNodeModel();
+	}
 
-    @Override
-    public ZeroShotTextClassifierNodeModel createNodeModel() {
-        return new ZeroShotTextClassifierNodeModel();
-    }
+	@Override
+	public int getNrNodeViews() {
+		return 0;
+	}
 
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    @Override
-    public NodeView<ZeroShotTextClassifierNodeModel> createNodeView(int viewIndex, ZeroShotTextClassifierNodeModel nodeModel) {
+	@Override
+	public NodeView<ZeroShotTextClassifierNodeModel> createNodeView(int viewIndex,
+			ZeroShotTextClassifierNodeModel nodeModel) {
 		return null;
-    }
+	}
 
-    
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
+	@Override
+	public boolean hasDialog() {
+		return true;
+	}
 
-    
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new ZeroShotTextClassifierNodeDialog();
-    }
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
+		return new ZeroShotTextClassifierNodeDialog();
+	}
 
 }
-

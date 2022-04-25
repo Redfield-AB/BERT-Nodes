@@ -20,20 +20,20 @@ import javax.swing.JLabel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.util.ColumnSelectionPanel;
-import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.dl.base.nodes.AbstractGridBagDialogComponentGroup;
 
 import se.redfield.bert.setting.ZeroShotTextClassifierSettings;
 import se.redfield.bert.setting.ui.PythonNodeDialog;
 
-
 /**
- * Implementation of the node dialog of {@link ZeroShotTextClassifierNodeModel} node.
+ * Implementation of the node dialog of {@link ZeroShotTextClassifierNodeModel}
+ * node.
  * 
  * @author Abderrahim Alakouche.
  */
@@ -41,61 +41,58 @@ import se.redfield.bert.setting.ui.PythonNodeDialog;
 public class ZeroShotTextClassifierNodeDialog extends PythonNodeDialog<ZeroShotTextClassifierSettings> {
 
 	private DialogComponentColumnNameSelection sentenceColumn;
-	
+
 	@SuppressWarnings("unchecked")
-    protected ZeroShotTextClassifierNodeDialog() {
-        super(new ZeroShotTextClassifierSettings());
-        
-        sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), 
-        														"Sentence column", 
-        														ZeroShotTextClassifierNodeModel.PORT_DATA_TABLE,
-        														StringValue.class);
-        
-        addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
-        addTab("Multi-label", new AdvancedTabGroup().getComponentGroupPanel());
-        addPythonTab();
-  
-    }
-	
+	protected ZeroShotTextClassifierNodeDialog() {
+		super(new ZeroShotTextClassifierSettings());
+
+		sentenceColumn = new DialogComponentColumnNameSelection(settings.getSentenceColumnModel(), "Sentence column",
+				ZeroShotTextClassifierNodeModel.PORT_DATA_TABLE, StringValue.class);
+
+		addTab("Settings", new SettingsTabGroup().getComponentGroupPanel());
+		addTab("Multi-label", new AdvancedTabGroup().getComponentGroupPanel());
+		addPythonTab();
+
+	}
+
 	@Override
-	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec [] specs) throws NotConfigurableException{
+	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
 		super.loadSettingsFrom(settings, specs);
 		try {
 			this.settings.validate((DataTableSpec) specs[ZeroShotTextClassifierNodeModel.PORT_DATA_TABLE]);
 		} catch (InvalidSettingsException e) {
 			// ignore
 		}
-		
+
 		sentenceColumn.loadSettingsFrom(settings, specs);
-		
+
 	}
-	
-	
-	
+
 	private class SettingsTabGroup extends AbstractGridBagDialogComponentGroup {
-		
+
 		public SettingsTabGroup() {
-			
-			addDoubleColumnRow(new JLabel("Sentence column"), getFirstComponent(sentenceColumn, ColumnSelectionPanel.class));
+
+			addDoubleColumnRow(new JLabel("Sentence column"),
+					getFirstComponent(sentenceColumn, ColumnSelectionPanel.class));
 			addStringEditRowComponent(settings.getCandidateLabelsModel(), "Candidate labels");
-			
+
 			addHorizontalSeparator();
-			
-			addCheckboxRow(settings.getUseCustomHypothesisModel(),"Use custom hypothesis", false);
+
+			addCheckboxRow(settings.getUseCustomHypothesisModel(), "Use custom hypothesis", false);
 			addStringEditRowComponent(settings.getHypothesisModel(), "Hypothesis");
-			
+
 			addCheckboxRow(settings.getAppendProbabilitiesModel(), "Append individual class probabilities", false);
-				
-		}		
+
+		}
 	}
-	
-	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup{
-		
+
+	private class AdvancedTabGroup extends AbstractGridBagDialogComponentGroup {
+
 		public AdvancedTabGroup() {
 			addCheckboxRow(settings.getMultilabelClassification(), "Multi-label classification", false);
-			addCheckboxRow(settings.getUseCustomThreshouldModel(), "Use custom threshold for determining predictions", false);
+			addCheckboxRow(settings.getUseCustomThreshouldModel(), "Use custom threshold for determining predictions",
+					false);
 			addNumberSpinnerRowComponent(settings.getPredictionThresholdModel(), "Probability threshold", 0.01);
 		}
-	}	
+	}
 }
-
