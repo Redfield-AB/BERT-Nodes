@@ -16,17 +16,15 @@
 
 package se.redfield.bert.setting;
 
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 import se.redfield.bert.nodes.zstc.ZeroShotTextClassifierNodeModel;
-
-
 
 /**
  * Settings for {@link ZeroShotTextClassifierNodeModel} node.
@@ -36,7 +34,7 @@ import se.redfield.bert.nodes.zstc.ZeroShotTextClassifierNodeModel;
  */
 
 public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
-	
+
 	private static final String KEY_SENTENCE_COLUMN = "sentenceColumn";
 	private static final String CANDIDATE_LABELS = "candidateLabels";
 	private static final String KEY_USE_CUSTOM_HYPOTHESIS = "useCustomHypothesis";
@@ -47,69 +45,61 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 	private static final String KEY_PREDICTION_THRESHOLD = "predictionThreshold";
 	private static final double DEFAULT_PREDICTION_THRESHOLD = 0.5;
 	private static final String DEFAULT_HYPOTHESIS = "This example is {}";
-	
+
 	private final SettingsModelString sentenceColumn;
 	private final SettingsModelString candidateLabels;
 	private final SettingsModelBoolean useCustomHypothesis;
 	private final SettingsModelString hypothesis;
 	private final SettingsModelBoolean appendProbabilities;
 	private final SettingsModelBoolean multilabelClassification;
-	private final SettingsModelBoolean useCustomThreshould;
+	private final SettingsModelBoolean useCustomThreshold;
 	private final SettingsModelDoubleBounded predictionThreshold;
-	
-	
+
 	/**
-	 * Create a new instance. 
+	 * Create a new instance.
 	 */
 	public ZeroShotTextClassifierSettings() {
 		sentenceColumn = new SettingsModelString(KEY_SENTENCE_COLUMN, "");
 		candidateLabels = new SettingsModelString(CANDIDATE_LABELS, "");
 		useCustomHypothesis = new SettingsModelBoolean(KEY_USE_CUSTOM_HYPOTHESIS, false);
 		hypothesis = new SettingsModelString(KEY_HYPOTHESIS, DEFAULT_HYPOTHESIS);
-		appendProbabilities = new SettingsModelBoolean(KEY_APPEND_PROBABILITIES, false);		
-		multilabelClassification = new SettingsModelBoolean(KEY_MULTILABEL_CLASSIFICATION, false);		
-		useCustomThreshould = new SettingsModelBoolean(KEY_USE_CUSTOM_THRESHOLD, false);
-		predictionThreshold = new SettingsModelDoubleBounded(KEY_PREDICTION_THRESHOLD, DEFAULT_PREDICTION_THRESHOLD, 0, 1);
-		
+		appendProbabilities = new SettingsModelBoolean(KEY_APPEND_PROBABILITIES, false);
+		multilabelClassification = new SettingsModelBoolean(KEY_MULTILABEL_CLASSIFICATION, false);
+		useCustomThreshold = new SettingsModelBoolean(KEY_USE_CUSTOM_THRESHOLD, false);
+		predictionThreshold = new SettingsModelDoubleBounded(KEY_PREDICTION_THRESHOLD, DEFAULT_PREDICTION_THRESHOLD, 0,
+				1);
+
 		predictionThreshold.setEnabled(false);
-		useCustomThreshould.setEnabled(false);
+		useCustomThreshold.setEnabled(false);
 		hypothesis.setEnabled(false);
-		
-		
-		useCustomHypothesis.addChangeListener(e->{
+
+		useCustomHypothesis.addChangeListener(e -> {
 			boolean selected = useCustomHypothesis.getBooleanValue();
-			
+
 			hypothesis.setEnabled(selected);
 
 		});
-		
-		
+
 		multilabelClassification.addChangeListener(e -> {
-			
+
 			boolean selected = multilabelClassification.getBooleanValue();
-			
-			if (selected) {
-				useCustomThreshould.setEnabled(true);
-				useCustomThreshould.addChangeListener(e1 -> {
-					boolean selected1 = useCustomThreshould.getBooleanValue();
-					predictionThreshold.setEnabled(selected1);
-				});
-			}
-			else {
-				useCustomThreshould.setEnabled(false);
-				useCustomThreshould.setBooleanValue(false);
-			}
-			
+			useCustomThreshold.setEnabled(selected);
+
 		});
-			
+
+		useCustomThreshold.addChangeListener(e1 -> {
+			boolean selected = useCustomThreshold.getBooleanValue();
+			predictionThreshold.setEnabled(selected);
+		});
+
 	}
-	
-	
+
 	/**
 	 * Save current settings into the given {@link NodeSettingsWO}
+	 * 
 	 * @param settings
 	 */
-	
+
 	public void saveSettingsTo(NodeSettingsWO settings) {
 		super.saveSettingsTo(settings);
 		sentenceColumn.saveSettingsTo(settings);
@@ -118,37 +108,35 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 		appendProbabilities.saveSettingsTo(settings);
 		hypothesis.saveSettingsTo(settings);
 		multilabelClassification.saveSettingsTo(settings);
-		useCustomThreshould.saveSettingsTo(settings);
+		useCustomThreshold.saveSettingsTo(settings);
 		predictionThreshold.saveSettingsTo(settings);
-		
-		
+
 	}
-	
+
 	/**
 	 * Validates settings in the provided {@link NodeSettingsRO}
 	 * 
 	 * @param settings
 	 * @throws InvalidSettingsException
 	 */
-	
-	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException{
+
+	public void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
 		sentenceColumn.validateSettings(settings);
 		candidateLabels.validateSettings(settings);
 		useCustomHypothesis.validateSettings(settings);
 		hypothesis.validateSettings(settings);
 		appendProbabilities.validateSettings(settings);
 		multilabelClassification.validateSettings(settings);
-		useCustomThreshould.validateSettings(settings);
+		useCustomThreshold.validateSettings(settings);
 		predictionThreshold.validateSettings(settings);
-		
-		
+
 		ZeroShotTextClassifierSettings temp = new ZeroShotTextClassifierSettings();
 		temp.loadSettingsFrom(settings);
 		temp.validate();
-			
+
 	}
-	
-	public void validate() throws InvalidSettingsException{
+
+	public void validate() throws InvalidSettingsException {
 		// Invalid sentence column
 		if (sentenceColumn.getStringValue().isEmpty()) {
 			throw new InvalidSettingsException("Sentnece column is not selected");
@@ -157,22 +145,18 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 		if (candidateLabels.getStringValue().isEmpty()) {
 			throw new InvalidSettingsException("At least one candidate label should be provided");
 		}
-		
+
 	}
-	
-	
-	
+
 	public void validate(DataTableSpec spec) throws InvalidSettingsException {
 		validate();
 		String sc = sentenceColumn.getStringValue();
-		if (!spec.containsName(sc)) { 
+		if (!spec.containsName(sc)) {
 			throw new InvalidSettingsException("Input table doesn't contain column:" + sc);
-			
+
 		}
 	}
-	
 
-	
 	/**
 	 * Loads settings from the provided {@link NodeSettingsRO}
 	 * 
@@ -189,10 +173,10 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 		appendProbabilities.loadSettingsFrom(settings);
 		predictionThreshold.loadSettingsFrom(settings);
 		multilabelClassification.loadSettingsFrom(settings);
-		useCustomThreshould.loadSettingsFrom(settings);
-		
+		useCustomThreshold.loadSettingsFrom(settings);
+
 	}
-	
+
 	/**
 	 * @return the sentence column model.
 	 */
@@ -217,50 +201,46 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 	public String getCandidateLabels() {
 		return candidateLabels.getStringValue();
 	}
-	
-	
+
 	public SettingsModelBoolean getUseCustomHypothesisModel() {
 		return useCustomHypothesis;
 	}
-	
+
 	public Boolean getUseCustomHypothesis() {
 		return useCustomHypothesis.getBooleanValue();
 	}
-	
+
 	public SettingsModelString getHypothesisModel() {
 		return hypothesis;
 	}
-	
-	public String getHypothesis(){
+
+	public String getHypothesis() {
 		if (getUseCustomHypothesis())
-			return  hypothesis.getStringValue();
-		else 
+			return hypothesis.getStringValue();
+		else
 			return DEFAULT_HYPOTHESIS;
-		
+
 	}
-	
+
 	public SettingsModelBoolean getAppendProbabilitiesModel() {
 		return appendProbabilities;
-		
+
 	}
-	
+
 	public Boolean getAppendProbabilities() {
 		return appendProbabilities.getBooleanValue();
 	}
-	
+
 	public SettingsModelBoolean getMultilabelClassification() {
 		return multilabelClassification;
 	}
-	
-	
+
 	public Boolean isMultilabelClassification() {
 		return multilabelClassification.getBooleanValue();
 	}
-	
 
-	
 	public SettingsModelBoolean getUseCustomThreshouldModel() {
-		return useCustomThreshould;
+		return useCustomThreshold;
 	}
 
 	/**
@@ -268,7 +248,7 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 	 *         compute predicted classes
 	 */
 	public boolean getUseCustomThreshould() {
-		return useCustomThreshould.getBooleanValue();
+		return useCustomThreshold.getBooleanValue();
 	}
 
 	/**

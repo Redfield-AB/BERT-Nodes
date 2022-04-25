@@ -8,7 +8,7 @@ from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 
 class ZeroShotTextClassifier:
 
-    def __init__(self , model=None, tokenizer=None, multi_label=False,threshold=None, hypothesis= "this example is {}", append_probabilites=False, padding=True, truncation='only_first'):
+    def __init__(self , model=None, tokenizer=None, multi_label=False,threshold=None, hypothesis= "This example is {}", append_probabilites=False, padding=True, truncation='only_first'):
         
         if(model):
             assert tokenizer is not None
@@ -42,9 +42,19 @@ class ZeroShotTextClassifier:
     def add_probabilities_prefix(self, labels):
         return ["P({})".format(label) for label in labels]
 
+
+
     def predict(self, input_table, sentence_column, candidate_labels):
         """
+        Classify a given sentence without any previously labeled data.
 
+        Args 
+            input_table : A dataFrame contains at least one String column.
+            sentence_column : A string column that contains text to be classified.
+            candidate_labels : A list of labels to use for prediction.
+        
+        Return 
+            output_table : A dataFrame that contains the senetence_column and the model predictions.
         """
         
         data = []
@@ -62,59 +72,57 @@ class ZeroShotTextClassifier:
 
             self.candidate_labels = self._parse_labels(candidate_labels)
 
-        probabilitiesColumn = self.add_probabilities_prefix(self.candidate_labels)
-        self.nbrSequences = len(self.sentence_column)
-        self.nbrLabels = len(self.candidate_labels)
+        probabilities_column = self.add_probabilities_prefix(self.candidate_labels)
+        self.sequences_length = len(self.sentence_column) # Number of sequences.
+        self.labels_length = len(self.candidate_labels)   # Number of labels. 
 
 
         for sequence in self.sentence_column:
             sequence_pairs.extend([[sequence, self.hypothesis.format(label)] for label in self.candidate_labels])
 
         # Tokenization
-        input_ids = self.tokenizer(sequence_pairs,return_tensors='tf', padding=self.padding, truncation=self.truncation)
+        input_ids = self.tokenizer(sequence_pairs, return_tensors='tf', padding=self.padding, truncation=self.truncation)
 
         # Model logits
         logits = self.model(input_ids).logits
+        reshaped_logits = logits.numpy().reshape((self.sequences_length, self.labels_length, -1))
 
-        if not self.multi_label:
-            
-            entail = logits[..., -1]
-            predictions = tf.nn.softmax(entail)[:].numpy().reshape(self.nbrSequences, self.nbrLabels)
-            for i in range(self.nbrSequences):
+        if (not self.multi_label) and (self.labels_length > 1):
+            # softmax the "entailment" logits over all candidate labels.
+            entailment = reshaped_logits[..., -1]
+            predictions = tf.nn.softmax(entailment).numpy()
+            for i in range(self.sequences_length):
                 top_ids = list(reversed(predictions[i].argsort()))
                 if(self.append_probabilities):
                     data.append([self.sentence_column[i], np.array(self.candidate_labels)[top_ids][0]] + list(predictions[i]))
-                    columns = ['Sentence', 'Prediction'] + probabilitiesColumn
+                    columns = ['Sentence', 'Prediction'] + probabilities_column
                 else:
                     data.append([self.sentence_column[i], np.array(self.candidate_labels)[top_ids][0]])
                     columns = ['Sentence', 'Prediction']
-                outputTable = pd.DataFrame(data, columns=columns)
+                output_table = pd.DataFrame(data, columns=columns)
 
 
         else:
-            entail_contra_logits = logits[:, 0::2]
-            probs = tf.nn.softmax(entail_contra_logits)
-            predictions = probs[:, 1].numpy().reshape(self.nbrSequences, self.nbrLabels)
-            predictionsCopy = predictions.copy()
-
-            predictionsCopy[predictionsCopy >= self.threshold] = 1
-            predictionsCopy[predictionsCopy < self.threshold] = 0
-            predictionsCopy = predictionsCopy.astype('int32')
+            # softmax over the entailment vs contradiction for each lable independently 
+            entail_contra_logits = reshaped_logits[..., [0, -1]]
+            probabilities = tf.nn.softmax(entail_contra_logits)
+            entailment_probs = probabilities[..., 1].numpy()
+            predictions = entailment_probs.copy()
+            predictions[predictions >= self.threshold] = 1
+            predictions[predictions < self.threshold] = 0
+            predictions = predictions.astype('int32')
             
-            for i in range(self.nbrSequences):
+            for i in range(self.sequences_length):
 
                 if(self.append_probabilities):
-                    data.append([self.sentence_column[i]] + list(predictionsCopy[i]) + list(predictions[i]))
-                    columns = ["sentence"] + self.candidate_labels + probabilitiesColumn
+                    data.append([self.sentence_column[i]] + list(predictions[i]) + list(entailment_probs[i]))
+                    columns = ["sentence"] + self.candidate_labels + probabilities_column
                 else:
-                    data.append([self.sentence_column[i]] + list(predictionsCopy[i]))
+                    data.append([self.sentence_column[i]] + list(predictions[i]))
                     columns = ["sentence"] + self.candidate_labels 
-
-                outputTable = pd.DataFrame(data, columns=columns)
-
-        
+                output_table = pd.DataFrame(data, columns=columns)
             
-        return outputTable     
+        return output_table     
         
 
     @classmethod
@@ -122,18 +130,18 @@ class ZeroShotTextClassifier:
                  input_table, 
                  sentence_column, 
                  candidate_labels,  
-                 bert_model_type_key,
                  hypothesis, 
-                 bert_model_handel, 
-                 cach_dir=None,
+                 bert_model_handle, 
+                 bert_model_type_key,
+                 cache_dir=None,
                  multi_label=False,
                  threshold=None,
                  append_probabilities=True):
                  
         
-        model = TFAutoModelForSequenceClassification.from_pretrained(bert_model_handel, cache_dir = cach_dir)
-        tokenizer = AutoTokenizer.from_pretrained(bert_model_handel, cache_dir = cach_dir)
+        model = TFAutoModelForSequenceClassification.from_pretrained(bert_model_handle, cache_dir = cache_dir)
+        tokenizer = AutoTokenizer.from_pretrained(bert_model_handle, cache_dir = cache_dir)
         classifier = ZeroShotTextClassifier(model, tokenizer, multi_label,threshold, hypothesis, append_probabilities)
-        outputTable  = classifier.predict(input_table, sentence_column, candidate_labels) 
+        output_table  = classifier.predict(input_table, sentence_column, candidate_labels) 
 
-        return outputTable
+        return output_table
