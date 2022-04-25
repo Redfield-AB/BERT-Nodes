@@ -239,7 +239,7 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 		return multilabelClassification.getBooleanValue();
 	}
 
-	public SettingsModelBoolean getUseCustomThreshouldModel() {
+	public SettingsModelBoolean getUseCustomThresholdModel() {
 		return useCustomThreshold;
 	}
 
@@ -247,7 +247,7 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 	 * @return whether user-defined probability threshold value should be used to
 	 *         compute predicted classes
 	 */
-	public boolean getUseCustomThreshould() {
+	public boolean getUseCustomThreshold() {
 		return useCustomThreshold.getBooleanValue();
 	}
 
@@ -262,7 +262,7 @@ public class ZeroShotTextClassifierSettings extends PythonNodeSettings {
 	 * @return the probability threshold value used to determine predicted classes
 	 */
 	public double getPredictionThreshold() {
-		if (getUseCustomThreshould()) {
+		if (getUseCustomThreshold()) {
 			return predictionThreshold.getDoubleValue();
 		} else {
 			return DEFAULT_PREDICTION_THRESHOLD;
