@@ -17,16 +17,16 @@ class BertEmbedder:
         input_masks = tf.keras.layers.Input(shape=(tokenizer.max_seq_length,), dtype=tf.int32, name="input_masks")
         input_segments = tf.keras.layers.Input(shape=(tokenizer.max_seq_length,), dtype=tf.int32, name="input_segments")
 
-        pooled_output, sequence_output = bert_layer([input_ids, input_masks, input_segments])
-        if(pooled_output.shape.ndims == 3 and sequence_output.shape.ndims == 2):
-            # For Hugging Face models
-            pooled_output, sequence_output = sequence_output, pooled_output
-        
-        self.pooled_output = pooled_output
-        self.sequence_output = sequence_output
+        if bert_layer.__class__.__module__.startswith('transformers'):
+            res = bert_layer(input_ids, input_masks, input_segments)
+            self.pooled_output =  res.pooler_output
+            self.sequence_output = res.last_hidden_state
+        else:
+            self.pooled_output, self.sequence_output = bert_layer([input_ids, input_masks, input_segments])
+
         self.inputs = [input_ids, input_masks, input_segments]
         
-        self.model = Model(inputs=self.inputs, outputs=[pooled_output, sequence_output])
+        self.model = Model(inputs=self.inputs, outputs=[self.pooled_output, self.sequence_output])
 
     def predict(self, input_table, batch_size, progress_logger):
         ids, masks, segments = self.tokenizer.tokenize(input_table, progress_logger)
