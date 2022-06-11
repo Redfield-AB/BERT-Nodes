@@ -8,7 +8,7 @@ from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 
 class ZeroShotTextClassifier:
 
-    def __init__(self , model=None, tokenizer=None, multi_label=False,threshold=None, hypothesis= "This example is {}", append_probabilites=False, padding=True, truncation='only_first'):
+    def __init__(self , model=None, tokenizer=None, multi_label=False,threshold=0.5, hypothesis= "This example is {}", append_probabilites=False, padding=True, truncation='only_first'):
         
         if(model):
             assert tokenizer is not None
@@ -21,9 +21,6 @@ class ZeroShotTextClassifier:
         self.threshold = threshold
         self.hypothesis = hypothesis
         self.append_probabilities = append_probabilites
-
-        if self.multi_label and (not self.threshold):
-          self.threshold = 0.5
         
         if self.multi_label and (0 >= self.threshold <= 1) : 
           raise ValueError("Threshold {} must be within the open interval ]0, 1[".format(self.threshold))
@@ -73,8 +70,8 @@ class ZeroShotTextClassifier:
             self.candidate_labels = self._parse_labels(candidate_labels)
 
         probabilities_column = self.add_probabilities_prefix(self.candidate_labels)
-        self.sequences_length = len(self.sentence_column) # Number of sequences.
-        self.labels_length = len(self.candidate_labels)   # Number of labels. 
+        sequences_length = len(self.sentence_column) 
+        labels_length = len(self.candidate_labels)   
 
 
         for sequence in self.sentence_column:
@@ -85,13 +82,13 @@ class ZeroShotTextClassifier:
 
         # Model logits
         logits = self.model(input_ids).logits
-        reshaped_logits = logits.numpy().reshape((self.sequences_length, self.labels_length, -1))
+        reshaped_logits = logits.numpy().reshape((sequences_length, labels_length, -1))
 
-        if (not self.multi_label) and (self.labels_length > 1):
+        if (not self.multi_label) and (labels_length > 1):
             # softmax the "entailment" logits over all candidate labels.
             entailment = reshaped_logits[..., -1]
             predictions = tf.nn.softmax(entailment).numpy()
-            for i in range(self.sequences_length):
+            for i in range(sequences_length):
                 top_ids = list(reversed(predictions[i].argsort()))
                 if(self.append_probabilities):
                     data.append([self.sentence_column[i], np.array(self.candidate_labels)[top_ids][0]] + list(predictions[i]))
@@ -112,7 +109,7 @@ class ZeroShotTextClassifier:
             predictions[predictions < self.threshold] = 0
             predictions = predictions.astype('int32')
             
-            for i in range(self.sequences_length):
+            for i in range(sequences_length):
 
                 if(self.append_probabilities):
                     data.append([self.sentence_column[i]] + list(predictions[i]) + list(entailment_probs[i]))
