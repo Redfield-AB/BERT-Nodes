@@ -44,6 +44,7 @@ import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.nodes.port.BertPortObjectBase;
 import se.redfield.bert.setting.BertEmbedderSettings;
+import se.redfield.bert.util.InputUtils;
 
 public class BertEmbedder {
 
@@ -75,11 +76,28 @@ public class BertEmbedder {
 	public BufferedDataTable computeEmbeddings(BertPortObjectBase bertObject, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
 			DLInvalidEnvironmentException {
+		var preprocessedTable = preprocess(inTable, exec);
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
-			commands.putDataTable(inTable, exec.createSubProgress(0.1));
+			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.1));
 			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.85));
-			return commands.getDataTable(exec, exec.createSubProgress(0.05));
+			var embeddings = commands.getDataTable(exec, exec.createSubProgress(0.05));
+			return exec.createJoinedTable(inTable, embeddings, exec.createSilentSubProgress(0));
 		}
+	}
+	
+	/**
+	 * Only keeps the sentence columns and converts them to string if they aren't yet.
+	 */
+	private BufferedDataTable preprocess(final BufferedDataTable inTable, final ExecutionContext exec)
+			throws CanceledExecutionException {
+		var rearranger = new ColumnRearranger(inTable.getDataTableSpec());
+		var inputSettings = settings.getInputSettings();
+		String[] columns = inputSettings.getTwoSentenceMode()
+				? new String[] { inputSettings.getSentenceColumn(), inputSettings.getSecondSentenceColumn() }
+				: new String[] { inputSettings.getSentenceColumn() };
+		InputUtils.convertColumnsToString(rearranger, columns);
+		rearranger.keepOnly(columns);
+		return exec.createColumnRearrangeTable(inTable, rearranger, exec.createSilentSubProgress(0));
 	}
 
 	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {
