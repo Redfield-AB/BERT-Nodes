@@ -26,14 +26,14 @@ class BertEmbedder:
         
         self.model = Model(inputs=self.inputs, outputs=[self.pooled_output, self.sequence_output])
 
-    def predict(self, input_table, batch_size, progress_logger):
+    def predict(self, input_table: pd.DataFrame, batch_size, progress_logger):
         ids, masks, segments = self.tokenizer.tokenize(input_table, progress_logger)
 
         pooled_emb, sequence_emb = self.model.predict([ids, masks, segments],
             batch_size=batch_size, callbacks=[progress_logger])
         return pooled_emb, sequence_emb
 
-    def compute_embeddings(self, input_table, batch_size,
+    def compute_embeddings(self, input_table: pd.DataFrame, batch_size,
         embeddings_column = 'embeddings',
         sequence_embedding_column_prefix = 'sequence_embeddings_',
         include_sequence_embeddings = False
@@ -41,7 +41,7 @@ class BertEmbedder:
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
         pooled_emb, sequence_emb = self.predict(input_table, batch_size, progress_logger)
 
-        output_table = input_table.copy()
+        output_table = pd.DataFrame(index=input_table.index)
         output_table[embeddings_column] = pooled_emb.tolist()
 
         if(include_sequence_embeddings):

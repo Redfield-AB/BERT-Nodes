@@ -121,7 +121,6 @@ class BertClassifier:
             pd_batch = batch.to_pandas() # TODO pyarrow is probably more efficient
             progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size)
             output = classifier.predict(pd_batch, batch_size, progress_logger)
-            # TODO use pyarrow directly
             output_table = pd.DataFrame(output, index=pd_batch.index).astype('float64')
             write_table.append(output_table)
         knio.output_tables[0] = write_table

@@ -48,6 +48,7 @@ import se.redfield.bert.core.ComputePredictionCellFactory;
 import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.setting.BertPredictorSettings;
+import se.redfield.bert.util.InputUtils;
 
 /**
  * BERT Predictor node. Takes trained {@link BertClassifierPortObject} and the
@@ -88,11 +89,20 @@ public class BertPredictorNodeModel extends NodeModel {
 	private BufferedDataTable runPredict(BertClassifierPortObject classifier, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException {
+		var preprocessedTable = preprocess(inTable, exec.createSubExecutionContext(0.05));
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
-			commands.putDataTable(inTable, exec.createSubProgress(0.1));
+			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.05));
 			commands.executeInKernel(getPredictScript(classifier), exec.createSubProgress(0.8));
 			return commands.getDataTable(exec, exec.createSubProgress(0.1));
 		}
+	}
+
+	private BufferedDataTable preprocess(final BufferedDataTable inTable, ExecutionContext exec)
+			throws CanceledExecutionException {
+		var rearranger = new ColumnRearranger(inTable.getDataTableSpec());
+		InputUtils.convertColumnsToString(rearranger, settings.getSentenceColumn());
+		rearranger.keepOnly(settings.getSentenceColumn());
+		return exec.createColumnRearrangeTable(inTable, rearranger, exec);
 	}
 
 	private String getPredictScript(BertClassifierPortObject classifier) {
