@@ -77,45 +77,9 @@ public class BertEmbedder {
 			DLInvalidEnvironmentException {
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.8));
-			BufferedDataTable res = commands.getDataTable(exec, exec.createSubProgress(0.05));
-			res = exec.createColumnRearrangeTable(res,
-					createColumnConverter(inTable.getDataTableSpec().getNumColumns(), res),
-					exec.createSilentSubProgress(0.05));
-			return res;
+			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.85));
+			return commands.getDataTable(exec, exec.createSubProgress(0.05));
 		}
-	}
-
-	private ColumnRearranger createColumnConverter(int startIndex, BufferedDataTable table) {
-		int[] indexes = new int[table.getDataTableSpec().getNumColumns() - startIndex];
-		DataColumnSpec[] specs = new DataColumnSpec[table.getDataTableSpec().getNumColumns() - startIndex];
-
-		for (int i = 0; i < indexes.length; i++) {
-			indexes[i] = i + startIndex;
-			DataColumnSpec original = table.getDataTableSpec().getColumnSpec(i + startIndex);
-			specs[i] = new DataColumnSpecCreator(original.getName(), ListCell.getCollectionType(DoubleCell.TYPE))
-					.createSpec();
-		}
-		ColumnRearranger r = new ColumnRearranger(table.getDataTableSpec());
-		CellFactory fac = new AbstractCellFactory(specs) {
-
-			@Override
-			public DataCell[] getCells(DataRow row) {
-				DataCell[] result = new DataCell[indexes.length];
-				for (int i = 0; i < indexes.length; i++) {
-					String str = row.getCell(indexes[i]).toString();
-					List<DoubleCell> doubles = Arrays.asList(str.substring(1, str.length() - 1).split(","))//
-							.stream()//
-							.mapToDouble(Double::valueOf)//
-							.mapToObj(DoubleCell::new)//
-							.collect(Collectors.toList());
-					result[i] = CollectionCellFactory.createListCell(doubles);
-				}
-				return result;
-			}
-		};
-		r.replace(fac, indexes);
-		return r;
 	}
 
 	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {
