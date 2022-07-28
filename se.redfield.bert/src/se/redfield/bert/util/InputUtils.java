@@ -53,7 +53,7 @@ public final class InputUtils {
 			var colSpec = spec.getColumnSpec(colIdx);
 			getConverter(colSpec.getType())//
 					.ifPresent(c -> rearranger.replace(
-							new ToStringCellFactory(colIdx, colSpec.getName(), InputUtils::stringValueToString),
+							new ToStringCellFactory(colIdx, colSpec.getName(), c),
 							colIdx));
 		}
 	}
