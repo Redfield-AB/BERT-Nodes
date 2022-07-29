@@ -15,12 +15,13 @@
  */
 package se.redfield.bert.setting;
 
+import org.knime.conda.prefs.CondaPreferences;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.python2.PythonVersion;
 import org.knime.python2.config.PythonCommandConfig;
+import org.knime.python2.prefs.PythonPreferences;
 
 public class PythonNodeSettings {
 
@@ -29,8 +30,9 @@ public class PythonNodeSettings {
 	private final PythonCommandConfig pythonCommand;
 
 	public PythonNodeSettings() {
+		// TODO use bundled environment or environment coming from the extension's preference page
 		pythonCommand = new PythonCommandConfig(KEY_PYTHON_COMMAND, PythonVersion.PYTHON3,
-				DLPythonPreferences::getCondaInstallationPath, DLPythonPreferences::getPythonTF2CommandPreference);
+				CondaPreferences::getCondaInstallationDirectory, PythonPreferences::getPython3CommandPreference);
 	}
 
 	public PythonCommandConfig getPythonCommand() {

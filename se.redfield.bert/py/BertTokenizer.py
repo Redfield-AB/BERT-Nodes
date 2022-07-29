@@ -4,7 +4,13 @@ import tensorflow as tf
 import numpy as np
 
 from zipfile import ZipFile
-from bert.tokenization import FullTokenizer
+try:
+    # latest version of bert-for-tf2
+    from bert.tokenization.bert_tokenization import FullTokenizer
+except ImportError:
+    # former versions of bert-for-tf2
+    from bert.tokenization import FullTokenizer
+
 from transformers import AutoTokenizer, AutoConfig
 from ProgressCallback import ProgressCallback
 from bert_utils import load_bert_layer

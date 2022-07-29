@@ -7,11 +7,11 @@ from transformers import TFAutoModel
 
 from BertEmbedder import BertEmbedder
 from BertModelType import BertModelType
-from BertTokenizer import BertTokenizer, HFTokenizerWrap
+from BertTokenizer import TokenizerBase
 from ProgressCallback import ProgressCallback
 
 class BertClassifier:
-    def __init__(self, embedder = None, tokenizer = None, class_count = 0, model = None, multi_label = False):
+    def __init__(self, embedder:BertEmbedder = None, tokenizer: TokenizerBase = None, class_count = 0, model = None, multi_label = False):
         if(model):
             assert tokenizer is not None
             self.tokenizer = tokenizer
@@ -73,7 +73,7 @@ class BertClassifier:
     
     @classmethod
     def run_train(cls,
-        input_table,
+        input_table: knio.ReadTable,
         bert_model_type_key,
         bert_model_handle,
         sentence_column,
@@ -90,6 +90,7 @@ class BertClassifier:
         validation_table = None,
         multi_label = False
     ):
+        input_table = input_table.to_pandas()
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = BertEmbedder.from_pretrained(model_type, bert_model_handle, sentence_column, max_seq_length=max_seq_length, cache_dir=cache_dir)
         classifier = BertClassifier(embedder=embedder, class_count=class_count, multi_label=multi_label)
@@ -103,7 +104,7 @@ class BertClassifier:
 
     @classmethod
     def run_predict(cls,
-        input_table,
+        input_table: knio.ReadTable,
         sentence_column,
         file_store,
         bert_model_type_key,
@@ -114,9 +115,12 @@ class BertClassifier:
         model_type = BertModelType.from_key(bert_model_type_key)
         tokenizer = model_type.tokenizer_cls.from_saved_model(model, sentence_column, max_seq_length=max_seq_length)
         classifier = BertClassifier(tokenizer=tokenizer, model=model)
-        progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
 
-        output = classifier.predict(input_table, batch_size, progress_logger)
-
-        output_table = pd.DataFrame(output, index=input_table.index).astype('float64')
-        knio.output_tables[0] = knio.write_table(output_table)
+        write_table = knio.batch_write_table()
+        for batch in input_table.batches():
+            pd_batch = batch.to_pandas() # TODO pyarrow is probably more efficient
+            progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size)
+            output = classifier.predict(pd_batch, batch_size, progress_logger)
+            output_table = pd.DataFrame(output, index=pd_batch.index).astype('float64')
+            write_table.append(output_table)
+        knio.output_tables[0] = write_table

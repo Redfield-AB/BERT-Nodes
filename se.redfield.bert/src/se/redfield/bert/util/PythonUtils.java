@@ -18,7 +18,6 @@ package se.redfield.bert.util;
 import java.util.Collections;
 
 import org.knime.dl.core.DLInvalidEnvironmentException;
-import org.knime.dl.python.prefs.DLPythonPreferences;
 import org.knime.python2.PythonCommand;
 import org.knime.python2.kernel.PythonCancelable;
 import org.knime.python2.kernel.PythonCanceledExecutionException;
@@ -26,6 +25,7 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernel;
 import org.knime.python2.kernel.PythonKernelOptions;
 import org.knime.python2.kernel.PythonKernelQueue;
+import org.knime.python2.prefs.PythonPreferences;
 
 import com.google.common.base.Strings;
 
@@ -53,7 +53,7 @@ public class PythonUtils {
 	}
 
 	private static PythonCommand getCommand() {
-		return DLPythonPreferences.getPythonTF2CommandPreference();
+		return PythonPreferences.getPython3CommandPreference();
 	}
 
 }

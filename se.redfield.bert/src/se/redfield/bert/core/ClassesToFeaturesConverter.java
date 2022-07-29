@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -31,6 +32,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.MissingValueException;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.container.AbstractCellFactory;
@@ -40,6 +42,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+
+import se.redfield.bert.util.InputUtils;
 
 /**
  * Class intended for processing input training and validation tables for the
@@ -106,6 +110,7 @@ public class ClassesToFeaturesConverter {
 		r.replace(new ClassConverterCellFactory(classes, classColumnIdx, createClassColumnSpec()), classColumnIdx);
 
 		r.keepOnly(sentenceColumn, classColumn);
+		InputUtils.convertColumnsToString(r, sentenceColumn);
 		return exec.createColumnRearrangeTable(inTable, r, exec.createSubProgress(0));
 	}
 
@@ -132,7 +137,7 @@ public class ClassesToFeaturesConverter {
 				throw new MissingValueException((MissingValue) c, "Class column contains missing values");
 			}
 
-			classes.addAll(getClassesFromCell(c));
+			classes.addAll(getClassesFromCell((StringValue)c));
 		}
 
 		return classes;
@@ -154,7 +159,7 @@ public class ClassesToFeaturesConverter {
 							"Validation table: class column contains missing values");
 				}
 
-				Collection<String> rowClasses = getClassesFromCell(c);
+				Collection<String> rowClasses = getClassesFromCell((StringValue)c);
 				for (String rowClass : rowClasses) {
 					if (!classes.contains(rowClass)) {
 						throw new InvalidSettingsException(
@@ -165,12 +170,14 @@ public class ClassesToFeaturesConverter {
 		}
 	}
 
-	private Collection<String> getClassesFromCell(DataCell cell) {
+	private Collection<String> getClassesFromCell(StringValue cell) {
 		if (multiLabel) {
-			return Arrays.stream(cell.toString().split(classSeparator)).map(String::trim).filter(s -> !s.isEmpty())
+			return Stream.of(cell.getStringValue().split(classSeparator))//
+					.map(String::trim)//
+					.filter(s -> !s.isEmpty())//
 					.collect(Collectors.toList());
 		} else {
-			return Arrays.asList(cell.toString());
+			return List.of(cell.getStringValue());
 		}
 	}
 
@@ -187,7 +194,7 @@ public class ClassesToFeaturesConverter {
 
 		@Override
 		public DataCell[] getCells(DataRow row) {
-			Collection<String> rowClasses = getClassesFromCell(row.getCell(classColumnIdx));
+			Collection<String> rowClasses = getClassesFromCell((StringValue)row.getCell(classColumnIdx));
 
 			DataCell cell = CollectionCellFactory.createListCell(toFeatureArray(rowClasses));
 

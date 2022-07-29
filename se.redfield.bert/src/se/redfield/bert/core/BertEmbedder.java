@@ -44,6 +44,7 @@ import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.nodes.port.BertPortObjectBase;
 import se.redfield.bert.setting.BertEmbedderSettings;
+import se.redfield.bert.util.InputUtils;
 
 public class BertEmbedder {
 
@@ -75,47 +76,28 @@ public class BertEmbedder {
 	public BufferedDataTable computeEmbeddings(BertPortObjectBase bertObject, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonIOException, CanceledExecutionException, PythonKernelCleanupException,
 			DLInvalidEnvironmentException {
+		var preprocessedTable = preprocess(inTable, exec);
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
-			commands.putDataTable(inTable, exec.createSubProgress(0.1));
-			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.8));
-			BufferedDataTable res = commands.getDataTable(exec, exec.createSubProgress(0.05));
-			res = exec.createColumnRearrangeTable(res,
-					createColumnConverter(inTable.getDataTableSpec().getNumColumns(), res),
-					exec.createSilentSubProgress(0.05));
-			return res;
+			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.1));
+			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.85));
+			var embeddings = commands.getDataTable(exec, exec.createSubProgress(0.05));
+			return exec.createJoinedTable(inTable, embeddings, exec.createSilentSubProgress(0));
 		}
 	}
-
-	private ColumnRearranger createColumnConverter(int startIndex, BufferedDataTable table) {
-		int[] indexes = new int[table.getDataTableSpec().getNumColumns() - startIndex];
-		DataColumnSpec[] specs = new DataColumnSpec[table.getDataTableSpec().getNumColumns() - startIndex];
-
-		for (int i = 0; i < indexes.length; i++) {
-			indexes[i] = i + startIndex;
-			DataColumnSpec original = table.getDataTableSpec().getColumnSpec(i + startIndex);
-			specs[i] = new DataColumnSpecCreator(original.getName(), ListCell.getCollectionType(DoubleCell.TYPE))
-					.createSpec();
-		}
-		ColumnRearranger r = new ColumnRearranger(table.getDataTableSpec());
-		CellFactory fac = new AbstractCellFactory(specs) {
-
-			@Override
-			public DataCell[] getCells(DataRow row) {
-				DataCell[] result = new DataCell[indexes.length];
-				for (int i = 0; i < indexes.length; i++) {
-					String str = row.getCell(indexes[i]).toString();
-					List<DoubleCell> doubles = Arrays.asList(str.substring(1, str.length() - 1).split(","))//
-							.stream()//
-							.mapToDouble(Double::valueOf)//
-							.mapToObj(DoubleCell::new)//
-							.collect(Collectors.toList());
-					result[i] = CollectionCellFactory.createListCell(doubles);
-				}
-				return result;
-			}
-		};
-		r.replace(fac, indexes);
-		return r;
+	
+	/**
+	 * Only keeps the sentence columns and converts them to string if they aren't yet.
+	 */
+	private BufferedDataTable preprocess(final BufferedDataTable inTable, final ExecutionContext exec)
+			throws CanceledExecutionException {
+		var rearranger = new ColumnRearranger(inTable.getDataTableSpec());
+		var inputSettings = settings.getInputSettings();
+		String[] columns = inputSettings.getTwoSentenceMode()
+				? new String[] { inputSettings.getSentenceColumn(), inputSettings.getSecondSentenceColumn() }
+				: new String[] { inputSettings.getSentenceColumn() };
+		InputUtils.convertColumnsToString(rearranger, columns);
+		rearranger.keepOnly(columns);
+		return exec.createColumnRearrangeTable(inTable, rearranger, exec.createSilentSubProgress(0));
 	}
 
 	private String computeEmbeddingsScript(BertPortObjectBase bertObject) {

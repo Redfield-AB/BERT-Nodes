@@ -1,16 +1,14 @@
 import tensorflow as tf
-import numpy as np
 import pandas as pd
 import knime_io as knio
 from tensorflow.keras.models import Model
 
 from ProgressCallback import ProgressCallback
-from BertTokenizer import BertTokenizer, HFTokenizerWrap
-from bert_utils import load_bert_layer, load_hf_bert_layer
+from BertTokenizer import TokenizerBase
 from BertModelType import BertModelType
 
 class BertEmbedder:
-    def __init__(self, bert_layer, tokenizer):
+    def __init__(self, bert_layer, tokenizer: TokenizerBase):
         self.tokenizer = tokenizer
 
         input_ids = tf.keras.layers.Input(shape=(tokenizer.max_seq_length,), dtype=tf.int32, name="input_ids")
@@ -28,14 +26,14 @@ class BertEmbedder:
         
         self.model = Model(inputs=self.inputs, outputs=[self.pooled_output, self.sequence_output])
 
-    def predict(self, input_table, batch_size, progress_logger):
+    def predict(self, input_table: pd.DataFrame, batch_size, progress_logger):
         ids, masks, segments = self.tokenizer.tokenize(input_table, progress_logger)
 
         pooled_emb, sequence_emb = self.model.predict([ids, masks, segments],
             batch_size=batch_size, callbacks=[progress_logger])
         return pooled_emb, sequence_emb
 
-    def compute_embeddings(self, input_table, batch_size,
+    def compute_embeddings(self, input_table: pd.DataFrame, batch_size,
         embeddings_column = 'embeddings',
         sequence_embedding_column_prefix = 'sequence_embeddings_',
         include_sequence_embeddings = False
@@ -43,19 +41,19 @@ class BertEmbedder:
         progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
         pooled_emb, sequence_emb = self.predict(input_table, batch_size, progress_logger)
 
-        output_table = input_table.copy()
+        output_table = pd.DataFrame(index=input_table.index)
         output_table[embeddings_column] = pooled_emb.tolist()
 
         if(include_sequence_embeddings):
             columns = [sequence_embedding_column_prefix + str(i) for i in range(len(sequence_emb[0]))]
-            se = pd.DataFrame(sequence_emb.tolist(), columns = columns, index = output_table.index).astype(str)
+            se = pd.DataFrame(sequence_emb.tolist(), columns = columns, index = output_table.index)
             output_table = pd.concat([output_table, se], axis=1)
 
         return output_table
 
     @classmethod
     def run_from_pretrained(cls,
-        input_table,
+        input_table:knio.ReadTable,
         bert_model_type_key,
         bert_model_handle,
         sentence_column,
@@ -69,8 +67,11 @@ class BertEmbedder:
     ):
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_pretrained(model_type, bert_model_handle, sentence_column, second_sentence_column, max_seq_length, cache_dir)
-        output_table = embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
-        knio.output_tables[0] = knio.write_table(output_table)
+        write_table = knio.batch_write_table()
+        for batch in input_table.batches():
+            output_batch = embedder.compute_embeddings(batch.to_pandas(), batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+            write_table.append(output_batch)
+        knio.output_tables[0] = write_table
     
     @classmethod
     def run_from_classifier(cls,
@@ -88,8 +89,11 @@ class BertEmbedder:
         saved_model = tf.keras.models.load_model(file_store)
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_saved_model(model_type, saved_model, sentence_column, second_sentence_column, max_seq_length)
-        output_table = embedder.compute_embeddings(input_table, batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
-        knio.output_tables[0] = knio.write_table(output_table)
+        write_table = knio.batch_write_table()
+        for batch in input_table.batches():
+            output_table = embedder.compute_embeddings(batch.to_pandas(), batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+            write_table.append(output_table)
+        knio.output_tables[0] = write_table
 
     @classmethod
     def from_pretrained(cls, model_type:BertModelType, bert_model_handle, sentence_column, second_sentence_column=None, max_seq_length=128, cache_dir=None):
