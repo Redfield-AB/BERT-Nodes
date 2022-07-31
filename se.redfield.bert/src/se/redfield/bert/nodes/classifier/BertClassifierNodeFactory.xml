@@ -24,10 +24,18 @@
         	</option>
         	<option name="Class column">A column that contains class labels.</option>
         	<option name="Max sequence length">The maximum length of a sequence after tokenization, limit is 512.</option>
+        	<option name="Multi-label classification">
+        		Enables multi-label classification mode. In this mode multiple
+        		labels (classes) could be assigned to each text.
+        	</option>
+        	<option name="Class separator">
+        		The character used to separate different classes assigned to a given text in a multi-label classification mode.
+        	</option>
         </tab>
         <tab name="Advanced">
         	<option name="Number of epochs">The number of epochs used for training the classifier.</option>
         	<option name="Batch size">The size of a chunk of the input data used for model update.</option>
+        	<option name="Validation batch size">The size of a chunk of the validation data to process.</option>
         	<option name="Fine tune BERT">
         		If checked than BERT model will be trained along with the additional classifier.
         		It takes longer time to fine tune BERT, but the results are usually better.
