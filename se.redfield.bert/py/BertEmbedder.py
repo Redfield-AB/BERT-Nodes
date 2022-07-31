@@ -33,12 +33,11 @@ class BertEmbedder:
             batch_size=batch_size, callbacks=[progress_logger])
         return pooled_emb, sequence_emb
 
-    def compute_embeddings(self, input_table: pd.DataFrame, batch_size,
+    def compute_embeddings(self, input_table: pd.DataFrame, batch_size, progress_logger,
         embeddings_column = 'embeddings',
         sequence_embedding_column_prefix = 'sequence_embeddings_',
         include_sequence_embeddings = False
     ):
-        progress_logger = ProgressCallback(len(input_table), predict=True, batch_size=batch_size)
         pooled_emb, sequence_emb = self.predict(input_table, batch_size, progress_logger)
 
         output_table = pd.DataFrame(index=input_table.index)
@@ -68,9 +67,14 @@ class BertEmbedder:
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_pretrained(model_type, bert_model_handle, sentence_column, second_sentence_column, max_seq_length, cache_dir)
         write_table = knio.batch_write_table()
+        progress_done = 0
         for batch in input_table.batches():
-            output_batch = embedder.compute_embeddings(batch.to_pandas(), batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+            pd_batch = batch.to_pandas()
+            progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size,
+                initial_progress=progress_done, subprogress_factor=1/input_table.num_batches)
+            output_batch = embedder.compute_embeddings(pd_batch, batch_size, progress_logger, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
             write_table.append(output_batch)
+            progress_done = progress_logger.last_progress
         knio.output_tables[0] = write_table
     
     @classmethod
@@ -90,9 +94,14 @@ class BertEmbedder:
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_saved_model(model_type, saved_model, sentence_column, second_sentence_column, max_seq_length)
         write_table = knio.batch_write_table()
+        progress_done = 0
         for batch in input_table.batches():
-            output_table = embedder.compute_embeddings(batch.to_pandas(), batch_size, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
+            pd_batch = batch.to_pandas()
+            progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size,
+                initial_progress=progress_done, subprogress_factor=1/input_table.num_batches)
+            output_table = embedder.compute_embeddings(pd_batch, batch_size, progress_logger, embeddings_column, sequence_embedding_column_prefix, include_sequence_embeddings)
             write_table.append(output_table)
+            progress_done = progress_logger.last_progress
         knio.output_tables[0] = write_table
 
     @classmethod

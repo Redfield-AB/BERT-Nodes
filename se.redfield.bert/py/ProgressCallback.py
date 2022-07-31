@@ -1,11 +1,14 @@
 from tensorflow.keras.callbacks import Callback
 
 class ProgressCallback(Callback):
-    def __init__(self, total_count, predict=False, train=False, batch_size=0, epochs_count=1):
+    def __init__(self, total_count, predict=False, train=False, batch_size=0, epochs_count=1,
+            initial_progress=0, subprogress_factor=1):
         super(ProgressCallback, self).__init__()
         self.total_count = total_count
         self.batch_size = batch_size
         self.epochs_count = epochs_count
+        self.initial_progress = initial_progress
+        self.subprogress_factor = subprogress_factor
 
         if predict:
             self.tokenization_factor = 0.1
@@ -49,7 +52,8 @@ class ProgressCallback(Callback):
 
             progress = self.tokenization_factor + self.prediction_factor * (epoch_progress + batch_progress / self.epochs_count)
 
-        progress = int(trim(progress) * 100)
+        progress = trim(progress) * 100
+        progress = int(progress * self.subprogress_factor + self.initial_progress)
         if(self.last_progress < progress):
             self.last_progress = progress
             print('')
