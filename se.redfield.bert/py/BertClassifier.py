@@ -91,6 +91,9 @@ class BertClassifier:
         multi_label = False
     ):
         input_table = input_table.to_pandas()
+        if validation_table is not None:
+            validation_table = validation_table.to_pandas()
+        
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = BertEmbedder.from_pretrained(model_type, bert_model_handle, sentence_column, max_seq_length=max_seq_length, cache_dir=cache_dir)
         classifier = BertClassifier(embedder=embedder, class_count=class_count, multi_label=multi_label)
@@ -117,10 +120,13 @@ class BertClassifier:
         classifier = BertClassifier(tokenizer=tokenizer, model=model)
 
         write_table = knio.batch_write_table()
+        progress_done = 0
         for batch in input_table.batches():
             pd_batch = batch.to_pandas() # TODO pyarrow is probably more efficient
-            progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size)
+            progress_logger = ProgressCallback(len(pd_batch), predict=True, batch_size=batch_size,
+                initial_progress=progress_done, subprogress_factor=1/input_table.num_batches)
             output = classifier.predict(pd_batch, batch_size, progress_logger)
             output_table = pd.DataFrame(output, index=pd_batch.index).astype('float64')
             write_table.append(output_table)
+            progress_done = progress_logger.last_progress
         knio.output_tables[0] = write_table
