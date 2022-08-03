@@ -28,6 +28,7 @@ import se.redfield.bert.nodes.port.BertModelFeature;
 import se.redfield.bert.nodes.port.BertModelType;
 import se.redfield.bert.nodes.selector.BertModelSelectorNodeModel;
 import se.redfield.bert.setting.PythonNodeSettings;
+import se.redfield.bert.prefs.BertPreferences;
 
 /**
  * Settings for the {@link BertModelSelectorNodeModel} node.
@@ -61,7 +62,7 @@ public class BertModelSelectorSettings extends PythonNodeSettings {
 		hfModel = new SettingsModelString(KEY_HUGGING_FACE_MODEL, "");
 		remoteUrl = new SettingsModelString(KEY_REMOTE_URL, "");
 		localPath = new SettingsModelString(KEY_LOCAL_PATH, "");
-		cacheDir = new SettingsModelString(KEY_CACHE_DIR, "");
+		cacheDir = new SettingsModelString(KEY_CACHE_DIR, BertPreferences.getCacheDir());
 		advancedModeEnabled = new SettingsModelBoolean(KEY_ADVANCED_MODE_ENABLED, false);
 	}
 
