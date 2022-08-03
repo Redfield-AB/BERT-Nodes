@@ -1,0 +1,19 @@
+group_id: se.redfield
+name: bert
+author: Redfield AB
+vendor: Redfield AB
+description: "Redfield BERT Nodes"
+long_description: |
+  The extension provides the nodes that allow to use Google BERT Python libarary without coding.
+  Currently only classification for the texts is implemented.
+  This extension is built on top of the TensorFlow 2 Python package. 
+  It is also possible to execute BERT on GPU (nVidia CUDA-based).
+env_yml_path: se.redfield.bert/config/bert_cpu.yml
+version: 1.0.0
+copyright: "Copyright (c) 2020 Redfield AB"
+license_file: LICENSE.txt
+java_bundles:
+  - se.redfield.bert
+feature_dependencies:
+  - org.knime.features.ext.textprocessing
+  - org.knime.features.python2
