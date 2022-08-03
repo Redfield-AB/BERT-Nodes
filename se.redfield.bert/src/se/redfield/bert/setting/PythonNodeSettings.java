@@ -21,7 +21,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.python2.PythonVersion;
 import org.knime.python2.config.PythonCommandConfig;
-import org.knime.python2.prefs.PythonPreferences;
+import se.redfield.bert.prefs.BertPreferences;
 
 public class PythonNodeSettings {
 
@@ -30,11 +30,10 @@ public class PythonNodeSettings {
 	private final PythonCommandConfig pythonCommand;
 
 	public PythonNodeSettings() {
-		// TODO use bundled environment or environment coming from the extension's preference page
 		pythonCommand = new PythonCommandConfig(KEY_PYTHON_COMMAND, PythonVersion.PYTHON3,
-				CondaPreferences::getCondaInstallationDirectory, PythonPreferences::getPython3CommandPreference);
+				CondaPreferences::getCondaInstallationDirectory, BertPreferences::getPythonCommandPreference);
 	}
-
+	
 	public PythonCommandConfig getPythonCommand() {
 		return pythonCommand;
 	}
