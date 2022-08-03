@@ -1,0 +1,65 @@
+<knimeNode icon="./ZSTC logo.png" type="Predictor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://knime.org/node/v2.10" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd ">
+    <name>Zero Shot Text Classifier</name>
+    
+    <shortDescription>
+        The node consists of learning a classifier without any previously labeled data.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	 The node consists of learning a classifier without any previously labeled data.
+.
+        </intro>
+        <tab name="Settings">
+        	<option name="Sentence column">
+        		A column with a plain text (String), that contains text to be classified.
+        		No special pre-processing is needed.
+        	</option>
+        	<option name = "Candidate labels">
+        	A list of labels to use for prediction.
+        	Separation between labels must be done with comma punctuation.
+        	</option>
+        	
+        	<option name="Append individual class probabilities">
+        		If active, the columns with class probabilities will be created in the output table.
+        	</option>
+        	<option name="Use custom hypothesis">
+        		If active, it is possible to change the hypothesis used by the model.
+        	</option>
+        	<option name="Hypothesis">
+	
+	        </option>
+        	
+        	<option name="Append individual class probabilities">
+        		If active, the columns with class probabilities will be created in the output table.
+        	</option>
+        </tab>
+        <tab name="Multi-label">
+        <option name="Multi-label classification">
+        		If active, it is possible to change the probability threshold for assigning the class. By default class is assigned by the biggest probability value.
+        	</option>
+        	<option name="Use custom threshold for assigning the classes">
+        		If active, it is possible to change the probability threshold for assigning the class. By default class is assigned by the biggest probability value.
+        	</option>
+        	<option name="Probability threshold">
+        		The class is assigned if the class probability is equal or higher then the value. Several classes might be assigned.
+        	</option>
+        </tab>
+        <tab name="Python">
+    		<option name="Python">
+    			Select one of Python execution environment options:
+    			<ul>
+        			<li>use default Python environment for Deep Learning</li>
+        			<li>use Conda environment</li>
+        		</ul>
+    		</option>
+        </tab>        
+    </fullDescription>
+    
+    <ports>
+		<inPort name="BERT Model" index="0">BERT Model</inPort>
+		<inPort name="Data Table" index="1">Data Table</inPort>
+		<outPort name="Output Table" index="0">Output table</outPort>
+    </ports>    
+</knimeNode>
+    

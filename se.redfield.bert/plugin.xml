@@ -27,6 +27,12 @@
             category-path="/community/bert"
             factory-class="se.redfield.bert.nodes.predictor.BertPredictorNodeFactory">
       </node>
+      <node
+            category-path="/community/bert"
+            deprecated="false"
+            factory-class="se.redfield.bert.nodes.zstc.ZeroShotTextClassifierNodeFactory"
+            hidden="false">
+      </node>
    </extension>
    <extension
          point="org.knime.core.PortType">
