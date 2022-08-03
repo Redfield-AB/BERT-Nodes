@@ -1,0 +1,17 @@
+name: py39_bert_cpu # Name of the created environment
+channels:                # Repositories to search for packages
+- conda-forge
+dependencies:            # List of packages that should be installed
+- python=3.9             # Python
+- py4j                   # used for KNIME <-> Python communication
+- nomkl                  # Prevents the use of Intel's MKL
+- pandas                 # Table data structures
+- numpy                  # N-dimensional arrays
+- pyarrow=7.0            # Arrow serialization
+- pip
+- pip:
+  - tensorflow-cpu
+  - tensorflow-hub
+  - transformers
+  - bert-for-tf2
+
