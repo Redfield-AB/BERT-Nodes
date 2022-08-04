@@ -1,6 +1,7 @@
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import knime_io as knio
 from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 
 
@@ -87,7 +88,7 @@ class ZeroShotTextClassifier:
         if (not self.multi_label) and (labels_length > 1):
             # softmax the "entailment" logits over all candidate labels.
             entailment = reshaped_logits[..., -1]
-            predictions = tf.nn.softmax(entailment).numpy()
+            predictions = tf.nn.softmax(entailment).numpy().astype('float64')
             for i in range(sequences_length):
                 top_ids = list(reversed(predictions[i].argsort()))
                 if(self.append_probabilities):
@@ -96,14 +97,14 @@ class ZeroShotTextClassifier:
                 else:
                     data.append([self.sentence_column[i], np.array(self.candidate_labels)[top_ids][0]])
                     columns = ['Sentence', 'Prediction']
-                output_table = pd.DataFrame(data, columns=columns)
+                
 
 
         else:
             # softmax over the entailment vs contradiction for each lable independently 
             entail_contra_logits = reshaped_logits[..., [0, -1]]
             probabilities = tf.nn.softmax(entail_contra_logits)
-            entailment_probs = probabilities[..., 1].numpy()
+            entailment_probs = probabilities[..., 1].numpy().astype('float64')
             predictions = entailment_probs.copy()
             predictions[predictions >= self.threshold] = 1
             predictions[predictions < self.threshold] = 0
@@ -117,8 +118,8 @@ class ZeroShotTextClassifier:
                 else:
                     data.append([self.sentence_column[i]] + list(predictions[i]))
                     columns = ["sentence"] + self.candidate_labels 
-                output_table = pd.DataFrame(data, columns=columns)
-            
+
+        output_table = pd.DataFrame(data, columns=columns)    
         return output_table     
         
 
@@ -135,10 +136,10 @@ class ZeroShotTextClassifier:
                  threshold=None,
                  append_probabilities=True):
                  
-        
+        input_table = input_table.to_pandas()
         model = TFAutoModelForSequenceClassification.from_pretrained(bert_model_handle, cache_dir = cache_dir)
         tokenizer = AutoTokenizer.from_pretrained(bert_model_handle, cache_dir = cache_dir)
         classifier = ZeroShotTextClassifier(model, tokenizer, multi_label,threshold, hypothesis, append_probabilities)
         output_table  = classifier.predict(input_table, sentence_column, candidate_labels) 
 
-        return output_table
+        knio.output_tables[0] = knio.write_table(output_table)

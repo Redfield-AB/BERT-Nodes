@@ -26,6 +26,9 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.ext.textprocessing.data.DocumentValue;
 
 /**
@@ -41,6 +44,25 @@ public final class InputUtils {
 
 	/**
 	 * Converts the provided columns to string columns if they aren't already string
+	 * columns and removes all other columns from the provided table.
+	 * 
+	 * @param inTable The table to convert.
+	 * @param exec    Execution context.
+	 * @param columns The columns to keep and convert to strings.
+	 * @return The converted table containing only selected columns as a string
+	 *         columns.
+	 * @throws CanceledExecutionException
+	 */
+	public static BufferedDataTable toStringColumnsTable(BufferedDataTable inTable, ExecutionContext exec,
+			String... columns) throws CanceledExecutionException {
+		var rearranger = new ColumnRearranger(inTable.getDataTableSpec());
+		InputUtils.convertColumnsToString(rearranger, columns);
+		rearranger.keepOnly(columns);
+		return exec.createColumnRearrangeTable(inTable, rearranger, exec);
+	}
+
+	/**
+	 * Converts the provided columns to string columns if they aren't already string
 	 * columns.
 	 * 
 	 * @param rearranger the rearranger to modify
@@ -52,12 +74,10 @@ public final class InputUtils {
 			var colIdx = spec.findColumnIndex(column);
 			var colSpec = spec.getColumnSpec(colIdx);
 			getConverter(colSpec.getType())//
-					.ifPresent(c -> rearranger.replace(
-							new ToStringCellFactory(colIdx, colSpec.getName(), c),
-							colIdx));
+					.ifPresent(c -> rearranger.replace(new ToStringCellFactory(colIdx, colSpec.getName(), c), colIdx));
 		}
 	}
-	
+
 	private static Optional<Function<DataCell, String>> getConverter(DataType type) {
 		if (type.isCompatible(DocumentValue.class)) {
 			return Optional.of(InputUtils::documentValueToString);
@@ -67,9 +87,9 @@ public final class InputUtils {
 			return Optional.empty();
 		}
 	}
-	
+
 	private static String documentValueToString(final DataCell cell) {
-		var document = ((DocumentValue)cell).getDocument();
+		var document = ((DocumentValue) cell).getDocument();
 		return document.getDocumentBodyText();
 	}
 

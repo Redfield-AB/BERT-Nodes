@@ -41,6 +41,7 @@ import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.setting.ZeroShotTextClassifierSettings;
+import se.redfield.bert.util.InputUtils;
 
 /**
  * Zero shot Text Classifier
@@ -78,12 +79,14 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 	private BufferedDataTable runZeroShotTextClassifier(BertModelConfig zstcModel, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException {
+		var preprocessedTable = InputUtils.toStringColumnsTable(inTable, exec.createSubExecutionContext(0.05),
+				settings.getSentenceColumn());
 
-		try (BertCommands commands = new BertCommands(settings.getPythonCommand())) {
-			commands.putDataTable(inTable, exec.createSubProgress(0.1));
+		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
+			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.05));
 			commands.executeInKernel(getZeroShotTextClassifierScript(zstcModel), exec.createSubProgress(0.8));
 
-			return commands.getDataTable(BertCommands.VAR_OUTPUT_TABLE, exec, exec.createSilentSubProgress(0.1));
+			return commands.getDataTable(exec, exec.createSubProgress(0.1));
 
 		}
 
@@ -94,7 +97,7 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from ZeroShotTextClassifier import ZeroShotTextClassifier");
 
-		b.a(BertCommands.VAR_OUTPUT_TABLE).a(" = ZeroShotTextClassifier.run_zstc(").n();
+		b.a("ZeroShotTextClassifier.run_zstc(").n();
 		BertCommands.putInputTableArgs(b); // input_table
 		BertCommands.putSentenceColumArg(b, settings.getSentenceColumn()); // sentence_column
 		b.a("candidate_labels = ").as(settings.getCandidateLabels()).a(",").n(); // candidate_labels
