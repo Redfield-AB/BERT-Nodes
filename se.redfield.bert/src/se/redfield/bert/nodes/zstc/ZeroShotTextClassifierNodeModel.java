@@ -18,6 +18,7 @@ package se.redfield.bert.nodes.zstc;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -39,7 +40,9 @@ import org.knime.python2.kernel.PythonKernelCleanupException;
 
 import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertModelConfig;
+import se.redfield.bert.nodes.port.BertModelFeature;
 import se.redfield.bert.nodes.port.BertModelPortObject;
+import se.redfield.bert.nodes.port.BertModelPortObjectSpec;
 import se.redfield.bert.setting.ZeroShotTextClassifierSettings;
 import se.redfield.bert.util.InputUtils;
 
@@ -50,17 +53,21 @@ import se.redfield.bert.util.InputUtils;
  */
 public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
-	public static final int PORT_BERT_MODEL = 0; // input port index
+	/**
+	 * BERT model input port index.
+	 */
+	public static final int PORT_BERT_MODEL = 0;
 
-	public static final int PORT_DATA_TABLE = 1; // Data table input port index.
+	/**
+	 * Data table input port index
+	 */
+	public static final int PORT_DATA_TABLE = 1;
 
 	private final ZeroShotTextClassifierSettings settings = new ZeroShotTextClassifierSettings();
 
 	protected ZeroShotTextClassifierNodeModel() {
-
 		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
 				new PortType[] { BufferedDataTable.TYPE });
-
 	}
 
 	@Override
@@ -114,11 +121,20 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-
 		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
+		validateModelFeatures((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]);
 
 		return new PortObjectSpec[] { null };
 
+	}
+
+	private void validateModelFeatures(BertModelPortObjectSpec spec) throws InvalidSettingsException {
+		List<BertModelFeature> features = spec.getModel().getFeatures();
+		if (features.isEmpty()) {
+			setWarningMessage("Unable to detect if the selected model supports Zero-shot classification.");
+		} else if (!features.contains(BertModelFeature.ZSTC)) {
+			throw new InvalidSettingsException("The selected model does not support Zero-shot classification");
+		}
 	}
 
 	@Override

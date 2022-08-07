@@ -19,32 +19,24 @@ import java.awt.CardLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.EnumMap;
 import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.ComboBoxEditor;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.dl.util.DLUtils;
 
-import se.redfield.bert.setting.BertModelSelectorSettings;
-import se.redfield.bert.setting.BertModelSelectorSettings.BertModelSelectionMode;
-import se.redfield.bert.setting.BertModelSelectorSettings.TFHubModel;
+import se.redfield.bert.setting.model.BertModelSelectionMode;
+import se.redfield.bert.setting.model.BertModelSelectorSettings;
+import se.redfield.bert.setting.model.TFHubModel;
 
 /**
  * Editor component for the {@link BertModelSelectorSettings}.
@@ -54,15 +46,11 @@ import se.redfield.bert.setting.BertModelSelectorSettings.TFHubModel;
  */
 public class BertModelSelectorEditor extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelSelectorEditor.class);
-	private static final String HUGGING_FACE_MODELS_FILE = "config/hf_bert_models.txt";
-
 	private BertModelSelectorSettings settings;
 
 	private JPanel cards;
 	private Map<BertModelSelectionMode, JRadioButton> buttons;
 	private JComboBox<TFHubModel> hubModelCombo;
-	private JComboBox<String> hfModelCombo;
 	private JComponent cacheDirPanel;
 
 	/**
@@ -154,62 +142,7 @@ public class BertModelSelectorEditor extends JPanel {
 	}
 
 	private JComponent createHuggingFaceInput() {
-		hfModelCombo = new JComboBox<>(getHuggingFaceModels());
-		hfModelCombo.addActionListener(e -> {
-			settings.getHfModel().setStringValue((String) hfModelCombo.getSelectedItem());
-		});
-
-		hfModelCombo.setEditable(true);
-		ComboBoxEditor editor = hfModelCombo.getEditor();
-		((JTextField) editor.getEditorComponent()).getDocument().addDocumentListener(new DocumentListener() {
-
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				onUpdated();
-			}
-
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				onUpdated();
-			}
-
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				onUpdated();
-			}
-
-			private void onUpdated() {
-				hfModelCombo.setSelectedItem(editor.getItem());
-			}
-		});
-
-		JPanel panel = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-
-		c.fill = GridBagConstraints.NONE;
-		c.weightx = 0;
-		c.weighty = 0;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.insets = new Insets(5, 10, 5, 5);
-		panel.add(new JLabel("Select model:"), c);
-
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weightx = 1;
-		c.gridx += 1;
-		c.insets = new Insets(5, 5, 5, 10);
-		panel.add(hfModelCombo, c);
-		return panel;
-	}
-
-	private String[] getHuggingFaceModels() {
-		try {
-			return Files.readAllLines(DLUtils.Files.getFileFromSameBundle(this, HUGGING_FACE_MODELS_FILE).toPath())
-					.toArray(new String[] {});
-		} catch (IllegalArgumentException | IOException e) {
-			LOGGER.warn("Unable to load the list of Hugging Face models", e);
-		}
-		return new String[] {};
+		return new HuggingFaceModelInput(settings.getHfModel());
 	}
 
 	private JComponent createRemoteUrlInput() {
@@ -244,7 +177,6 @@ public class BertModelSelectorEditor extends JPanel {
 		BertModelSelectionMode mode = settings.getMode();
 		buttons.get(mode).setSelected(true);
 		hubModelCombo.setSelectedItem(settings.getTfModel());
-		hfModelCombo.setSelectedItem(settings.getHfModel().getStringValue());
 		onModeChanged(mode);
 		updateModesVisibility();
 	}

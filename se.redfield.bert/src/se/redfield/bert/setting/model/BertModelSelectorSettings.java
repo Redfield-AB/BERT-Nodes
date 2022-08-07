@@ -13,23 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package se.redfield.bert.setting;
+package se.redfield.bert.setting.model;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.dl.util.DLUtils;
 
+import se.redfield.bert.nodes.port.BertModelFeature;
 import se.redfield.bert.nodes.port.BertModelType;
 import se.redfield.bert.nodes.selector.BertModelSelectorNodeModel;
+import se.redfield.bert.setting.PythonNodeSettings;
 
 /**
  * Settings for the {@link BertModelSelectorNodeModel} node.
@@ -38,8 +36,6 @@ import se.redfield.bert.nodes.selector.BertModelSelectorNodeModel;
  *
  */
 public class BertModelSelectorSettings extends PythonNodeSettings {
-	private static final NodeLogger LOGGER = NodeLogger.getLogger(BertModelSelectorSettings.class);
-
 	private static final String KEY_MODE = "mode";
 	private static final String KEY_TFHUB_MODEL = "tfHubModel";
 	private static final String KEY_HUGGING_FACE_MODEL = "huggingFaceModel";
@@ -175,6 +171,23 @@ public class BertModelSelectorSettings extends PythonNodeSettings {
 	}
 
 	/**
+	 * @return The list of features supported by the selected model. The empty list
+	 *         is returned in cases when this information is not available.
+	 */
+	public List<BertModelFeature> getModelFeatures() {
+		switch (mode) {
+		case TF_HUB:
+			return List.of(BertModelFeature.CORE);
+		case HUGGING_FACE:
+			return HuggingFaceModel.forHandle(hfModel.getStringValue())//
+					.map(HuggingFaceModel::getFeatures)//
+					.orElse(Collections.emptyList());
+		default:
+			return Collections.emptyList();
+		}
+	}
+
+	/**
 	 * Saves the settings into the given {@link NodeSettingsWO} object.
 	 * 
 	 * @param settings
@@ -211,6 +224,7 @@ public class BertModelSelectorSettings extends PythonNodeSettings {
 		}
 
 		BertModelSelectorSettings temp = new BertModelSelectorSettings();
+		temp.loadSettingsFrom(settings);
 		temp.validate();
 	}
 
@@ -258,151 +272,6 @@ public class BertModelSelectorSettings extends PythonNodeSettings {
 
 		if (settings.containsKey(KEY_ADVANCED_MODE_ENABLED)) {
 			advancedModeEnabled.loadSettingsFrom(settings);
-		}
-	}
-
-	/**
-	 * BERT model selection mode.
-	 * 
-	 * @author Alexander Bondaletov
-	 *
-	 */
-	public enum BertModelSelectionMode {
-
-		/**
-		 * Select from provided TFHub models
-		 */
-		TF_HUB("TensorFlow Hub"),
-
-		/**
-		 * Select Hugging Face model
-		 */
-		HUGGING_FACE("Hugging Face"),
-
-		/**
-		 * Enter remove URL of the model
-		 */
-		REMOTE_URL("Remote URL"),
-
-		/**
-		 * Load from the local directory
-		 */
-		LOCAL_PATH("Local folder");
-
-		private String title;
-
-		private BertModelSelectionMode(String title) {
-			this.title = title;
-		}
-
-		/**
-		 * @return the title
-		 */
-		public String getTitle() {
-			return title;
-		}
-
-		static BertModelSelectionMode getDefault() {
-			return TF_HUB;
-		}
-	}
-
-	/**
-	 * Class representing a Tensorflow Hub model.
-	 * 
-	 * @author Alexander Bondaletov
-	 *
-	 */
-	public static class TFHubModel {
-		private static final String MODELS_FILE = "config/tf_bert_models.csv";
-		private static List<TFHubModel> values;
-
-		private final String name;
-		private final String url;
-
-		/**
-		 * @return List of availbale TFHub models.
-		 */
-		public static List<TFHubModel> values() {
-			if (values == null) {
-				readModels();
-			}
-			return values;
-		}
-
-		private static void readModels() {
-			values = new ArrayList<>();
-			try {
-				List<String> lines = Files
-						.readAllLines(DLUtils.Files.getFileFromSameBundle(TFHubModel.class, MODELS_FILE).toPath());
-
-				for (String line : lines) {
-					String[] parts = line.split(";");
-					values.add(new TFHubModel(parts[0], parts[1]));
-				}
-			} catch (IllegalArgumentException | IOException e) {
-				LOGGER.error(e.getMessage(), e);
-			}
-		}
-
-		/**
-		 * @return the default TFHub model.
-		 */
-		public static TFHubModel getDefault() {
-			return values().get(0);
-		}
-
-		/**
-		 * 
-		 * @param name Model name.
-		 * @return TFHub model.
-		 */
-		public static TFHubModel getByName(String name) {
-			for (TFHubModel m : values()) {
-				if (m.getName().equals(name)) {
-					return m;
-				}
-			}
-			return getDefault();
-		}
-
-		private TFHubModel(String name, String url) {
-			this.name = name;
-			this.url = url;
-		}
-
-		/**
-		 * @return the model name.
-		 */
-		public String getName() {
-			return name;
-		}
-
-		/**
-		 * @return the model URL
-		 */
-		public String getUrl() {
-			return url;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof TFHubModel)) {
-				return false;
-			}
-
-			TFHubModel other = (TFHubModel) obj;
-			return name.equals(other.name);
-		}
-
-		@Override
-		public int hashCode() {
-			return name.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return name;
 		}
 	}
 }
