@@ -36,8 +36,15 @@ import se.redfield.bert.core.BertCommands;
 import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelPortObject;
 import se.redfield.bert.nodes.port.BertModelPortObjectSpec;
-import se.redfield.bert.setting.BertModelSelectorSettings;
+import se.redfield.bert.setting.model.BertModelSelectorSettings;
 
+/**
+ * The model selector node. Allows user to select BERT models available on
+ * Tensorflow Hub and Hugging Face repository, as well as locally stored models.
+ * 
+ * @author Alexander Bondaletov
+ *
+ */
 public class BertModelSelectorNodeModel extends NodeModel {
 
 	private final BertModelSelectorSettings settings = new BertModelSelectorSettings();
@@ -77,7 +84,7 @@ public class BertModelSelectorNodeModel extends NodeModel {
 
 	private BertModelPortObjectSpec createSpec() {
 		BertModelConfig model = new BertModelConfig(settings.getMode().name(), settings.getHandle(),
-				settings.getCacheDir(), settings.getType());
+				settings.getCacheDir(), settings.getType(), settings.getModelFeatures());
 		return new BertModelPortObjectSpec(model);
 	}
 

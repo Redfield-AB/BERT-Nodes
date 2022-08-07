@@ -22,7 +22,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.port.PortObjectSpec;
 
-import se.redfield.bert.setting.BertModelSelectorSettings;
+import se.redfield.bert.setting.model.BertModelSelectorSettings;
 import se.redfield.bert.setting.ui.BertModelSelectorEditor;
 import se.redfield.bert.setting.ui.PythonNodeDialog;
 

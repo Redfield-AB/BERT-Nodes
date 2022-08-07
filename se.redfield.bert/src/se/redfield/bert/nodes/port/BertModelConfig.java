@@ -16,6 +16,10 @@
 package se.redfield.bert.nodes.port;
 
 import java.net.MalformedURLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -23,7 +27,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 
-import se.redfield.bert.setting.BertModelSelectorSettings.BertModelSelectionMode;
+import se.redfield.bert.setting.model.BertModelSelectionMode;
 
 /**
  * Data describing selected BERT model.
@@ -38,17 +42,19 @@ public class BertModelConfig {
 	private static final String KEY_HANDLE = "handle";
 	private static final String KEY_CACHE_DIR = "cacheDir";
 	private static final String KEY_TYPE = "type";
+	private static final String KEY_FEATURES = "features";
 
 	private String mode;
 	private String handle;
 	private String cacheDir;
 	private BertModelType type;
+	private List<BertModelFeature> features;
 
 	/**
 	 * Creates new instance
 	 */
 	public BertModelConfig() {
-		this("", "", "", null);
+		this("", "", "", null, Collections.emptyList());
 	}
 
 	/**
@@ -56,12 +62,15 @@ public class BertModelConfig {
 	 * @param handle   BERT model handle.
 	 * @param cacheDir TFHub cache dir.
 	 * @param type     The model type.
+	 * @param features The features supported by the model.
 	 */
-	public BertModelConfig(String mode, String handle, String cacheDir, BertModelType type) {
+	public BertModelConfig(String mode, String handle, String cacheDir, BertModelType type,
+			List<BertModelFeature> features) {
 		this.mode = mode;
 		this.handle = handle;
 		this.cacheDir = cacheDir;
 		this.type = type;
+		this.features = features;
 	}
 
 	/**
@@ -74,6 +83,12 @@ public class BertModelConfig {
 		model.addString(KEY_HANDLE, handle);
 		model.addString(KEY_CACHE_DIR, cacheDir);
 		type.save(model, KEY_TYPE);
+
+		String[] featuresArray = features.stream()//
+				.map(BertModelFeature::name)//
+				.collect(Collectors.toList())//
+				.toArray(new String[] {});
+		model.addStringArray(KEY_FEATURES, featuresArray);
 	}
 
 	/**
@@ -88,6 +103,14 @@ public class BertModelConfig {
 		handle = model.getString(KEY_HANDLE, "");
 		cacheDir = model.getString(KEY_CACHE_DIR, "");
 		type = BertModelType.load(model, KEY_TYPE);
+
+		if (model.containsKey(KEY_FEATURES)) {
+			features = Stream.of(model.getStringArray(KEY_FEATURES))//
+					.map(BertModelFeature::valueOf)//
+					.collect(Collectors.toList());
+		} else {
+			features = Collections.emptyList();
+		}
 	}
 
 	/**
@@ -145,5 +168,12 @@ public class BertModelConfig {
 	 */
 	public BertModelType getType() {
 		return type;
+	}
+
+	/**
+	 * @return The list of features supported by the model.
+	 */
+	public List<BertModelFeature> getFeatures() {
+		return features;
 	}
 }
