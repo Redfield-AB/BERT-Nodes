@@ -8,7 +8,10 @@ long_description: |
   Currently only classification for the texts is implemented.
   This extension is built on top of the TensorFlow 2 Python package. 
   It is also possible to execute BERT on GPU (nVidia CUDA-based).
-env_yml_path: se.redfield.bert/config/bert_cpu.yml
+env_yml_path: 
+  win-64: se.redfield.bert/config/bert_win_cpu.yml
+  linux-64: se.redfield.bert/config/bert_linux_cpu.yml
+  osx-64: se.redfield.bert/config/bert_osx_cpu.yml
 version: 1.0.0
 copyright: "Copyright (c) 2020 Redfield AB"
 license_file: LICENSE.txt

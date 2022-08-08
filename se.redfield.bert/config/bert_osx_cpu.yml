@@ -9,9 +9,9 @@ dependencies:            # List of packages that should be installed
 - numpy                  # N-dimensional arrays
 - pyarrow=7.0            # Arrow serialization
 - pip
+- tensorflow
+- tensorflow-hub
+- transformers
 - pip:
-  - tensorflow-cpu
-  - tensorflow-hub
-  - transformers
   - bert-for-tf2
 
