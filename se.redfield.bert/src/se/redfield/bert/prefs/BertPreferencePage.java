@@ -5,7 +5,9 @@ package se.redfield.bert.prefs;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.widgets.Composite;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.Version;
 import org.knime.python2.PythonModuleSpec;
 import org.knime.python2.config.PythonConfig;
@@ -64,9 +66,23 @@ public final class BertPreferencePage extends AbstractPythonPreferencePage {
 	}
 
 	private static String getEnvPath(final String tag) {
-		return PythonSourceDirectoryLocator.getPathFor(BertPreferencePage.class, "config/bert_" + tag + ".yml")//
+		return PythonSourceDirectoryLocator
+				.getPathFor(BertPreferencePage.class, String.format("config/bert_%s_%s.yml", getPlatformTag(), tag))//
 				.toAbsolutePath()//
 				.toString();
+	}
+	
+	private static String getPlatformTag() {
+		final var os = Platform.getOS();
+		if (Platform.OS_WIN32.equals(os)) {
+			return "win";
+		} else if (Platform.OS_LINUX.equals(os)) {
+			return "linux";
+		} else if (Platform.OS_MACOSX.equals(os)) {
+			return "osx";
+		} else {
+			throw new IllegalStateException("Unsupported platform: " + os);
+		}
 	}
 
 	@Override
