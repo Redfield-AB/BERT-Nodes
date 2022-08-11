@@ -4,10 +4,10 @@
 package se.redfield.bert.prefs;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.widgets.Composite;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.Version;
 import org.knime.python2.PythonModuleSpec;
 import org.knime.python2.config.PythonConfig;
@@ -27,9 +27,17 @@ public final class BertPreferencePage extends AbstractPythonPreferencePage {
 
 	private static final String FEATURE_NAME = "Redfield BERT Nodes";
 
-	// TODO add GPU
 	private final MultiOptionEnvironmentCreator m_condaEnvironmentCreator = new MultiOptionEnvironmentCreator(
-			FEATURE_NAME, "redfield_bert", new CondaEnvironmentCreationOption("CPU", true, getEnvPath("cpu")));
+			FEATURE_NAME, "redfield_bert", getCondaEnvCreationOptions());
+	
+	private static CondaEnvironmentCreationOption[] getCondaEnvCreationOptions() {
+		var options = Stream.of(new CondaEnvironmentCreationOption("CPU", true, getEnvPath("cpu")));
+		if (Platform.OS_LINUX.equals(Platform.getOS()) || Platform.OS_WIN32.equals(Platform.getOS())) {
+			options = Stream.concat(options,
+					Stream.of(new CondaEnvironmentCreationOption("GPU", true, getEnvPath("gpu"))));
+		}
+		return options.toArray(CondaEnvironmentCreationOption[]::new);
+	}
 
 	private final PythonEnvironmentSelectionConfig m_pyEnvSelectConfig = new PythonEnvironmentSelectionConfig(
 			BertPreferenceInitializer.getDefaultPythonEnvironmentTypeConfig(),
@@ -38,6 +46,8 @@ public final class BertPreferencePage extends AbstractPythonPreferencePage {
 			new BundledCondaEnvironmentConfig(BertPreferences.BUNDLED_ENV_ID));
 
 	private PythonEnvironmentSelectionPanel m_pyEnvSelectPanel;
+	
+	private StringPythonConfig m_cacheDirConfig = BertPreferences.createCacheDirConfig();
 
 	/**
 	 * Creates new instance.
@@ -62,7 +72,15 @@ public final class BertPreferencePage extends AbstractPythonPreferencePage {
 		);
 		m_pyEnvSelectPanel = new PythonEnvironmentSelectionPanel(container, m_pyEnvSelectConfig,
 				m_condaEnvironmentCreator, configObserver);
-
+		
+		configs.add(m_cacheDirConfig);
+		addCacheDirChooser(container);
+	}
+	
+	private void addCacheDirChooser(Composite container) {
+		var cacheDirGroup = PreferenceUtils.createGroup(container, "Cache Directory");
+		var cacheDirModel = m_cacheDirConfig.getModel();
+		new DirectoryChooser(BertPreferenceInitializer.PREF_CACHE_DIR, "", cacheDirGroup, cacheDirModel);
 	}
 
 	private static String getEnvPath(final String tag) {
