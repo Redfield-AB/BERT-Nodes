@@ -7,11 +7,12 @@ dependencies:            # List of packages that should be installed
 - nomkl                  # Prevents the use of Intel's MKL
 - pandas                 # Table data structures
 - numpy                  # N-dimensional arrays
-- pyarrow=7.0            # Arrow serialization
+- pyarrow<8.0            # Arrow serialization
+- protobuf<4.0           # Versions larger than 4.0 are incompatible with tensorflow-hub and bert-for-tf2
 - pip
 - pip:
-  - tensorflow
-  - tensorflow-hub
-  - transformers
-  - bert-for-tf2
+  - tensorflow==2.9.1
+  - tensorflow-hub==0.12.0
+  - transformers==4.21.1
+  - bert-for-tf2==0.14.9
 
