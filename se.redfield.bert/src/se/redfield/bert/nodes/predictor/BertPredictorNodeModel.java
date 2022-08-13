@@ -17,15 +17,8 @@ package se.redfield.bert.nodes.predictor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -44,7 +37,7 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
 import se.redfield.bert.core.BertCommands;
-import se.redfield.bert.core.ComputePredictionCellFactory;
+import se.redfield.bert.core.PredictionTableBuilder;
 import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.nodes.port.BertClassifierPortObjectSpec;
 import se.redfield.bert.setting.BertPredictorSettings;
@@ -80,8 +73,10 @@ public class BertPredictorNodeModel extends NodeModel {
 		BertClassifierPortObject classifier = (BertClassifierPortObject) inObjects[PORT_BERT_CLASSIFIER];
 		BufferedDataTable inTable = (BufferedDataTable) inObjects[PORT_DATA_TABLE];
 
-		BufferedDataTable probabilitiesTable = runPredict(classifier, inTable, exec);
-		BufferedDataTable outputTable = composeOutputTable(inTable, probabilitiesTable, classifier, exec);
+		BufferedDataTable probabilitiesTable = runPredict(classifier, inTable, exec.createSubExecutionContext(0.9));
+		BufferedDataTable outputTable = new PredictionTableBuilder(settings, classifier.isMultiLabel(),
+				classifier.getClasses())
+				.buildPredictionTable(inTable, probabilitiesTable, exec.createSubExecutionContext(0.1));
 
 		return new PortObject[] { outputTable };
 	}
@@ -115,45 +110,14 @@ public class BertPredictorNodeModel extends NodeModel {
 		return b.toString();
 	}
 
-	private BufferedDataTable composeOutputTable(BufferedDataTable inTable, BufferedDataTable probabilitiesTable,
-			BertClassifierPortObject classifier, ExecutionContext exec) throws CanceledExecutionException {
-		probabilitiesTable = renameProbabilitiesColumns(probabilitiesTable, classifier, exec);
-
-		ColumnRearranger r = new ColumnRearranger(probabilitiesTable.getDataTableSpec());
-		r.insertAt(0, ComputePredictionCellFactory.create(settings, classifier));
-
-		if (!settings.getOutputProbabilities()) {
-			r.keepOnly(0);
-		}
-
-		BufferedDataTable result = exec.createColumnRearrangeTable(probabilitiesTable, r, exec);
-
-		return exec.createJoinedTable(inTable, result, exec);
-	}
-
-	private BufferedDataTable renameProbabilitiesColumns(BufferedDataTable probTable,
-			BertClassifierPortObject classifier, ExecutionContext exec) {
-		if (settings.getOutputProbabilities()) {
-			return exec.createSpecReplacerTable(probTable, createProbabilitiesSpec(classifier));
-		} else {
-			return probTable;
-		}
-	}
-
-	private DataTableSpec createProbabilitiesSpec(BertClassifierPortObject classifier) {
-		List<DataColumnSpec> cols = Arrays.stream(classifier.getClasses())
-				.map(c -> String.format("P (%s)%s", c, settings.getProbabilitiesColumnSuffix()))
-				.map(name -> new DataColumnSpecCreator(name, DoubleCell.TYPE).createSpec())
-				.collect(Collectors.toList());
-
-		return new DataTableSpec(cols.toArray(new DataColumnSpec[] {}));
-	}
-
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.configure((DataTableSpec) inSpecs[PORT_DATA_TABLE],
-				(BertClassifierPortObjectSpec) inSpecs[PORT_BERT_CLASSIFIER]);
-		return new PortObjectSpec[] { null };
+		DataTableSpec inTableSpec = (DataTableSpec) inSpecs[PORT_DATA_TABLE];
+		BertClassifierPortObjectSpec classifier = (BertClassifierPortObjectSpec) inSpecs[PORT_BERT_CLASSIFIER];
+		settings.configure(inTableSpec, classifier);
+		return new PortObjectSpec[] {
+				new PredictionTableBuilder(settings, classifier.isMultiLabel(), classifier.getClasses())
+						.createSpec(inTableSpec) };
 	}
 
 	@Override
