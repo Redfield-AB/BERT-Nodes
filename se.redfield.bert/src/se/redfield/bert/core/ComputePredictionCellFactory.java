@@ -31,7 +31,6 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 
-import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.setting.BertPredictorSettings;
 
 /**
@@ -56,15 +55,6 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 	}
 
 	protected abstract String getPredictionString(DataRow row);
-
-	/**
-	 * @param settings   The predictor settings.
-	 * @param classifier The classifier object.
-	 * @return The {@link CellFactory} instance to contruct prediction column.
-	 */
-	public static CellFactory create(BertPredictorSettings settings, BertClassifierPortObject classifier) {
-		return create(settings, classifier.isMultiLabel(), classifier.getClasses());
-	}
 
 	/**
 	 * @param settings   The predictor settings.

@@ -44,6 +44,7 @@ public class BertClassifierPortObjectSpec extends AbstractSimplePortObjectSpec i
 	private boolean multiLabel;
 	private String classSeparator;
 	private BertModelType modelType;
+	private String[] classes;
 
 	/**
 	 * Creates new instance.
@@ -116,4 +117,15 @@ public class BertClassifierPortObjectSpec extends AbstractSimplePortObjectSpec i
 		return BertPortObjectType.CLASSIFIER;
 	}
 
+	/**
+	 * @return The classes. The field is filled by the PortObject. Could be
+	 *         <code>null</code> if producer node is not at "executed" stage.
+	 */
+	public String[] getClasses() {
+		return classes;
+	}
+
+	void setClasses(String[] classes) {
+		this.classes = classes;
+	}
 }
