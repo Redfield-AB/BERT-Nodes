@@ -20,8 +20,7 @@ import se.redfield.bert.prefs.MultiOptionEnvironmentCreator.CondaEnvironmentCrea
 /**
  * The preference page.
  * 
- * @author Alexander Bondaletov
- *
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class BertPreferencePage extends AbstractPythonPreferencePage {
 

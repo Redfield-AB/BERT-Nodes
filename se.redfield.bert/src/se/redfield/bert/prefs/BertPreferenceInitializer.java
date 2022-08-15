@@ -19,8 +19,7 @@ import org.knime.python2.prefs.PythonPreferences;
 /**
  * Preferences initializer.
  * 
- * @author Alexander Bondaletov
- *
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class BertPreferenceInitializer extends AbstractPreferenceInitializer {
 	@SuppressWarnings("unused")

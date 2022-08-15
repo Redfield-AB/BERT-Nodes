@@ -41,8 +41,6 @@ final class MultiOptionEnvironmentCreator extends AbstractCondaEnvironmentCreati
 		return m_options;
 	}
 
-	// TODO disable GPU on Mac
-
 	static final class CondaEnvironmentCreationOption {
 
 		private final String m_name;
