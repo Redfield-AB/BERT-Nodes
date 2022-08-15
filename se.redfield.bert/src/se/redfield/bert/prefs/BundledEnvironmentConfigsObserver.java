@@ -436,7 +436,7 @@ final class BundledEnvironmentConfigsObserver extends AbstractPythonConfigsObser
 					environmentConfig.getEnvironmentDirectory().setStringValue(createdEnvironment.getDirectoryPath());
 					testPythonEnvironment(true);
 				} catch (Exception ex) {
-					// Ignore, we still want to configure and test the second environment.
+					// Ignore
 				}
 			}
 
