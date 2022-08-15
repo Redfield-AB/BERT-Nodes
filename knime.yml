@@ -4,10 +4,14 @@ author: Redfield AB
 vendor: Redfield AB
 description: "Redfield BERT Nodes"
 long_description: |
-  The extension provides the nodes that allow to use Google BERT Python libarary without coding.
-  Currently only classification for the texts is implemented.
+  This extension provides nodes that make the functionality of Google's BERT library available in the KNIME Analytics Platform.
+  Currently, the extension is allows the training of text classification models as well as creating embeddings for texts.
   This extension is built on top of the TensorFlow 2 Python package. 
   It is also possible to execute BERT on GPU (nVidia CUDA-based).
+  
+  NOTE: The installation of this extension can fail on Windows if the installation folder of your Analytics Platform has a long path.
+  This is due to Windows' long path limitations. You can circumvent this problem by enabling long path support as outlined here: 
+  https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
 env_yml_path: 
   win-64: se.redfield.bert/config/bert_win_cpu.yml
   linux-64: se.redfield.bert/config/bert_linux_cpu.yml
