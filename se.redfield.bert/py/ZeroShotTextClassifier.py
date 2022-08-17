@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import knime_io as knio
 from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
+from ProgressCallback import ProgressCallback
 
 
 
@@ -26,7 +27,7 @@ class ZeroShotTextClassifier:
                              "Make sure your hypothesis is including formatting syntax such as {{}}."
                              ).format(hypothesis))
 
-    def predict(self, input_table, sentence_column, candidate_labels):
+    def predict(self, input_table, sentence_column, candidate_labels, batch_size):
         """
         Classify a given sentence without any previously labeled data.
 
@@ -39,7 +40,6 @@ class ZeroShotTextClassifier:
             output_table : A dataFrame that contains the senetence_column and the model predictions.
         """
         
-        data = []
         sequence_pairs = []
         sentence_column = input_table[sentence_column]
    
@@ -59,30 +59,29 @@ class ZeroShotTextClassifier:
         for sequence in self.sentence_column:
             sequence_pairs.extend([[sequence, self.hypothesis.format(label)] for label in candidate_labels])
 
+        progress_logger = ProgressCallback(len(sequence_pairs), predict=True, batch_size=batch_size)
+
         # Tokenization
         input_ids = self.tokenizer(sequence_pairs, return_tensors='tf', padding=self.padding, truncation=self.truncation)
 
+        progress_logger.on_tokenize_rows_end(len(sequence_pairs))
+        input_ids = [input_ids[name] for name in self.tokenizer.model_input_names]
+
         # Model logits
-        logits = self.model(input_ids).logits
-        reshaped_logits = logits.numpy().reshape((sequences_length, labels_length, -1))
+        logits = self.model.predict(input_ids, batch_size=batch_size, callbacks=[progress_logger]).logits
+        reshaped_logits = logits.reshape((sequences_length, labels_length, -1))
 
         if (not self.multi_label) and (labels_length > 1):
             # softmax the "entailment" logits over all candidate labels.
             entailment = reshaped_logits[..., -1]
             predictions = tf.nn.softmax(entailment).numpy().astype('float64')
-            for i in range(sequences_length):
-                data.append(list(predictions[i]))
-
         else:
             # softmax over the entailment vs contradiction for each lable independently 
             entail_contra_logits = reshaped_logits[..., [0, -1]]
             probabilities = tf.nn.softmax(entail_contra_logits)
-            entailment_probs = probabilities[..., 1].numpy().astype('float64')
-            
-            for i in range(sequences_length):
-                data.append(list(entailment_probs[i]))
+            predictions = probabilities[..., 1].numpy().astype('float64')
 
-        output_table = pd.DataFrame(data, index=input_table.index)    
+        output_table = pd.DataFrame(predictions, index=input_table.index)    
         return output_table     
         
 
@@ -95,12 +94,13 @@ class ZeroShotTextClassifier:
                  bert_model_handle, 
                  bert_model_type_key,
                  cache_dir=None,
-                 multi_label=False):
+                 multi_label=False,
+                 batch_size=20):
                  
         input_table = input_table.to_pandas()
         model = TFAutoModelForSequenceClassification.from_pretrained(bert_model_handle, cache_dir = cache_dir)
         tokenizer = AutoTokenizer.from_pretrained(bert_model_handle, cache_dir = cache_dir)
         classifier = ZeroShotTextClassifier(model, tokenizer, multi_label, hypothesis)
-        output_table  = classifier.predict(input_table, sentence_column, candidate_labels) 
+        output_table  = classifier.predict(input_table, sentence_column, candidate_labels, batch_size) 
 
         knio.output_tables[0] = knio.write_table(output_table)

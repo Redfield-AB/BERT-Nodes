@@ -116,6 +116,7 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 		b.a("hypothesis = ").as(settings.getHypothesis()).a(",").n(); // hypothesis
 		BertCommands.putBertModelArgs(b, zstcModel); // bert_model_handle, cach_dir
 		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
+		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 		b.a(")").n();
 
 		return b.toString();
