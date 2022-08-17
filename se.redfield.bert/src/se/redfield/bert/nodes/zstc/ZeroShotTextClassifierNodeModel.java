@@ -39,6 +39,7 @@ import org.knime.python2.kernel.PythonIOException;
 import org.knime.python2.kernel.PythonKernelCleanupException;
 
 import se.redfield.bert.core.BertCommands;
+import se.redfield.bert.core.PredictionTableBuilder;
 import se.redfield.bert.nodes.port.BertModelConfig;
 import se.redfield.bert.nodes.port.BertModelFeature;
 import se.redfield.bert.nodes.port.BertModelPortObject;
@@ -65,6 +66,8 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
 	private final ZeroShotTextClassifierSettings settings = new ZeroShotTextClassifierSettings();
 
+	private PredictionTableBuilder outputBuilder;
+
 	protected ZeroShotTextClassifierNodeModel() {
 		super(new PortType[] { BertModelPortObject.TYPE, BufferedDataTable.TYPE },
 				new PortType[] { BufferedDataTable.TYPE });
@@ -77,7 +80,10 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
 		BufferedDataTable inTable = (BufferedDataTable) inObjects[PORT_DATA_TABLE];
 
-		BufferedDataTable outputTable = runZeroShotTextClassifier(zstcModel.getModel(), inTable, exec);
+		BufferedDataTable probabilitiesTable = runZeroShotTextClassifier(zstcModel.getModel(), inTable,
+				exec.createSubExecutionContext(0.9));
+		BufferedDataTable outputTable = outputBuilder.buildPredictionTable(inTable, probabilitiesTable,
+				exec.createSubExecutionContext(0.1));
 
 		return new PortObject[] { outputTable };
 
@@ -100,7 +106,6 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 	}
 
 	private String getZeroShotTextClassifierScript(BertModelConfig zstcModel) {
-
 		DLPythonSourceCodeBuilder b = DLPythonUtils
 				.createSourceCodeBuilder("from ZeroShotTextClassifier import ZeroShotTextClassifier");
 
@@ -111,8 +116,7 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 		b.a("hypothesis = ").as(settings.getHypothesis()).a(",").n(); // hypothesis
 		BertCommands.putBertModelArgs(b, zstcModel); // bert_model_handle, cach_dir
 		b.a("multi_label = ").a(settings.isMultilabelClassification()).a(",").n();
-		b.a("threshold = ").a(settings.getPredictionThreshold()).a(",").n();
-		b.a("append_probabilities = ").a(settings.getAppendProbabilities()).n();
+		BertCommands.putBatchSizeArgs(b, settings.getBatchSize());
 		b.a(")").n();
 
 		return b.toString();
@@ -121,10 +125,13 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-		settings.validate((DataTableSpec) inSpecs[PORT_DATA_TABLE]);
+		DataTableSpec inTableSpec = (DataTableSpec) inSpecs[PORT_DATA_TABLE];
+		settings.validate(inTableSpec);
 		validateModelFeatures((BertModelPortObjectSpec) inSpecs[PORT_BERT_MODEL]);
 
-		return new PortObjectSpec[] { null };
+		outputBuilder = new PredictionTableBuilder(settings, settings.isMultilabelClassification(),
+				settings.getCandidateLabels());
+		return new PortObjectSpec[] { outputBuilder.createSpec(inTableSpec) };
 
 	}
 
@@ -139,7 +146,7 @@ public class ZeroShotTextClassifierNodeModel extends NodeModel {
 
 	@Override
 	protected void reset() {
-		// nothing to reset.
+		outputBuilder = null;
 	}
 
 	@Override

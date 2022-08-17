@@ -68,6 +68,7 @@ public class BertClassifierPortObject extends FileStorePortObject implements Ber
 		super(Arrays.asList(fileStore));
 		this.spec = spec;
 		this.classes = classes.toArray(new String[] {});
+		this.spec.setClasses(this.classes);
 	}
 
 	/**
@@ -148,6 +149,7 @@ public class BertClassifierPortObject extends FileStorePortObject implements Ber
 	protected void load(ModelContentRO model, BertClassifierPortObjectSpec spec) throws InvalidSettingsException {
 		this.spec = spec;
 		this.classes = model.getStringArray(KEY_CLASSES);
+		this.spec.setClasses(classes);
 	}
 
 	protected void save(ModelContentWO model) {

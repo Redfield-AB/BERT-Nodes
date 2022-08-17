@@ -31,7 +31,6 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 
-import se.redfield.bert.nodes.port.BertClassifierPortObject;
 import se.redfield.bert.setting.BertPredictorSettings;
 
 /**
@@ -45,9 +44,9 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 	protected String[] classes;
 
-	protected ComputePredictionCellFactory(BertPredictorSettings settings, BertClassifierPortObject classifier) {
+	protected ComputePredictionCellFactory(BertPredictorSettings settings, String[] classes) {
 		super(createPredictionColumnSpec(settings));
-		this.classes = classifier.getClasses();
+		this.classes = classes;
 	}
 
 	@Override
@@ -59,16 +58,17 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 	/**
 	 * @param settings   The predictor settings.
-	 * @param classifier The classifier object.
-	 * @return The {@link CellFactory} instance to contruct prediction column.
+	 * @param multilabel Whether the multilabel mode is used.
+	 * @param classes    The classes.
+	 * @return The {@link CellFactory} instance to construct prediction column.
 	 */
-	public static CellFactory create(BertPredictorSettings settings, BertClassifierPortObject classifier) {
-		if (classifier.isMultiLabel() && settings.getFixNumberOfClasses()) {
-			return new FixedNumberOfClassesPredictionsCellFactory(settings, classifier);
-		} else if (classifier.isMultiLabel() || settings.getUseCustomThreshould()) {
-			return new ThresholdPredictionsCellFactory(settings, classifier);
+	public static CellFactory create(BertPredictorSettings settings, boolean multilabel, String[] classes) {
+		if (multilabel && settings.getFixNumberOfClasses()) {
+			return new FixedNumberOfClassesPredictionsCellFactory(settings, classes);
+		} else if (multilabel || settings.getUseCustomThreshould()) {
+			return new ThresholdPredictionsCellFactory(settings, classes);
 		} else {
-			return new SinglePredictionCellFactory(settings, classifier);
+			return new SinglePredictionCellFactory(settings, classes);
 		}
 	}
 
@@ -79,8 +79,8 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 	private static class SinglePredictionCellFactory extends ComputePredictionCellFactory {
 
-		protected SinglePredictionCellFactory(BertPredictorSettings settings, BertClassifierPortObject classifier) {
-			super(settings, classifier);
+		protected SinglePredictionCellFactory(BertPredictorSettings settings, String[] classes) {
+			super(settings, classes);
 		}
 
 		@Override
@@ -107,8 +107,8 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 		private String separator;
 
-		protected MultiplePredictionsCellFactory(BertPredictorSettings settings, BertClassifierPortObject classifier) {
-			super(settings, classifier);
+		protected MultiplePredictionsCellFactory(BertPredictorSettings settings, String[] classes) {
+			super(settings, classes);
 			separator = settings.getClassSeparator();
 		}
 
@@ -124,8 +124,8 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 		private double threshold;
 
-		protected ThresholdPredictionsCellFactory(BertPredictorSettings settings, BertClassifierPortObject classifier) {
-			super(settings, classifier);
+		protected ThresholdPredictionsCellFactory(BertPredictorSettings settings, String[] classes) {
+			super(settings, classes);
 			threshold = settings.getPredictionThreshold();
 		}
 
@@ -150,10 +150,9 @@ public abstract class ComputePredictionCellFactory extends AbstractCellFactory {
 
 		private int numberOfClasses;
 
-		protected FixedNumberOfClassesPredictionsCellFactory(BertPredictorSettings settings,
-				BertClassifierPortObject classifier) {
-			super(settings, classifier);
-			numberOfClasses = Math.min(settings.getNumberOfClassesPerPrediction(), classifier.getClasses().length);
+		protected FixedNumberOfClassesPredictionsCellFactory(BertPredictorSettings settings, String[] classes) {
+			super(settings, classes);
+			numberOfClasses = Math.min(settings.getNumberOfClassesPerPrediction(), classes.length);
 		}
 
 		@Override

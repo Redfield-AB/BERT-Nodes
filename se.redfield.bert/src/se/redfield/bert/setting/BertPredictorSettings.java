@@ -57,9 +57,9 @@ public class BertPredictorSettings extends PythonNodeSettings {
 	private final SettingsModelString predictionColumn;
 	private final SettingsModelBoolean outputProbabilities;
 	private final SettingsModelString probabilitiesColumnSuffix;
-	private final SettingsModelBoolean useCustomThreshould;
+	protected final SettingsModelBoolean useCustomThreshould;
 	private final SettingsModelDoubleBounded predictionThreshold;
-	private final SettingsModelBoolean fixNumberOfClasses;
+	protected final SettingsModelBoolean fixNumberOfClasses;
 	private final SettingsModelIntegerBounded numberOfClassesPerPrediction;
 	private final SettingsModelBoolean useCustomClassSeparator;
 	private final SettingsModelString classSeparator;
@@ -203,7 +203,13 @@ public class BertPredictorSettings extends PythonNodeSettings {
 		}
 	}
 
-	private void validate(DataTableSpec spec) throws InvalidSettingsException {
+	/**
+	 * Validates the settings against input table spec.
+	 * 
+	 * @param spec The input table spec.
+	 * @throws InvalidSettingsException
+	 */
+	public void validate(DataTableSpec spec) throws InvalidSettingsException {
 		validate();
 
 		String sc = sentenceColumn.getStringValue();
@@ -414,6 +420,10 @@ public class BertPredictorSettings extends PythonNodeSettings {
 	 *         multiple classes.
 	 */
 	public String getClassSeparator() {
-		return classSeparator.getStringValue();
+		if (getUseCustomClassSeparator()) {
+			return classSeparator.getStringValue();
+		} else {
+			return BertClassifierSettings.DEFAULT_CLASS_SEPARATOR;
+		}
 	}
 }

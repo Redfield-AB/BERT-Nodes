@@ -18,9 +18,7 @@ package se.redfield.bert.nodes.zstc;
 
 import javax.swing.JLabel;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -58,14 +56,7 @@ public class ZeroShotTextClassifierNodeDialog extends PythonNodeDialog<ZeroShotT
 	@Override
 	protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
 		super.loadSettingsFrom(settings, specs);
-		try {
-			this.settings.validate((DataTableSpec) specs[ZeroShotTextClassifierNodeModel.PORT_DATA_TABLE]);
-		} catch (InvalidSettingsException e) {
-			// ignore
-		}
-
 		sentenceColumn.loadSettingsFrom(settings, specs);
-
 	}
 
 	private class SettingsTabGroup extends AbstractGridBagDialogComponentGroup {
@@ -75,13 +66,22 @@ public class ZeroShotTextClassifierNodeDialog extends PythonNodeDialog<ZeroShotT
 			addDoubleColumnRow(new JLabel("Sentence column"),
 					getFirstComponent(sentenceColumn, ColumnSelectionPanel.class));
 			addStringEditRowComponent(settings.getCandidateLabelsModel(), "Candidate labels");
+			addCheckboxRow(settings.getUseCustomClassSeparatorModel(), "Use custom labels separator", true);
+			addStringEditRowComponent(settings.getClassSeparatorModel(), "Labels separator");
 
 			addHorizontalSeparator();
 
 			addCheckboxRow(settings.getUseCustomHypothesisModel(), "Use custom hypothesis", false);
 			addStringEditRowComponent(settings.getHypothesisModel(), "Hypothesis");
 
-			addCheckboxRow(settings.getAppendProbabilitiesModel(), "Append individual class probabilities", false);
+			addHorizontalSeparator();
+			addNumberSpinnerRowComponent(settings.getBatchSizeModel(), "Batch size", 1);
+
+			addHorizontalSeparator();
+			addCheckboxRow(settings.getChangePredictionColumnModel(), "Change prediction column name", true);
+			addStringEditRowComponent(settings.getPredictionColumnModel(), "Prediction column name");
+			addCheckboxRow(settings.getOutputProbabilitiesModel(), "Append individual class probabilities", true);
+			addStringEditRowComponent(settings.getProbabilitiesColumnSuffixModel(), "Suffix for probability columns");
 
 		}
 	}
@@ -90,9 +90,12 @@ public class ZeroShotTextClassifierNodeDialog extends PythonNodeDialog<ZeroShotT
 
 		public AdvancedTabGroup() {
 			addCheckboxRow(settings.getMultilabelClassification(), "Multi-label classification", false);
-			addCheckboxRow(settings.getUseCustomThresholdModel(), "Use custom threshold for determining predictions",
-					false);
+			addCheckboxRow(settings.getUseCustomThreshouldModel(), "Use custom threshold for determining predictions",
+					true);
 			addNumberSpinnerRowComponent(settings.getPredictionThresholdModel(), "Probability threshold", 0.01);
+			addCheckboxRow(settings.getFixNumberOfClassesModel(), "Fixed number of classes per prediction", true);
+			addNumberSpinnerRowComponent(settings.getNumberOfClassesPerPredictionModel(),
+					"Number of classes per prediction", 1);
 		}
 	}
 }
