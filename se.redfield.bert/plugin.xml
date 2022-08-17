@@ -75,5 +75,20 @@
                path="/community">
          </category>
       </extension>
+      <extension
+            point="org.eclipse.core.runtime.preferences">
+         <initializer
+               class="se.redfield.bert.prefs.BertPreferenceInitializer">
+         </initializer>
+      </extension>
+      <extension
+            point="org.eclipse.ui.preferencePages">
+         <page
+               category="org.knime.workbench.ui.preferences"
+               class="se.redfield.bert.prefs.BertPreferencePage"
+               id="se.redfield.bert.prefs.BertPreferencePage"
+               name="Redfield BERT Nodes">
+         </page>
+      </extension>
    
 </plugin>
