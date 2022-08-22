@@ -130,5 +130,21 @@
 	{
 		"handle":"joeddav/xlm-roberta-large-xnli",
 		"features":["CORE", "ZSTC"]
+	},
+	{
+		"handle":"typeform/distilbert-base-uncased-mnli",
+		"features":["CORE", "ZSTC"]
+	},
+	{
+		"handle":"typeform/roberta-large-mnli",
+		"features":["CORE", "ZSTC"]
+	},	
+	{
+		"handle":"cmarkea/distilcamembert-base-nli",
+		"features":["CORE", "ZSTC"]
+	},
+	{
+		"handle":"BaptisteDoyen/camembert-base-xnli",
+		"features":["CORE", "ZSTC"]
 	}
 ]
