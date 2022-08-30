@@ -3,46 +3,56 @@
     
     <shortDescription>
         The node consists of learning a classifier without any previously labeled data.
-    </shortDescription>
+        The node takes the Zero Shot Text Classification model as input and applies it on the provided texts. No prior training is needed, user can just provided a set of labels that are expected to be used for text classification.
+    </shortDescription> 
     
     <fullDescription>
         <intro>
-        	 The node consists of learning a classifier without any previously labeled data.
-.
+        The node performs Zero-Shot Text Classification based on <a href = "https://nlp.stanford.edu/projects/snli/">NLI</a> task. No prior training is needed, user can just provide a set of labels that are expected to be used for text classification.<br/>
+        The node can use a model trained on an NLI task. It works by posing each candidate label as a 'hypothesis' and the sequence which one wants to classify as the 'premise'.
         </intro>
         <tab name="Settings">
         	<option name="Sentence column">
-        		A column with a plain text (String), that contains text to be classified.
+        		A column with a plain text (String), which contains the text to be classified.
         		No special pre-processing is needed.
         	</option>
         	<option name = "Candidate labels">
-        	A list of labels to use for prediction.
-        	Separation between labels must be done with comma punctuation.
+				A set of labels to use for prediction.<br/>
+				<b>E.g</b> : Positive;Negative
         	</option>
-        	
-        	<option name="Append individual class probabilities">
-        		If active, the columns with class probabilities will be created in the output table.
+			<option name = "Use custom labels separator">
+				If active, it is possible to change the character used to separate different candidate labels. 
+			</option>
+			<option name="Use custom hypothesis">
+        		If active, it is possible to change the hypothesis used as an input to the model.
+				Otherwise the default hypothesis will be used.
+	        </option> 
+	        <option name = "Batch size">
+				The number of samples that are passed to the model at once for one batch. It highly depends on the RAM or VRAM.
+			</option> 	
+			<option name="Change prediction column name">
+        		If active a column with provided name will be created in the output table.
+        		Otherwise the default name will be used for the column with predictions.
         	</option>
-        	<option name="Use custom hypothesis">
-        		If active, it is possible to change the hypothesis used by the model.
-        	</option>
-        	<option name="Hypothesis">
-	
-	        </option>
-        	
         	<option name="Append individual class probabilities">
         		If active, the columns with class probabilities will be created in the output table.
         	</option>
         </tab>
         <tab name="Multi-label">
         <option name="Multi-label classification">
-        		If active, it is possible to change the probability threshold for assigning the class. By default class is assigned by the biggest probability value.
+        		If active, it is possible to change the probability threshold for assigning the class or the number of desired classes. By default one class is assigned by the biggest probability value.
         	</option>
         	<option name="Use custom threshold for assigning the classes">
         		If active, it is possible to change the probability threshold for assigning the class. By default class is assigned by the biggest probability value.
         	</option>
         	<option name="Probability threshold">
         		The class is assigned if the class probability is equal or higher then the value. Several classes might be assigned.
+        	</option>
+        	<option name="Fixed number of classes per prediction">
+        		If active, it it possible to change the number of assigned classes per prediction.
+        	</option>
+        	<option name="Number of classes per prediction">
+        		The number of classes that will be assigned to the prediction.
         	</option>
         </tab>
         <tab name="Python">
@@ -62,4 +72,3 @@
 		<outPort name="Output Table" index="0">Output table</outPort>
     </ports>    
 </knimeNode>
-    
