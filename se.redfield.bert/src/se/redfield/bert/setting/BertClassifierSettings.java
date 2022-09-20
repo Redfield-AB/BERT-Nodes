@@ -186,8 +186,8 @@ public class BertClassifierSettings extends PythonNodeSettings {
 		validationBatchSize.loadSettingsFrom(settings);
 		fineTuneBert.loadSettingsFrom(settings);
 		optimizer.loadSettingsFrom(settings);
-		classSeparator.loadSettingsFrom(settings);
 		multilabelClassification.loadSettingsFrom(settings);
+		classSeparator.loadSettingsFrom(settings);
 
 	}
 
