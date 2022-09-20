@@ -106,8 +106,9 @@ public class BertClassifierNodeModel extends NodeModel {
 				commands.putDataTable(KNIO_VALIDATION_TABLE_IDX, input.getValidationTable(),
 						exec.createSubProgress(0.05));
 			}
-
+			exec.setMessage("Train classifier");
 			commands.executeInKernel(getTrainScript(bertModel, fileStore, input), exec.createSubProgress(0.9));
+			exec.setMessage("Retrieve outputs");
 			return commands.getDataTable(exec, exec.createSubProgress(0));
 		}
 	}

@@ -94,8 +94,11 @@ public class ClassesToFeaturesConverter {
 		for (String c : classes) {
 			indexedClasses.put(c, indexedClasses.size());
 		}
-
+		exec.setMessage("Prepare training table");
 		BufferedDataTable outTrainingTable = convertTable(inTrainingTable, indexedClasses, exec);
+		if (inValidationTable != null) {
+			exec.setMessage("Prepare validation table");
+		}
 		BufferedDataTable outValidationTable = inValidationTable == null ? null
 				: convertTable(inValidationTable, indexedClasses, exec);
 

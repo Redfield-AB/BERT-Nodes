@@ -84,10 +84,12 @@ public class BertPredictorNodeModel extends NodeModel {
 	private BufferedDataTable runPredict(BertClassifierPortObject classifier, BufferedDataTable inTable,
 			ExecutionContext exec) throws PythonKernelCleanupException, DLInvalidEnvironmentException,
 			PythonIOException, CanceledExecutionException {
+		exec.setMessage("Prepare input table");
 		var preprocessedTable = InputUtils.toStringColumnsTable(inTable, exec.createSubExecutionContext(0.05),
 				settings.getSentenceColumn());
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.05));
+			exec.setMessage("Calculate predictions");
 			commands.executeInKernel(getPredictScript(classifier), exec.createSubProgress(0.8));
 			return commands.getDataTable(exec, exec.createSubProgress(0.1));
 		}
