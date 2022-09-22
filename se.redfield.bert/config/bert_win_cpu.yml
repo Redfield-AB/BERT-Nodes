@@ -10,6 +10,7 @@ dependencies:            # List of packages that should be installed
 - pyarrow<8.0            # Arrow serialization
 - protobuf<4.0           # Versions larger than 4.0 are incompatible with tensorflow-hub and bert-for-tf2
 - sentencepiece          # Additional dependency for some zero-shot classification models
+- termcolor=2.0.1
 - pip
 - pip:
   - tensorflow==2.9.1
