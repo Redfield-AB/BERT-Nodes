@@ -54,7 +54,7 @@ public class InputSettingsEditor extends AbstractGridBagDialogComponentGroup {
 
 		addDoubleColumnRow(new JLabel("Sentence column"),
 				getFirstComponent(firstSentenceColumn, ColumnSelectionPanel.class));
-		addCheckboxRow(settings.getTwoSentenceModeModel(), "Two-sencence mode", true);
+		addCheckboxRow(settings.getTwoSentenceModeModel(), "Two-sentence mode", true);
 		addDoubleColumnRow(new JLabel("Second sentence column"),
 				getFirstComponent(secondSentenceColumn, ColumnSelectionPanel.class));
 		addNumberSpinnerRowComponent(settings.getMaxSeqLengthModel(), "Max sequence length", 1);

@@ -71,7 +71,7 @@
          <category
                icon="icons/redfield_logo.png"
                level-id="bert"
-               name="BERT by Redfield"
+               name="Redfield BERT Nodes"
                path="/community">
          </category>
       </extension>

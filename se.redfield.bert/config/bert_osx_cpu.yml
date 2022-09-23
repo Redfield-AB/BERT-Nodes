@@ -13,6 +13,7 @@ dependencies:            # List of packages that should be installed
 - tensorflow-hub=0.12.0
 - transformers=4.6.1
 - sentencepiece          # Additional dependency for some zero-shot classification models
+- termcolor=2.0.1
 - pip
 - pip:
   - bert-for-tf2==0.14.9

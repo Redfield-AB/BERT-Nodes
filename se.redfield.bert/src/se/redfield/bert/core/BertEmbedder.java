@@ -79,6 +79,7 @@ public class BertEmbedder {
 		var preprocessedTable = preprocess(inTable, exec);
 		try (BertCommands commands = new BertCommands(settings.getPythonCommand(), 1)) {
 			commands.putDataTable(preprocessedTable, exec.createSubProgress(0.1));
+			exec.setMessage("Calculate embeddings");
 			commands.executeInKernel(computeEmbeddingsScript(bertObject), exec.createSubProgress(0.85));
 			var embeddings = commands.getDataTable(exec, exec.createSubProgress(0.05));
 			return exec.createJoinedTable(inTable, embeddings, exec.createSilentSubProgress(0));
@@ -90,6 +91,7 @@ public class BertEmbedder {
 	 */
 	private BufferedDataTable preprocess(final BufferedDataTable inTable, final ExecutionContext exec)
 			throws CanceledExecutionException {
+		exec.setMessage("Prepare input table");
 		var rearranger = new ColumnRearranger(inTable.getDataTableSpec());
 		var inputSettings = settings.getInputSettings();
 		String[] columns = inputSettings.getTwoSentenceMode()

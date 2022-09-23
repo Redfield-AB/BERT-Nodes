@@ -3,33 +3,38 @@
     <name>BERT Classification Learner</name>
     
     <shortDescription>
-        The node uses BERT model and adds a predefined neural network on top.
+    	Trains a text classification model on top of the provided BERT model.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        	The node uses BERT model and adds a predefined neural network on top.
-        	There are 3 layers added:
+        	Trains a text classification model on top of the provided BERT model.
+        	The model is extended with 3 layers:
         	<ul>
         		<li>GlobalAveragePooling1D layer</li>
         		<li>Dropout layer</li>
         		<li>Dense layer</li>
         	</ul>
-        	The trained model can be applied for multi-class classification.
+        	<p>
+        		Besides the typical classification task where every row is assigned a single class it is also possible
+        		to train a model for multi-label classification where a row can be assigned multiple labels.
+        	</p>
+        	<p>
+        		If a validation table is provided, then the model performance is evaluated on that data after every epoch.
+        	</p>
         </intro>
         <tab name="Settings">
         	<option name="Sentence column">
-        		A column with a plain text (String), that contains text to be classified.
+        		A column with plain text (String) or Documents, that contains text to be classified.
         		No special pre-processing is needed.
         	</option>
         	<option name="Class column">A column that contains class labels.</option>
-        	<option name="Max sequence length">The maximum length of a sequence after tokenization, limit is 512.</option>
+        	<option name="Max sequence length">The maximum length of a sequence after tokenization. The upper limit is 512.</option>
         	<option name="Multi-label classification">
-        		Enables multi-label classification mode. In this mode multiple
-        		labels (classes) could be assigned to each text.
+        		Enables multi-label classification mode. In this mode multiple labels (classes) can be assigned to each text.
         	</option>
         	<option name="Class separator">
-        		The character used to separate different classes assigned to a given text in a multi-label classification mode.
+        		The character used to separate different classes assigned to a given text in multi-label classification mode.
         	</option>
         </tab>
         <tab name="Advanced">
@@ -37,8 +42,8 @@
         	<option name="Batch size">The size of a chunk of the input data used for model update.</option>
         	<option name="Validation batch size">The size of a chunk of the validation data to process.</option>
         	<option name="Fine tune BERT">
-        		If checked than BERT model will be trained along with the additional classifier.
-        		It takes longer time to fine tune BERT, but the results are usually better.
+        		If checked then the weights of the BERT model will be trained along with the additional classifier.
+        		Fine-tuning BERT will be more resource and time intensive, but the results are usually better.
         	</option>
         	<option name="Optimizer">
         		Available <a href="https://www.tensorflow.org/api_docs/python/tf/keras/optimizers">optimizers</a> and their configuration.
@@ -46,10 +51,10 @@
         </tab>
         <tab name="Python">
     		<option name="Python">
-    			Select one of Python execution environment options:
+    			Select one of the Python execution environment options:
     			<ul>
-        			<li>use default Python environment for Deep Learning</li>
-        			<li>use Conda environment</li>
+        			<li>use default Python environment for the Redfield BERT Nodes (can be configured on the preference page)</li>
+        			<li>use Conda environment from a Conda flow variable (only selectable if such a flow variable is available)</li>
         		</ul>
     		</option>
         </tab>
@@ -59,8 +64,8 @@
     <ports>
 		<inPort name="BERT Model" index="0">BERT Model</inPort>
 		<inPort name="Data Table" index="1">Data Table</inPort>
-		<inPort name="Validation Table" index="2">Validation Table</inPort>
+		<inPort name="Validation Table" index="2">Optional Validation Table</inPort>
 		<outPort name="BERT Classifier" index="0">BERT Classifier model</outPort>
-		<outPort name="Stats" index="1">Stats</outPort>
+		<outPort name="Training statistics" index="1">Statistics of the training process</outPort>
     </ports>    
 </knimeNode>
