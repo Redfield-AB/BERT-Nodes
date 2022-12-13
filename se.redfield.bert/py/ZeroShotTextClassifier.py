@@ -1,7 +1,7 @@
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import knime_io as knio
+import knime.scripting.io as knio
 from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 from ProgressCallback import ProgressCallback
 
@@ -103,4 +103,4 @@ class ZeroShotTextClassifier:
         classifier = ZeroShotTextClassifier(model, tokenizer, multi_label, hypothesis)
         output_table  = classifier.predict(input_table, sentence_column, candidate_labels, batch_size) 
 
-        knio.output_tables[0] = knio.write_table(output_table)
+        knio.output_tables[0] = knio.Table.from_pandas(output_table)

@@ -73,7 +73,6 @@ public class BertCommands implements AutoCloseable {
 			PythonKernel kernel = PythonKernelQueue.getNextKernel(command, PythonKernelBackendType.PYTHON3,
 					Collections.emptySet(), Collections.emptySet(), options, PythonCancelable.NOT_CANCELABLE);
 			kernel.execute("import tensorflow as tf");
-			kernel.execute("import knime_io as knio");
 			kernel.execute(setupPythonPath());
 			return kernel;
 		} catch (PythonIOException e) {
@@ -124,8 +123,10 @@ public class BertCommands implements AutoCloseable {
 
 	public void executeInKernel(String code, ExecutionMonitor exec)
 			throws PythonIOException, CanceledExecutionException {
+		// must be imported after the input tables are put in so that they are wrapped properly
+		kernel.execute("import knime.scripting.io as knio");
 		progressListener.setMonitor(exec);
-		kernel.execute(code, new PythonExecutionMonitorCancelable(exec));
+		kernel.executeAndCheckOutputs(code, new PythonExecutionMonitorCancelable(exec));
 		progressListener.setMonitor(null);
 		exec.setProgress(1.0);
 	}
