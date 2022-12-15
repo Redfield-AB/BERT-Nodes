@@ -1,6 +1,6 @@
 import tensorflow as tf
 import pandas as pd
-import knime_io as knio
+import knime.scripting.io as knio
 from tensorflow.keras.models import Model
 
 from ProgressCallback import ProgressCallback
@@ -52,7 +52,7 @@ class BertEmbedder:
 
     @classmethod
     def run_from_pretrained(cls,
-        input_table:knio.ReadTable,
+        input_table:knio.Table,
         bert_model_type_key,
         bert_model_handle,
         sentence_column,
@@ -66,7 +66,7 @@ class BertEmbedder:
     ):
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_pretrained(model_type, bert_model_handle, sentence_column, second_sentence_column, max_seq_length, cache_dir)
-        write_table = knio.batch_write_table()
+        write_table = knio.BatchOutputTable.create()
         progress_done = 0
         for batch in input_table.batches():
             pd_batch = batch.to_pandas()
@@ -93,7 +93,7 @@ class BertEmbedder:
         saved_model = tf.keras.models.load_model(file_store)
         model_type = BertModelType.from_key(bert_model_type_key)
         embedder = cls.from_saved_model(model_type, saved_model, sentence_column, second_sentence_column, max_seq_length)
-        write_table = knio.batch_write_table()
+        write_table = knio.BatchOutputTable.create()
         progress_done = 0
         for batch in input_table.batches():
             pd_batch = batch.to_pandas()

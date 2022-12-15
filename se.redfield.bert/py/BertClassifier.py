@@ -2,7 +2,7 @@ import tempfile
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import knime_io as knio
+import knime.scripting.io as knio
 from transformers import TFAutoModel
 
 from BertEmbedder import BertEmbedder
@@ -73,7 +73,7 @@ class BertClassifier:
     
     @classmethod
     def run_train(cls,
-        input_table: knio.ReadTable,
+        input_table: knio.Table,
         bert_model_type_key,
         bert_model_handle,
         sentence_column,
@@ -103,11 +103,11 @@ class BertClassifier:
         classifier.save(file_store)
 
         output_table = pd.DataFrame(progress_logger.logs)
-        knio.output_tables[0] = knio.write_table(output_table)
+        knio.output_tables[0] = knio.Table.from_pandas(output_table)
 
     @classmethod
     def run_predict(cls,
-        input_table: knio.ReadTable,
+        input_table: knio.Table,
         sentence_column,
         file_store,
         bert_model_type_key,
@@ -119,7 +119,7 @@ class BertClassifier:
         tokenizer = model_type.tokenizer_cls.from_saved_model(model, sentence_column, max_seq_length=max_seq_length)
         classifier = BertClassifier(tokenizer=tokenizer, model=model)
 
-        write_table = knio.batch_write_table()
+        write_table = knio.BatchOutputTable.create()
         progress_done = 0
         for batch in input_table.batches():
             pd_batch = batch.to_pandas() # TODO pyarrow is probably more efficient
