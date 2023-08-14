@@ -16,8 +16,8 @@ env_yml_path:
   win-64: se.redfield.bert/config/bert_win_cpu.yml
   linux-64: se.redfield.bert/config/bert_linux_cpu.yml
   osx-64: se.redfield.bert/config/bert_osx_cpu.yml
-version: 1.0.2
-copyright: "Copyright (c) 2020 Redfield AB"
+version: 1.0.3
+copyright: "Copyright (c) 2023 Redfield AB"
 license_file: LICENSE.txt
 java_bundles:
   - se.redfield.bert
