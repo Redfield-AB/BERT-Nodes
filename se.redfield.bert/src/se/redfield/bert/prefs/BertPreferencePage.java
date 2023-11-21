@@ -10,10 +10,10 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.core.util.Version;
 import org.knime.python2.PythonModuleSpec;
+import org.knime.python2.config.BundledCondaEnvironmentConfig;
 import org.knime.python2.config.PythonConfig;
 import org.knime.python2.prefs.AbstractPythonPreferencePage;
 import org.knime.python3.PythonSourceDirectoryLocator;
-import org.knime.python3.scripting.nodes.prefs.BundledCondaEnvironmentConfig;
 
 import se.redfield.bert.prefs.MultiOptionEnvironmentCreator.CondaEnvironmentCreationOption;
 
