@@ -11,6 +11,7 @@ dependencies:            # List of packages that should be installed
 - protobuf<4.0           # Versions larger than 4.0 are incompatible with tensorflow-hub and bert-for-tf2
 - sentencepiece          # Additional dependency for some zero-shot classification models
 - termcolor=2.0.1
+- setuptools<70          # setuptools 70.0 removed convert_path, which is used in the pip packages params-flow, py-params and bert-for-tf2 (this line can be deleted once the three pip packages are updated) (https://github.com/pypa/setuptools/blob/33afc112522057851eeaa016df7fdf774b3b1626/NEWS.rst#deprecations-and-removals)
 - pip
 - pip:
   - tensorflow==2.9.1
