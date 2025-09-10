@@ -1,6 +1,6 @@
 [workspace]
 authors = ["AbderrahimAl <abderrahimalakouche@gmail.com>"]
-channels = ["knime/label/githubTest", "knime", "conda-forge", "abderrahimal", "Esri", "deepmodeling"]
+channels = ["knime/label/nightly", "knime", "conda-forge", "abderrahimal", "Esri", "deepmodeling"]
 name = "py39_bert_cpu"
 platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
@@ -19,34 +19,25 @@ sentencepiece = "*"
 termcolor = "2.0.1.*"
 setuptools = "<70"
 bert-for-tf2 = "0.14.9.*"
-
-transformers = "4.6.1"
+transformers = "4.6.1.*"
+tensorflow-hub = "0.12.0.*"
+tensorflow = "2.8.1"
 pip = "*"
 
-
-[target.osx-64.host-dependencies]
-tensorflow-hub = "0.12.0"
-tensorflow = "2.8.1"
-
-
 [target.linux-64.build-dependencies]
-tensorflow-hub = "0.12.0"
 tensorflow-cpu = "2.8.1"
 
-[target.win-64.pypi-dependencies]
-tensorflow-hub = "==0.12.0"
-tensorflow = "==2.8.1"
 
 
 [feature.build.dependencies]
 python = "3.9.*"
-knime-extension-bundling = "5.6.*"
+knime-extension-bundling = "5.7.*"
 
 [feature.debug.dependencies]
 debugpy = "*"
 
 [feature.build.tasks]
-build = { args = [{ "arg" = "dest", "default" = "./local-update-site" }], cmd = "build-python-extension . {{ dest }}"}
+build = { args = [{ "arg" = "dest", "default" = "./local-update-site" }], cmd = "build-python-extension . {{ dest }} --disable-strict-enforcement"}
 
 [environments]
 build = {features = ["build"], no-default-feature = true}
